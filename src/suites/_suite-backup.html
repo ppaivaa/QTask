@@ -1,0 +1,87 @@
+<dialog id="bkDlg" aria-labelledby="bkTitle">
+  <div class="sheet">
+    <h2 id="bkTitle">Sync and backups</h2>
+    <div class="bk-row"><b>Sync between your devices</b><span id="bkSyncLine">Checking...</span></div>
+    <div class="bk-bar" id="bkSyncBar"></div>
+    <h3>{{SUITE_TITLE}} on this device</h3>
+    <div class="bk-list" id="bkList"></div>
+    <p class="note">A backup file holds this suite's data. On an iPhone, choose <b>Save to Files</b> and pick iCloud Drive; on a Mac it goes to Downloads. Restore it in the control center, under Backup.</p>
+    <div class="bk-bar"><button class="bk-btn primary" id="bkDl" type="button">Download a backup file</button><a class="bk-btn" id="bkHub" href="control-center.html#backup" style="text-decoration:none;display:inline-flex;align-items:center">All backups</a><button class="bk-btn" id="bkClose" type="button">Close</button></div>
+  </div>
+</dialog>
+<div class="bk-toast" id="bkToast" role="status" aria-live="polite"></div>
+<script>
+const BACKUP_APPS={{BACKUP_APPS}};
+(function(){
+  const $=s=>document.getElementById(s);
+  const btn=document.querySelector('nav [data-act="backup"]'), dlg=$("bkDlg");
+  const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  let tt=null;
+  function toast(t){const el=$("bkToast");el.textContent=t;el.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("show"),2600)}
+  const S=()=>window.SuiteSync||null;
+
+  /* ---------- what each app keeps ---------- */
+  function owned(app,k){return app.keys.includes(k)||app.prefixes.some(p=>k.startsWith(p))}
+  function keysOf(app){const out=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k!=null&&owned(app,k))out.push(k)}}catch(_){}return out.sort()}
+  function payload(app){
+    const json={}, text={};
+    for(const k of keysOf(app)){const v=localStorage.getItem(k);if(v==null)continue;try{json[k]=JSON.parse(v)}catch(_){text[k]=v}}
+    if(!Object.keys(json).length&&!Object.keys(text).length) return null;
+    return {format:"suite-backup",version:1,suite:SUITE.id,suiteTitle:SUITE.title,app:app.file,label:app.label,saved:new Date().toISOString(),json,text};
+  }
+  const bytes=app=>keysOf(app).reduce((n,k)=>n+(k.length+(localStorage.getItem(k)||"").length)*2,0);
+  const size=b=>b<1024?b+" B":b<1048576?(b/1024).toFixed(b<10240?1:0)+" KB":(b/1048576).toFixed(1)+" MB";
+  const ago=t=>{if(!t)return "never";const s=(Date.now()-t)/1000;if(s<60)return "just now";if(s<3600)return Math.floor(s/60)+" min ago";if(s<86400)return Math.floor(s/3600)+" h ago";const d=Math.floor(s/86400);return d===1?"yesterday":d+" days ago"};
+  const localDate=()=>{const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)};
+
+  /* ---------- panel ---------- */
+  function paint(){
+    const sync=S(), st=sync?sync.status():{configured:false};
+    btn.dataset.state=!st.configured?"":st.state==="error"?"err":st.state==="ok"||st.state==="idle"?"ok":"";
+    if(!dlg.open) return;
+    let line, bar="";
+    if(!sync) line="Sync is not available on this page.";
+    else if(!st.configured){
+      line="Off. Turn it on in the control center to keep your Mac and iPhone in step through a private GitHub repository.";
+      bar=`<a class="bk-btn primary" href="control-center.html#backup" style="text-decoration:none;display:inline-flex;align-items:center">Set up sync</a>`;
+    }else{
+      const pend=st.pending?`, ${st.pending} change${st.pending>1?"s":""} waiting`:"";
+      line=st.busy?"Syncing...":st.state==="error"?`Last try failed: ${esc(st.error)}`:st.state==="offline"?esc(st.error||"Offline"):
+        `${st.last?"Synced "+ago(st.last):"Not synced yet"} with ${esc(st.repo)} as ${esc(st.device)}${pend}${st.auto?"":" (automatic sync off)"}`;
+      bar=`<button class="bk-btn primary" id="bkSyncNow" type="button" ${st.busy?"disabled":""}>Sync now</button>`;
+    }
+    $("bkSyncLine").innerHTML=line; $("bkSyncBar").innerHTML=bar; $("bkSyncBar").hidden=!bar;
+    const pend=new Set(sync&&st.configured?sync.pendingKeys():[]);
+    $("bkList").innerHTML=BACKUP_APPS.map(a=>{
+      const ks=keysOf(a);
+      const state=!ks.length?"Nothing stored yet":!st.configured?`${size(bytes(a))}, not synced`
+        :ks.some(k=>pend.has(k))?`${size(bytes(a))}, changes waiting to sync`:`${size(bytes(a))}, in sync`;
+      return `<div class="bk-row"><b>${esc(a.label)}</b><span>${esc(state)}</span></div>`;
+    }).join("");
+  }
+  function open(){dlg.showModal();paint()}
+  $("bkClose").addEventListener("click",()=>dlg.close());
+  dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close()});
+  $("bkSyncBar").addEventListener("click",async e=>{
+    if(!e.target.closest("#bkSyncNow")) return;
+    const st=await S().syncNow();
+    toast(st.state==="ok"?(st.pulled||st.pushed?`Synced: ${st.pushed} sent, ${st.pulled} received`:"Already in sync"):st.error||"Sync failed");
+    paint();
+  });
+  $("bkDl").addEventListener("click",()=>{
+    const apps=BACKUP_APPS.map(payload).filter(Boolean);
+    if(!apps.length){toast("Nothing stored yet");return}
+    const b={format:"suite-bundle",version:1,saved:new Date().toISOString(),origin:location.origin,suite:SUITE.id,apps,rest:{}};
+    const blob=new Blob([JSON.stringify(b)],{type:"application/json"}), url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download=`${SUITE.id}-backup-${localDate()}.json`; a.style.display="none"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),15000);
+    const now=String(Date.now());
+    for(const ap of BACKUP_APPS) if(ap.reminder){try{localStorage.setItem(ap.reminder+".lastBackup",now);localStorage.setItem(ap.reminder+".backupSnooze","0")}catch(_){}}
+    toast("Backup file saved");
+  });
+  window.suiteBackup={open};
+  if(S()) S().onStatus(paint);
+  else window.addEventListener("load",()=>{if(S())S().onStatus(paint);paint()});
+  paint();
+})();
+</script>

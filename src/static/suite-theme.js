@@ -1,4 +1,5 @@
 /* suite-theme.js: colour schemes shared by the control center, every suite and every app in it.
+   (From CompChemKit by A. R. V. Pinto, MIT licence; the iPhone file sharing below was added for {{APP_NAME}}.)
 
    The choice is kept in this browser as localStorage "suite.theme":
      {"mode": "dark" | "light" | "system", "palette": "orchid" | "ocean" | "forest" | "ember" | "graphite"}
@@ -180,6 +181,40 @@
         window.open(u.href, "_blank");
       });
     }
+  }
+
+  /* iPhone and iPad: a file "downloaded" from a web app on the home screen has nowhere useful to
+     go, so hand it to the share sheet, where Save to Files puts it in iCloud Drive (or AirDrop it
+     to the Mac). The Blob behind each blob: link is remembered when it is created, so the share
+     sheet opens inside the tap, as Safari requires. Anything it cannot share downloads as before. */
+  var ua = navigator.userAgent || "";
+  var ios = !droid && (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1));
+  if (ios && navigator.canShare && navigator.share && window.File && window.Map) {
+    var blobs = new Map(), mkURL = URL.createObjectURL, rmURL = URL.revokeObjectURL;
+    URL.createObjectURL = function (o) { var u = mkURL.apply(URL, arguments); if (o instanceof Blob) blobs.set(u, o); return u; };
+    URL.revokeObjectURL = function (u) { setTimeout(function () { blobs.delete(u); }, 60000); return rmURL.apply(URL, arguments); };
+    var fromData = function (href) {
+      var m = /^data:([^;,]*)((?:;[^;,]*)*?)(;base64)?,(.*)$/.exec(href); if (!m) return null;
+      var bin = m[3] ? atob(m[4]) : decodeURIComponent(m[4]), u8 = new Uint8Array(bin.length);
+      for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+      return new Blob([u8], { type: m[1] || "application/octet-stream" });
+    };
+    var shareFile = function (a) {
+      if (!a || !a.hasAttribute || !a.hasAttribute("download")) return false;
+      var name = a.getAttribute("download") || "download", href = a.href || "", blob = null;
+      try { blob = /^blob:/.test(href) ? blobs.get(href) : /^data:/.test(href) ? fromData(href) : null; } catch (e) { blob = null; }
+      if (!blob) return false;
+      var file; try { file = new File([blob], name, { type: blob.type || "application/octet-stream" }); } catch (e) { return false; }
+      try { if (!navigator.canShare({ files: [file] })) return false; } catch (e) { return false; }
+      navigator.share({ files: [file], title: name }).catch(function () { /* cancelled */ });
+      return true;
+    };
+    var iosClick = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function () { if (shareFile(this)) return; return iosClick.apply(this, arguments); };
+    document.addEventListener("click", function (e) {
+      var a = e.target && e.target.closest ? e.target.closest("a[download]") : null;
+      if (a && shareFile(a)) e.preventDefault();
+    }, true);
   }
 
   apply(document);
