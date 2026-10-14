@@ -126,6 +126,8 @@ def build(out, ctx):
                     fh.write(text)
             else:
                 shutil.copy2(src_f, dst_f)
+    # GitHub Pages: serve the files as they are
+    open(os.path.join(out, ".nojekyll"), "w").close()
     # suites
     for sid, (title, apps) in SUITES.items():
         d = os.path.join(SRC, "suites", sid)

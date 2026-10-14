@@ -374,7 +374,6 @@ const netErr=e=>e&&e.code==="offline"?"No connection. Check you are online and t
     if(t.due){const n=between(T,t.due);meta.push(`<span class="${t.done?"":n<0?"over":n<=2?"soon":""}">${n<0&&!t.done?(n===-1?"due yesterday":`${-n} days overdue`):"due "+esc(dayName(t.due))}</span>`)}
     if(t.plan&&!t.done) meta.push(`<span>${t.plan<T?"carried over from "+esc(dayName(t.plan)):t.plan===T?"do today":"do "+esc(dayName(t.plan))}</span>`);
     if(subs.length) meta.push(`<span>${subs.filter(s=>s.done).length}/${subs.length} subtasks</span>`);
-    if(t.prio==="high") meta.push(`<span style="color:var(--danger)">high priority</span>`);
     if(t.done&&t.doneAt) meta.push(`<span>done ${esc(dayName(new Date(t.doneAt-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10)))}</span>`);
     const lv=LEVELS[u.lvl];
     const pill=!t.done&&(u.lvl==="critical"||u.lvl==="urgent")?`<div class="why"><span class="lvl" style="--lc:var(${lv.c})" title="${esc(u.why)}">${lv.n}</span> <span style="color:var(--muted)">${esc(u.why)}</span></div>`:"";
