@@ -1,0 +1,969 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="suite-theme.js" data-suite-theme></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#5A4360">
+<meta name="color-scheme" content="dark">
+<title>Meetings</title>
+<!-- Meetings for {{APP_NAME}}: grown out of the meeting notes in the CompChemKit research log (A. R. V. Pinto, MIT),
+     with planned meetings, repeats, points to present and calendar reminders. -->
+<style>
+:root{
+  color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);
+  --bg:var(--t-bg,#14161B);--surface:var(--t-surface,#1C1F26);--raised:var(--t-raised,#242832);--ink:var(--t-ink,#E7E9EE);--muted:var(--t-muted,#8B919E);--faint:var(--t-faint,#2C303A);
+  --accent:var(--t-accent,#9DB2FF);--danger:var(--t-red,#F28B82);--gold:var(--t-gold,#E6C170);--green:var(--t-green,#7DCB9C);--violet:var(--t-violet,#C3A6F0);--pink:var(--t-pink,#EE93AF);--teal:var(--t-teal,#8CC3CC);
+  --font:"Manrope",system-ui,Roboto,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px calc(110px + env(safe-area-inset-bottom,0px))}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 16px}
+h1{font-size:1.5rem;font-weight:700;margin:0;letter-spacing:-.01em}
+h1 .n{font-weight:400;color:var(--muted);font-size:1rem;margin-left:6px}
+.hbtns{display:flex;gap:4px;position:relative}
+.ibtn{min-width:44px;min-height:44px;border-radius:12px;color:var(--muted);display:grid;place-items:center;font-size:1.1rem}
+.ibtn:active{background:var(--surface)}
+.menu{position:absolute;right:0;top:48px;background:var(--raised);border-radius:12px;padding:6px;min-width:200px;display:none;z-index:5;box-shadow:0 8px 24px var(--t-shadow,rgba(0,0,0,.4))}
+.menu.open{display:block}
+.menu button{display:block;width:100%;text-align:left;padding:12px;border-radius:8px}
+.menu button:active{background:var(--faint)}
+.search{width:100%;background:var(--surface);border:0;border-radius:12px;padding:12px 14px;min-height:48px}
+.search::placeholder{color:var(--muted)}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:10px -16px 0;padding:0 16px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border-radius:999px;padding:8px 14px;min-height:38px;color:var(--muted);background:var(--surface);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip .c{opacity:.7}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--cc)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 8px;color:var(--muted);font-size:.85rem;gap:8px}
+.bar select{background:transparent;border:0;color:var(--muted);padding:6px 0;min-height:40px;max-width:60%}
+.list{display:flex;flex-direction:column;gap:8px}
+.card{background:var(--surface);border-radius:14px;padding:14px 10px 8px 16px}
+.card h3{font-size:1rem;font-weight:500;margin:0;overflow-wrap:anywhere}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.tags{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px;font-size:.82rem;color:var(--muted)}
+.pill{flex:0 0 auto;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:999px;color:var(--cc);background:color-mix(in srgb,var(--cc) 16%,transparent)}
+.note{font-size:.88rem;color:var(--muted);margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+.acts{display:flex;justify-content:flex-end;margin-top:2px;flex-wrap:wrap}
+.acts .ibtn{min-width:40px;min-height:40px;font-size:.95rem}
+.acts .txt{font-size:.85rem;padding:0 10px;color:var(--accent)}
+.star-on{color:var(--gold)}
+.empty{color:var(--muted);text-align:center;padding:48px 16px}
+.fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:18px;background:var(--accent);color:var(--t-on-accent,#14161B);font-size:1.8rem;box-shadow:0 6px 18px var(--t-shadow,rgba(0,0,0,.45));z-index:4}
+dialog{border:0;padding:0;background:var(--raised);color:var(--ink);width:100%;max-width:560px;margin:auto auto 0;border-radius:20px 20px 0 0;max-height:92vh}
+@media (min-width:600px){dialog{margin:auto;border-radius:20px}}
+dialog::backdrop{background:var(--t-backdrop,rgba(0,0,0,.6))}
+.sheet{padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.sheet h2{margin:0;font-size:1.15rem;font-weight:700}
+.sheet h4{margin:6px 0 -4px;font-size:.8rem;font-weight:500;color:var(--accent)}
+.sheet label{display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--muted);min-width:0}
+.sheet input,.sheet select,.sheet textarea{background:var(--surface);border:0;border-radius:12px;padding:12px;color:var(--ink);min-height:48px;width:100%;min-width:0}
+.sheet textarea{min-height:90px;resize:vertical}
+.mono{font-family:var(--mono)!important;font-size:.88rem!important}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.check{flex-direction:row!important;align-items:center;gap:10px!important;color:var(--ink)!important;font-size:1rem!important}
+.check input{min-height:auto!important;width:20px!important;height:20px;accent-color:var(--accent)}
+.hint{font-size:.8rem;color:var(--danger);min-height:1em;margin:0}
+.sbar{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.btn{border-radius:12px;padding:12px 16px;min-height:48px}
+.btn.primary{background:var(--accent);color:var(--t-on-accent,#14161B);font-weight:700}
+.btn.ghost{color:var(--muted)}
+.btn.danger{color:var(--danger)}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--raised);padding:10px 16px;border-radius:12px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:6}
+.toast.show{opacity:1}
+.sync{font-size:.8rem;color:var(--muted);text-align:center;margin-top:24px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.hidden{display:none!important}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--faint);margin:0 0 12px}
+.tab{padding:12px 4px;color:var(--muted);font-weight:500;position:relative;min-height:48px}
+.tab .c{font-size:.78rem;opacity:.8;margin-left:4px}
+.tab[aria-selected="true"]{color:var(--ink)}
+.tab[aria-selected="true"]::after{content:"";position:absolute;left:25%;right:25%;bottom:-1px;height:2px;background:var(--accent);border-radius:2px}
+.day{margin-top:20px}
+.day:first-child{margin-top:4px}
+.dayhead{font-size:.85rem;font-weight:700;color:var(--muted);margin:0 2px 8px;display:flex;justify-content:space-between}
+.entry{background:var(--surface);border-radius:14px;padding:12px 10px 6px 16px;box-shadow:inset 3px 0 0 var(--cc)}
+.entry .body{white-space:pre-wrap;overflow-wrap:anywhere}
+.entry code,.mtg code{font-family:var(--mono);font-size:.85em;background:var(--bg);padding:1px 5px;border-radius:5px}
+.entry .meta{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;margin-top:6px;font-size:.8rem;color:var(--muted)}
+.entry .kind{color:var(--cc);font-weight:700}
+.entry .proj{color:var(--accent)}
+.mtitle{font-weight:700;font-size:1.02rem;overflow-wrap:anywhere}
+.people{font-size:.82rem;color:var(--muted);margin-top:2px}
+.msec{margin-top:10px}
+.msec > span{display:block;font-size:.72rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.msec .txt{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.95rem}
+.more{color:var(--accent);font-size:.85rem;padding:4px 0;min-height:32px}
+.clamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.act{display:flex;align-items:flex-start;gap:10px;padding:6px 0}
+.act input{width:22px;height:22px;margin-top:1px;accent-color:var(--accent);flex:0 0 auto}
+.act .at{flex:1;min-width:0;overflow-wrap:anywhere}
+.act .am{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:.78rem;color:var(--muted);margin-top:1px}
+.act.done .at > div:first-child{text-decoration:line-through;color:var(--muted)}
+.overdue{color:var(--danger)!important}
+.soon{color:var(--gold)!important}
+.kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.kinds button{padding:11px 4px;border-radius:12px;background:var(--surface);color:var(--cc);font-weight:500;font-size:.9rem}
+.kinds button[aria-pressed="true"]{background:color-mix(in srgb,var(--cc) 22%,var(--surface));outline:1px solid var(--cc)}
+.filters2{display:flex;gap:8px;margin-top:10px}
+.filters2 select{flex:1;background:var(--surface);border:0;border-radius:12px;padding:10px 12px;min-height:44px;color:var(--ink);min-width:0}
+#fText{min-height:150px}
+.arow{background:var(--surface);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:6px}
+.arow .l2{display:grid;grid-template-columns:1fr 1fr 44px 44px;gap:6px;align-items:center}
+.arow input[type="text"],.arow input[type="date"]{min-height:44px!important;padding:10px!important;background:var(--bg)!important}
+.arow input[type="checkbox"]{width:22px;height:22px;justify-self:center;accent-color:var(--accent)}
+.arow .x{color:var(--danger);min-height:44px}
+.carry{background:color-mix(in srgb,var(--gold) 10%,var(--surface));border-radius:12px;padding:10px 12px}
+.carry > b{display:block;font-size:.8rem;color:var(--gold);margin-bottom:4px}
+.group{margin-top:18px}
+.group:first-child{margin-top:4px}
+.ghead{font-size:.85rem;font-weight:700;margin:0 2px 8px;display:flex;justify-content:space-between;color:var(--muted)}
+.acard{background:var(--surface);border-radius:14px;padding:6px 12px}
+.acard .src{color:var(--accent);cursor:pointer}
+.linkbtn{color:var(--accent);min-height:40px;padding:0 4px;font-size:.9rem}
+/* ---- Theme: dark with pink-to-blue accents ---- */
+:root{
+  --bg:var(--t-bg,#000000);--surface:var(--t-surface,#131316);--raised:var(--t-raised,#1D1D22);--ink:var(--t-ink,#F2F2F4);--muted:var(--t-muted,#9D9DA5);--faint:var(--t-faint,#28282E);
+  --accent:var(--t-accent,#EBA8E4);--accent2:var(--t-accent2,#A7CBF4);
+  --grad:linear-gradient(90deg,var(--t-grad1,#F0A8DC) 0%,var(--t-grad2,#C9B6EF) 50%,var(--t-grad3,#A6CCF5) 100%);
+  --danger:var(--t-danger,#EF5A50);--star:var(--t-accent,#EBA8E4);--pinbg:var(--t-pinbg,#2A2413);
+  --font:Roboto,"Google Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Roboto Mono","Droid Sans Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+body{background-color:var(--t-bg,#000);background-image:linear-gradient(172deg,var(--t-head,#5A4360) 0%,var(--t-head2,#352C3F) 90px,var(--t-head3,#15121A) 210px,var(--t-bg,#000) 320px);background-repeat:no-repeat;background-size:100% 340px}
+h1{font-weight:500;font-size:1.85rem;letter-spacing:0}
+h1 .n{font-size:1rem}
+.search{background:var(--t-field,#0E0E11);border:1.5px solid var(--t-line,#2E2E35);border-radius:999px}
+.search:focus{border-color:var(--t-focus,#9C8BC0);outline:none}
+.chip{background:var(--t-bg,#000);border:1.5px solid var(--t-edge,#3B3B43);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--grad);border-color:transparent;color:var(--t-on-grad,#17161C);font-weight:500}
+.chip.add{color:var(--accent)}
+.tab[aria-selected="true"]::after{background:var(--grad)}
+.btn.primary,.add{background:var(--grad)!important;color:var(--t-on-grad,#17161C)!important}
+.fab{background:var(--t-fab,#17171C);border:1px solid var(--t-edge,#3A3A42);color:var(--t-fab-ink,#D9B9EE);box-shadow:0 8px 22px var(--t-shadow,rgba(0,0,0,.7))}
+.star-on{color:var(--star)!important}
+.card:has(.star-on),.paper:has(.star-on),.entry:has(.star-on){background:var(--pinbg)}
+.menu{background:var(--raised);border:1px solid var(--t-line,#2E2E35)}
+dialog{background:var(--raised)}
+.sheet input,.sheet select,.sheet textarea,.dlg input,.dlg textarea,.dlg select{background:var(--t-field,#0F0F12)}
+.toast{background:var(--t-raised2,#26262C);color:var(--ink)}
+.doi{color:var(--accent2)}
+.sync{color:var(--t-dim,#6F6F77)}
+.seg button[aria-pressed="true"]{background:var(--grad);color:var(--t-on-grad,#17161C)}
+.topbar{background:linear-gradient(172deg,var(--t-head,#5A4360) 0%,var(--t-headbar,#2A2432) 100%)}
+.toolbar{background:var(--t-bg,#000)}
+.bk.hidden{display:none!important}
+.bk{display:flex;align-items:center;gap:8px;background:var(--pinbg,var(--t-pinbg,#2A2413));border-radius:14px;padding:10px 8px 10px 14px;margin:0 0 14px}
+.bk .bkt{flex:1;min-width:0;font-size:.9rem;line-height:1.3}
+.bk .bkt b{display:block;font-weight:500}
+.bk .bkt span{color:var(--muted);font-size:.8rem}
+.bk .bkgo{background:var(--grad);color:var(--t-on-grad,#17161C);border-radius:999px;padding:10px 14px;min-height:44px;font-weight:500;white-space:nowrap}
+.bk .bkno{color:var(--muted);padding:10px 8px;min-height:44px}
+/* ---- Meetings ---- */
+.mt{background:var(--surface);border-radius:14px;padding:12px 10px 6px 16px;box-shadow:inset 3px 0 0 var(--cc,var(--accent))}
+.mt.skipped{opacity:.55}
+.mt.warn{box-shadow:inset 3px 0 0 var(--gold)}
+.mt.now{box-shadow:inset 3px 0 0 var(--accent2)}
+.mhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.mhead .mtitle{flex:1;min-width:0}
+.cd{flex:0 0 auto;font-size:.85rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap}
+.cd.soon{color:var(--gold)}
+.cd.now{color:var(--accent2)}
+.when{font-size:.88rem;margin-top:2px}
+.mt .meta{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;margin-top:4px;font-size:.8rem;color:var(--muted)}
+.mt .meta .kind{color:var(--accent);font-weight:700}
+.mt .meta .proj{color:var(--accent2)}
+.mt .meta a{color:var(--accent2);overflow-wrap:anywhere}
+.mt .acts{display:flex;justify-content:flex-end;align-items:center;margin-top:4px;flex-wrap:wrap;gap:2px}
+.mt .acts .txt{font-size:.85rem;padding:0 10px;color:var(--accent);min-height:40px;border-radius:10px}
+.mt .acts .ibtn{min-width:40px;min-height:40px;font-size:.95rem}
+.ck{appearance:none;-webkit-appearance:none;flex:0 0 auto;width:24px;height:24px;margin:1px 0 0;border:2px solid var(--t-edge,#3B3B43);border-radius:7px;background:transparent;position:relative;cursor:pointer}
+.ck:checked{background:var(--grad);border-color:transparent}
+.ck:checked::after{content:"";position:absolute;left:7px;top:3px;width:6px;height:11px;border:solid var(--t-on-grad,#17161C);border-width:0 2.5px 2.5px 0;transform:rotate(45deg)}
+.ck.sm{width:20px;height:20px;border-radius:6px}
+.ck.sm:checked::after{left:5px;top:2px;width:5px;height:9px}
+.ag{display:flex;flex-direction:column;gap:0}
+.pt{display:flex;align-items:flex-start;gap:10px;font-size:.93rem;min-height:34px;padding:5px 0;cursor:pointer}
+.pt span{overflow-wrap:anywhere}
+.pt.done span{text-decoration:line-through;color:var(--muted)}
+.addpt{display:flex;gap:6px;margin:4px 0 2px}
+.addpt input{flex:1;min-width:0;background:var(--t-field,#0E0E11);border:1.5px solid var(--t-line,#2E2E35);border-radius:10px;padding:8px 12px;min-height:42px;color:var(--ink)}
+.addpt input:focus{border-color:var(--t-focus,#9C8BC0);outline:none}
+.addpt .btn{min-height:42px;padding:8px 14px;background:var(--raised);color:var(--accent);border-radius:10px}
+.agrow{display:grid;grid-template-columns:24px 1fr 44px;gap:8px;align-items:center}
+.agrow input[type="text"]{min-height:44px!important;padding:10px!important}
+.sheet .agrow input.ck{min-height:0!important;width:22px!important;height:22px!important;padding:0!important;background:transparent!important;border:2px solid var(--t-edge,#3B3B43)!important;border-radius:7px!important}
+.sheet .agrow input.ck:checked{background:var(--grad)!important;border-color:transparent!important}
+.repnote{font-size:.8rem;color:var(--muted);margin:-4px 0 0}
+.movebtn{background:var(--surface)!important;color:var(--gold)!important;font-size:.9rem}
+.secthead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0 -4px;padding-top:10px;border-top:1px solid var(--faint)}
+.secthead h4{margin:0!important}
+.row4{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Meetings<span class="n" id="total"></span></h1>
+    <div class="hbtns">
+      <button class="ibtn" id="moreBtn" aria-label="More options" aria-expanded="false">⋮</button>
+      <div class="menu" id="menu" role="menu">
+        <button role="menuitem" id="icsBtn">Export calendar file (upcoming)</button>
+        <button role="menuitem" id="mdBtn">Export view as Markdown</button>
+        <button role="menuitem" id="exportBtn">Export backup</button>
+        <button role="menuitem" id="importBtn">Import backup</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </header>
+
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+
+  <label class="sr" for="search">Search</label>
+  <input class="search" id="search" type="search" placeholder="Search meetings, points, people, actions">
+
+  <div id="projFilters"><div class="chips" id="chips"></div></div>
+  <div id="actFilters" class="hidden"><div class="chips" id="ownerChips"></div></div>
+
+  <div class="bar"><span id="count"></span><button class="linkbtn hidden" id="showDone"></button></div>
+  <main id="list"></main>
+  <p class="sync" id="sync"></p>
+</div>
+<button class="fab" id="fab" aria-label="New meeting">+</button>
+<datalist id="dlProj"></datalist>
+<datalist id="dlPeople"></datalist>
+<datalist id="dlTitles"></datalist>
+
+<dialog id="mdlg">
+  <form class="sheet" id="mform" autocomplete="off" novalidate>
+    <h2 id="mTitle">New meeting</h2>
+    <label>Title<input id="mName" list="dlTitles" maxlength="120" placeholder="Consortium meeting"></label>
+    <div class="row">
+      <label>Type<select id="mType"></select></label>
+      <label>Project<input id="mProj" list="dlProj" maxlength="60" placeholder="Optional"></label>
+    </div>
+    <div class="row4">
+      <label>Date<input id="mDate" type="date"></label>
+      <label>Starts<input id="mTime" type="time"></label>
+      <label>Ends<input id="mEnd" type="time"></label>
+    </div>
+    <div class="row">
+      <label id="mRepWrap">Repeats<select id="mRep"></select></label>
+      <label>Remind me<select id="mWarn"></select></label>
+    </div>
+    <p class="repnote hidden" id="mRepNote"></p>
+    <label><span id="mPeopleLabel">People</span><input id="mPeople" list="dlPeople" maxlength="400" placeholder="Comma separated"></label>
+    <label>Where or link<input id="mWhere" maxlength="400" placeholder="Room, or a Zoom or Teams link" autocapitalize="off"></label>
+
+    <div class="secthead"><h4>To present or discuss</h4></div>
+    <div id="mAgenda" style="display:flex;flex-direction:column;gap:6px"></div>
+    <button type="button" class="btn" id="mAddPt" style="background:var(--surface);color:var(--accent)">+ Add a point</button>
+    <button type="button" class="btn movebtn hidden" id="mMove"></button>
+
+    <div class="secthead"><h4>From the meeting</h4></div>
+    <div id="mCarry"></div>
+    <label>Notes<textarea id="mNotes" maxlength="12000" placeholder="Discussion, results shown, questions raised. #tags and `code` work here."></textarea></label>
+    <label>Decisions<textarea id="mDec" maxlength="4000" style="min-height:70px" placeholder="What was agreed"></textarea></label>
+    <h4>Action items</h4>
+    <div id="mActs" style="display:flex;flex-direction:column;gap:8px"></div>
+    <button type="button" class="btn" id="mAddAct" style="background:var(--surface);color:var(--accent)">+ Add action item</button>
+    <label class="check"><input type="checkbox" id="mPin"> Pin as important</label>
+    <p class="hint" id="mHint"></p>
+    <div class="sbar" style="flex-wrap:wrap">
+      <span style="display:flex;gap:2px">
+        <button type="button" class="btn danger" id="mDel">Delete</button>
+        <button type="button" class="btn ghost" id="mSkip">Skip this date</button>
+      </span>
+      <span style="display:flex;gap:6px;margin-left:auto">
+        <button type="button" class="btn ghost" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </span>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const $=s=>document.querySelector(s);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const stamp=()=>new Date().toISOString().slice(0,10);
+let _tt=null;
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("show");clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove("show"),2400)}
+async function copyText(t,msg){
+  try{await navigator.clipboard.writeText(t);toast(msg||"Copied")}
+  catch(_){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();
+    try{document.execCommand("copy");toast(msg||"Copied")}catch(__){toast("Copy not available")}a.remove()}
+}
+function storageWorks(){try{const k="__probe"+Math.random();localStorage.setItem(k,"1");localStorage.removeItem(k);return true}catch(_){return false}}
+function saveFile(filename,data){
+  try{
+    const ext=(filename.split(".").pop()||"").toLowerCase();
+    const type={json:"application/json",md:"text/markdown",ics:"text/calendar"}[ext]||"text/plain";
+    const blob=data instanceof Blob?data:new Blob([data],{type:type+";charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=filename;a.style.display="none";
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    toast("Saved to Downloads");if(/\.json$/i.test(filename)&&window.__markBackup)window.__markBackup();
+  }catch(_){toast("Couldn't save the file")}
+}
+function setupMenu(){
+  const menu=$("#menu"),btn=$("#moreBtn");
+  const close=()=>{menu.classList.remove("open");btn.setAttribute("aria-expanded","false")};
+  btn.addEventListener("click",e=>{e.stopPropagation();btn.setAttribute("aria-expanded",menu.classList.toggle("open"))});
+  document.addEventListener("click",e=>{if(!e.target.closest("#menu"))close()});
+  menu.addEventListener("click",close);
+  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>b.closest("dialog").close()));
+  document.querySelectorAll("dialog").forEach(d=>d.addEventListener("click",e=>{if(e.target===d)d.close()}));
+}
+// Store: kept in this browser's local storage only.
+function makeStore(lsKey,docName,listKeys){
+  const S={data:null};
+  try{const r=localStorage.getItem(lsKey);S.data=r?JSON.parse(r):null}catch(_){}
+  if(!S.data||typeof S.data!=="object"||Array.isArray(S.data)) S.data={};
+  listKeys.forEach(k=>{if(!Array.isArray(S.data[k]))S.data[k]=[]});
+  S.saveLocal=()=>{try{localStorage.setItem(lsKey,JSON.stringify(S.data))}catch(_){toast("Couldn't save. Storage is full or blocked; export a backup.")}};
+  S.persist=()=>S.saveLocal();
+  S.connect=()=>{
+    $("#sync").textContent=storageWorks()?(localStorage.getItem("sync.github")?"Saved on this device and synced to your other devices.":"Saved on this device. Turn on sync in the control center, or export a backup now and then."):"Storage is blocked here, so changes will be lost when you close this page.";
+  };
+  return S;
+}
+/* Meetings used to live in the research log. Move any that are still there (same ids, nothing lost). */
+function migrateLogMeetings(){
+  try{
+    const lg=JSON.parse(localStorage.getItem("researchlog.v1")||"null");
+    if(!lg||!Array.isArray(lg.entries)||!lg.entries.some(e=>e&&e.kind==="meeting")) return 0;
+    let mt=JSON.parse(localStorage.getItem("meetings.v1")||"null");
+    if(!mt||typeof mt!=="object"||Array.isArray(mt)) mt={items:[]};
+    if(!Array.isArray(mt.items)) mt.items=[];
+    const ids=new Set(mt.items.map(x=>x&&x.id)); let n=0;
+    for(const e of lg.entries){
+      if(!e||e.kind!=="meeting"||ids.has(e.id)) continue;
+      mt.items.push({id:e.id||uid(),added:e.added||Date.now(),updated:Date.now(),series:"",title:e.title||"Meeting",mtype:e.mtype||"group",
+        proj:e.proj||"",people:Array.isArray(e.people)?e.people:[],date:e.date||stamp(),time:"",end:"",where:"",rep:null,warn:3,
+        agenda:[],text:e.text||"",decisions:e.decisions||"",actions:Array.isArray(e.actions)?e.actions:[],pin:!!e.pin});
+      n++;
+    }
+    if(!mt.lastProj&&lg.lastProj) mt.lastProj=lg.lastProj;
+    localStorage.setItem("meetings.v1",JSON.stringify(mt));
+    lg.entries=lg.entries.filter(e=>!(e&&e.kind==="meeting"));
+    localStorage.setItem("researchlog.v1",JSON.stringify(lg));
+    return n;
+  }catch(_){return 0}
+}
+
+(function(){
+  const MTYPES=[["group","Group meeting"],["collab","Collaboration or consortium"],["supervision","Supervision"],["seminar","Seminar or talk"],["oneone","One-to-one"],["other","Other"]];
+  const WD=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  const ORD=["","first","second","third","fourth"];
+  const MON=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const WARNS=[[0,"On the day"],[1,"1 day before"],[2,"2 days before"],[3,"3 days before"],[5,"5 days before"],[7,"1 week before"],[14,"2 weeks before"]];
+  const moved=migrateLogMeetings();
+  const store=makeStore("meetings.v1","meetings",["items"]);
+  const D=()=>store.data;
+  let tab="upcoming",proj="",query="",ownerF="me",showDone=false;
+  let editing=null,mActs=[],mAgenda=[],mCarryIds=[],repOpts=[],repShown=true,followOf=null;
+
+  /* ---------- dates ---------- */
+  const pad=n=>String(n).padStart(2,"0");
+  const iso=(y,m,d)=>`${y}-${pad(m+1)}-${pad(d)}`;
+  const parts=s=>{const [y,m,d]=s.split("-").map(Number);return {y,m:m-1,d}};
+  const dim=(y,m)=>new Date(y,m+1,0).getDate();
+  const dow=s=>new Date(s+"T12:00").getDay();
+  const today=()=>{const d=new Date();return iso(d.getFullYear(),d.getMonth(),d.getDate())};
+  const addDays=(s,n)=>{const d=new Date(s+"T12:00");d.setDate(d.getDate()+n);return iso(d.getFullYear(),d.getMonth(),d.getDate())};
+  const between=(a,b)=>Math.round((new Date(b+"T12:00")-new Date(a+"T12:00"))/864e5);
+  const fmtDay=s=>new Date(s+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",...(s.slice(0,4)===today().slice(0,4)?{}:{year:"numeric"})});
+  const shortDate=s=>new Date(s+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+  const dayLabel=d=>{const n=between(today(),d);if(n===0)return "Today";if(n===-1)return "Yesterday";
+    return new Date(d+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"})};
+  const whenText=m=>fmtDay(m.date)+(m.time?`, ${m.time}${m.end?"–"+m.end:""}`:"");
+  function rel(m){
+    const n=between(today(),m.date);
+    if(n===0) return m.time?"today "+m.time:"today";
+    if(n===1) return m.time?"tomorrow "+m.time:"tomorrow";
+    if(n>1) return `in ${n} days`;
+    return n===-1?"yesterday":`${-n} days ago`;
+  }
+  const warnOf=m=>Number.isFinite(+m.warn)?+m.warn:3;
+
+  /* ---------- repeats ----------
+     rep: {f:"w",n:1|2} weekly, {f:"md",d} same day each month, {f:"mn",n,wd} nth weekday,
+     {f:"ml",wd} last weekday, {f:"y",m,d} yearly. Every occurrence keeps the rule; the next one is
+     made from the latest occurrence of its series once that one's day has come. */
+  function nthWd(y,m,n,wd){
+    if(n<0){const last=dim(y,m);return iso(y,m,last-((new Date(y,m,last).getDay()-wd+7)%7))}
+    const day=1+((wd-new Date(y,m,1).getDay()+7)%7)+(n-1)*7;
+    return day<=dim(y,m)?iso(y,m,day):nthWd(y,m,-1,wd);
+  }
+  function ruleNext(rep,from){
+    if(!rep||!from) return null;
+    const p=parts(from);
+    if(rep.f==="w") return addDays(from,7*(rep.n||1));
+    if(rep.f==="y"){const y=p.y+1,mm=Number.isFinite(rep.m)?rep.m:p.m,dd=rep.d||p.d;return iso(y,mm,Math.min(dd,dim(y,mm)))}
+    let y=p.y,m=p.m+1; if(m>11){m=0;y++}
+    if(rep.f==="md") return iso(y,m,Math.min(rep.d||p.d,dim(y,m)));
+    if(rep.f==="mn") return nthWd(y,m,rep.n||1,rep.wd??dow(from));
+    if(rep.f==="ml") return nthWd(y,m,-1,rep.wd??dow(from));
+    return null;
+  }
+  function repOptions(date){
+    const p=parts(date), wd=dow(date), wn=WD[wd], n=Math.ceil(p.d/7), last=p.d+7>dim(p.y,p.m);
+    const o=[{k:"none",rep:null,label:"Doesn't repeat"},{k:"w1",rep:{f:"w",n:1},label:`Every week on ${wn}`},{k:"w2",rep:{f:"w",n:2},label:`Every 2 weeks on ${wn}`},
+      {k:"md",rep:{f:"md",d:p.d},label:`Every month on day ${p.d}`}];
+    if(n<=4) o.push({k:"mn",rep:{f:"mn",n,wd},label:`Every month on the ${ORD[n]} ${wn}`});
+    if(last) o.push({k:"ml",rep:{f:"ml",wd},label:`Every month on the last ${wn}`});
+    o.push({k:"y",rep:{f:"y",m:p.m,d:p.d},label:`Every year on ${p.d} ${MON[p.m]}`});
+    return o;
+  }
+  function repLabel(rep,date){
+    if(!rep) return "Doesn't repeat";
+    if(rep.f==="w") return (rep.n||1)===1?`Every week on ${WD[dow(date)]}`:`Every ${rep.n} weeks on ${WD[dow(date)]}`;
+    if(rep.f==="md") return `Every month on day ${rep.d}`;
+    if(rep.f==="mn") return `Every month on the ${ORD[rep.n]||"first"} ${WD[rep.wd]}`;
+    if(rep.f==="ml") return `Every month on the last ${WD[rep.wd]}`;
+    if(rep.f==="y") return `Every year on ${rep.d} ${MON[rep.m]}`;
+    return "Repeats";
+  }
+  function repShort(rep){
+    if(!rep) return "";
+    if(rep.f==="w") return (rep.n||1)===1?"weekly":`every ${rep.n} weeks`;
+    if(rep.f==="md") return `monthly, day ${rep.d}`;
+    if(rep.f==="mn") return `monthly, ${ORD[rep.n]||"first"} ${WD[rep.wd]}`;
+    if(rep.f==="ml") return `monthly, last ${WD[rep.wd]}`;
+    return "yearly";
+  }
+  const items=()=>D().items.filter(m=>m&&typeof m==="object"&&m.date&&m.title);
+  const series=m=>m.series?items().filter(x=>x.series===m.series):[m];
+  const headOf=m=>m.series?series(m).sort((a,b)=>b.date.localeCompare(a.date))[0]:m;
+  const isHead=m=>!m.series||headOf(m)===m;
+  const nextIn=m=>m.series?series(m).filter(x=>x.date>m.date).sort((a,b)=>a.date.localeCompare(b.date))[0]||null:null;
+  /* make the next meeting of each repeating series once the latest one's day has come */
+  function generate(){
+    const T=today(), heads=new Map(); let n=0;
+    for(const m of items()) if(m.series){const h=heads.get(m.series);if(!h||m.date>h.date)heads.set(m.series,m)}
+    for(const h of heads.values()){
+      if(!h.rep||h.date>T) continue;
+      let d=ruleNext(h.rep,h.date), guard=0;
+      while(d&&d<=T&&guard++<600) d=ruleNext(h.rep,d);
+      if(!d) continue;
+      const id=h.series+"-"+d.replace(/-/g,"");
+      if(D().items.some(x=>x&&x.id===id)) continue;
+      D().items.push({id,added:Date.now(),updated:Date.now(),series:h.series,title:h.title,mtype:h.mtype,proj:h.proj||"",people:[...(h.people||[])],
+        date:d,time:h.time||"",end:h.end||"",where:h.where||"",rep:{...h.rep},warn:warnOf(h),agenda:[],text:"",decisions:"",actions:[],pin:false});
+      n++;
+    }
+    if(n) store.persist();
+    return n;
+  }
+
+  /* ---------- actions ---------- */
+  const MY_NAMES=(()=>{try{return (localStorage.getItem("suite.me")||"").split(/[,;]/).map(s=>s.trim().toLowerCase()).filter(Boolean)}catch(_){return []}})();
+  const isMe=o=>!o||/^(me|myself|eu|yo)$/i.test(o.trim())||MY_NAMES.includes(o.trim().toLowerCase());
+  function dueState(a){
+    if(a.done||!a.due) return "";
+    const t=today(); if(a.due<t) return "overdue";
+    return a.due<=addDays(t,3)?"soon":"";
+  }
+  const dueLabel=a=>{if(!a.due)return"";const s=dueState(a);return s==="overdue"?`overdue, ${shortDate(a.due)}`:(a.due===today()?"due today":`due ${shortDate(a.due)}`)};
+  const allActions=()=>items().flatMap(m=>(m.actions||[]).filter(a=>a&&a.text).map(a=>({a,m})));
+  const sameKind=(x,m)=>(m.series&&x.series===m.series)||String(x.title).trim().toLowerCase()===String(m.title).trim().toLowerCase();
+  /* open actions from earlier meetings of the same series, or with the same title */
+  function carryFor(m,title){
+    const probe={...m,title:title??m.title};
+    return items().filter(x=>x.id!==m.id&&x.date<=(m.date||today())&&sameKind(x,probe))
+      .flatMap(x=>(x.actions||[]).filter(a=>a&&a.text&&(!a.done||mCarryIds.includes(a.id))).map(a=>({a,m:x})));
+  }
+  const written=m=>!!(m.text||m.decisions||(m.actions||[]).length);
+  const fmt=t=>esc(t).replace(/`([^`\n]+)`/g,"<code>$1</code>").replace(/(^|\s)#([\w\-/.]+)/g,'$1<span style="color:var(--accent)">#$2</span>');
+  const mtn=t=>(MTYPES.find(x=>x[0]===t)||MTYPES[MTYPES.length-1])[1];
+  const safeUrl=u=>/^https?:\/\/\S+$/i.test(String(u||"").trim())?String(u).trim():"";
+  const find=id=>D().items.find(x=>x&&x.id===id);
+
+  $("#mType").innerHTML=MTYPES.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join("");
+  $("#mWarn").innerHTML=WARNS.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+
+  /* ---------- filtering ---------- */
+  function haystack(m){
+    return [m.title,mtn(m.mtype),(m.people||[]).join(" "),m.text,m.decisions,m.where,m.proj,
+      (m.agenda||[]).map(a=>a.text).join(" "),(m.actions||[]).map(a=>a.text+" "+(a.owner||"")).join(" ")].join(" ").toLowerCase();
+  }
+  function matches(m){
+    if(proj==="__pin"){if(!m.pin) return false}
+    else if(proj&&m.proj!==proj) return false;
+    return !query||haystack(m).includes(query);
+  }
+
+  /* ---------- rendering ---------- */
+  function refreshLists(){
+    const L=items();
+    const projects=[...new Set(L.map(m=>m.proj).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+    const all=new Set(projects);
+    try{const lg=JSON.parse(localStorage.getItem("researchlog.v1")||"null");(lg&&lg.entries||[]).forEach(e=>{if(e&&e.proj)all.add(e.proj)})}catch(_){}
+    try{const tk=JSON.parse(localStorage.getItem("tasks.v1")||"null");(tk&&tk.items||[]).forEach(t=>{if(t&&t.proj)all.add(t.proj)})}catch(_){}
+    $("#dlProj").innerHTML=[...all].sort((a,b)=>a.localeCompare(b)).map(p=>`<option>${esc(p)}</option>`).join("");
+    const people=new Set(["Me"]); L.forEach(m=>{(m.people||[]).forEach(p=>people.add(p));(m.actions||[]).forEach(a=>{if(a.owner)people.add(a.owner)})});
+    $("#dlPeople").innerHTML=[...people].sort((a,b)=>a.localeCompare(b)).map(p=>`<option>${esc(p)}</option>`).join("");
+    $("#dlTitles").innerHTML=[...new Set(L.map(m=>m.title))].sort().map(t=>`<option>${esc(t)}</option>`).join("");
+    return projects;
+  }
+  function renderTabs(){
+    const T=today(), L=items();
+    const up=L.filter(m=>m.date>=T&&!m.skipped).length, past=L.filter(m=>m.date<T||written(m)).length;
+    const open=allActions().filter(x=>!x.a.done).length;
+    $("#tabs").innerHTML=[["upcoming","Upcoming",up],["notes","Notes",past],["actions","Actions",open]]
+      .map(([id,n,c])=>`<button class="tab" role="tab" data-tab="${id}" aria-selected="${tab===id}">${n}${c?`<span class="c">${c}</span>`:""}</button>`).join("");
+    $("#total").textContent=up||"";
+  }
+  function render(){
+    const projects=refreshLists();
+    if(proj&&proj!=="__pin"&&!projects.includes(proj)) proj="";
+    renderTabs();
+    $("#projFilters").classList.toggle("hidden",tab==="actions");
+    $("#actFilters").classList.toggle("hidden",tab!=="actions");
+    $("#showDone").classList.toggle("hidden",tab!=="actions");
+    if(tab==="actions"){renderActions();return}
+    const T=today(), pool=items().filter(m=>tab==="upcoming"?m.date>=T:(m.date<T||written(m)));
+    $("#chips").innerHTML=[`<button class="chip" data-f="" aria-pressed="${!proj}">All<span class="c">${pool.length}</span></button>`,
+      `<button class="chip" data-f="__pin" aria-pressed="${proj==="__pin"}">📌 Pinned<span class="c">${pool.filter(e=>e.pin).length}</span></button>`]
+      .concat(projects.map(p=>`<button class="chip" data-f="${esc(p)}" aria-pressed="${proj===p}">${esc(p)}<span class="c">${pool.filter(e=>e.proj===p).length}</span></button>`)).join("");
+    if(tab==="upcoming") renderUpcoming(); else renderNotes();
+  }
+  const group=(name,list,fn)=>list.length?`<section class="group"><div class="ghead"><span>${name}</span><span>${list.length}</span></div><div class="list">${list.map(fn).join("")}</div></section>`:"";
+  const byWhen=(a,b)=>(a.date+(a.time||"99")).localeCompare(b.date+(b.time||"99"));
+  function renderUpcoming(){
+    const T=today(), vis=items().filter(matches);
+    const toWrite=vis.filter(m=>m.date<T&&m.date>=addDays(T,-14)&&!m.skipped&&!written(m)).sort(byWhen).reverse();
+    const up=vis.filter(m=>m.date>=T).sort(byWhen), wk=addDays(T,7);
+    const n=up.filter(m=>!m.skipped).length;
+    $("#count").textContent=n?`${n} coming up`:"Nothing coming up";
+    const html=group("To write up",toWrite,writeCard)+group("Today",up.filter(m=>m.date===T),upCard)
+      +group("Next 7 days",up.filter(m=>m.date>T&&m.date<=wk),upCard)+group("Later",up.filter(m=>m.date>wk),upCard);
+    $("#list").innerHTML=html||`<div class="empty">${items().length&&(query||proj)?"Nothing matches.":"No meetings coming up. Tap + to plan one: give it a date, how often it repeats and what you want to present."}</div>`;
+  }
+  function renderNotes(){
+    const T=today(), vis=items().filter(m=>(m.date<T||written(m))&&matches(m)).sort((a,b)=>b.date.localeCompare(a.date)||(b.time||"").localeCompare(a.time||""));
+    $("#count").textContent=`${vis.length} meeting${vis.length===1?"":"s"}`;
+    if(!vis.length){$("#list").innerHTML=`<div class="empty">${items().length&&(query||proj)?"Nothing matches.":"Notes from past meetings collect here, newest first."}</div>`;return}
+    const days=[...new Set(vis.map(m=>m.date))];
+    $("#list").innerHTML=days.map(d=>{const ms=vis.filter(m=>m.date===d);
+      return `<section class="day"><div class="dayhead"><span>${dayLabel(d)}</span><span>${ms.length}</span></div><div class="list">${ms.map(notesCard).join("")}</div></section>`}).join("");
+  }
+  function metaLine(m){
+    const out=[`<span class="kind">${esc(mtn(m.mtype))}</span>`];
+    if(m.proj) out.push(`<span class="proj">${esc(m.proj)}</span>`);
+    const h=m.series?headOf(m):m; if(h&&h.rep) out.push(`<span>↻ ${esc(repShort(h.rep))}</span>`);
+    const u=safeUrl(m.where); if(u) out.push(`<a href="${esc(u)}" target="_blank" rel="noopener">${esc(/zoom|teams|meet\.|webex|whereby|jitsi/i.test(u)?"Join link":"Link")}</a>`);
+    else if(m.where) out.push(`<span>${esc(m.where)}</span>`);
+    if((m.people||[]).length) out.push(`<span>${esc(m.people.join(", "))}</span>`);
+    return out.join("");
+  }
+  function actionRow(a,m,showSrc){
+    const st=dueState(a);
+    return `<label class="act ${a.done?"done":""}"><input type="checkbox" data-aid="${esc(a.id)}" data-mid="${esc(m.id)}" ${a.done?"checked":""} aria-label="Done">
+      <div class="at"><div>${fmt(a.text)}</div><div class="am">${a.owner?`<span>${esc(a.owner)}</span>`:""}${a.due?`<span class="${st}">${dueLabel(a)}</span>`:""}
+      ${showSrc?`<span class="src" data-open="${esc(m.id)}">${esc(m.title)}, ${shortDate(m.date)}</span>`:""}</div></div></label>`;
+  }
+  const pointRow=(p,m)=>`<label class="pt ${p.done?"done":""}"><input type="checkbox" class="ck sm" data-pt="${esc(p.id)}" data-mid="${esc(m.id)}" ${p.done?"checked":""} aria-label="Covered"><span>${fmt(p.text)}</span></label>`;
+  function upCard(m){
+    const n=between(today(),m.date), cls=m.skipped?"skipped":n===0?"now":n<=warnOf(m)?"warn":"";
+    const ag=m.agenda||[], open=ag.filter(p=>!p.done).length, carry=carryFor(m).filter(x=>!x.a.done);
+    const acts=m.skipped?`<button class="txt" data-act="unskip">Undo skip</button>`
+      :`${n===0?`<button class="txt" data-act="notes">Write notes</button>`:""}${ag.length?`<button class="ibtn" data-act="copy" aria-label="Copy the points" title="Copy the points">⧉</button>`:""}<button class="ibtn" data-act="ics" aria-label="Add to calendar" title="Add to calendar">📅</button><button class="ibtn" data-act="edit" aria-label="Edit">✎</button>`;
+    return `<article class="mt ${cls}" data-id="${esc(m.id)}">
+      <div class="mhead"><div class="mtitle">${esc(m.title)}</div><span class="cd ${cls==="warn"?"soon":cls}">${m.skipped?"skipped":esc(rel(m))}</span></div>
+      <div class="when">${esc(whenText(m))}</div>
+      <div class="meta">${metaLine(m)}</div>
+      ${m.skipped?"":`<div class="msec"><span>To present or discuss${ag.length?` (${open} open)`:""}</span>
+        <div class="ag">${ag.map(p=>pointRow(p,m)).join("")}</div>
+        <form class="addpt" data-addpt><input maxlength="300" placeholder="Add a point" aria-label="Add a point to present or discuss" enterkeyhint="done"><button class="btn" type="submit">Add</button></form></div>
+        ${carry.length?`<div class="msec"><span>Open actions from earlier meetings</span>${carry.slice(0,4).map(x=>actionRow(x.a,x.m,false)).join("")}${carry.length>4?`<button class="more" data-act="edit">${carry.length-4} more</button>`:""}</div>`:""}
+        ${written(m)?notesBody(m):""}`}
+      <div class="acts">${acts}</div>
+    </article>`;
+  }
+  function notesBody(m){
+    const long=(m.text||"").length>320||(m.text||"").split("\n").length>5, acts=m.actions||[], open=acts.filter(a=>!a.done).length;
+    return `${m.text?`<div class="msec"><span>Notes</span><div class="txt ${long?"clamp":""}">${fmt(m.text)}</div>${long?`<button class="more" data-act="more">Show more</button>`:""}</div>`:""}
+      ${m.decisions?`<div class="msec"><span>Decisions</span><div class="txt">${fmt(m.decisions)}</div></div>`:""}
+      ${acts.length?`<div class="msec"><span>Actions${open?` (${open} open)`:""}</span>${acts.map(a=>actionRow(a,m,false)).join("")}</div>`:""}`;
+  }
+  function writeCard(m){
+    const ag=m.agenda||[];
+    return `<article class="mt warn" data-id="${esc(m.id)}">
+      <div class="mhead"><div class="mtitle">${esc(m.title)}</div><span class="cd">${esc(rel(m))}</span></div>
+      <div class="when">${esc(whenText(m))}</div>
+      <div class="meta">${metaLine(m)}</div>
+      ${ag.length?`<div class="msec"><span>Points you brought</span><div class="ag">${ag.map(p=>pointRow(p,m)).join("")}</div></div>`:""}
+      <div class="acts"><button class="txt" data-act="nothappen">Didn't happen</button><button class="txt" data-act="notes">Write notes</button></div>
+    </article>`;
+  }
+  function notesCard(m){
+    const ag=m.agenda||[];
+    return `<article class="mt ${m.skipped?"skipped":""}" data-id="${esc(m.id)}">
+      <div class="mhead"><div class="mtitle">${esc(m.title)}</div>${m.skipped?`<span class="cd">skipped</span>`:m.time?`<span class="cd">${esc(m.time)}</span>`:""}</div>
+      <div class="meta">${metaLine(m)}</div>
+      ${ag.length?`<div class="msec"><span>Points brought</span><div class="ag">${ag.map(p=>pointRow(p,m)).join("")}</div></div>`:""}
+      ${notesBody(m)}
+      <div class="acts">${!m.series?`<button class="ibtn" data-act="follow" aria-label="Plan a follow-up meeting" title="Plan a follow-up meeting">↻</button>`:""}<button class="ibtn ${m.pin?"star-on":""}" data-act="pin" aria-label="${m.pin?"Unpin":"Pin"}">${m.pin?"📌":"⚲"}</button><button class="ibtn" data-act="edit" aria-label="Edit">✎</button></div>
+    </article>`;
+  }
+  function renderActions(){
+    const all=allActions();
+    const owners=[...new Set(all.map(x=>x.a.owner).filter(o=>o&&!isMe(o)))].sort((a,b)=>a.localeCompare(b));
+    if(ownerF!=="me"&&ownerF!==""&&!owners.includes(ownerF)) ownerF="me";
+    const cnt=f=>all.filter(x=>!x.a.done&&f(x)).length;
+    $("#ownerChips").innerHTML=[`<button class="chip" data-o="me" aria-pressed="${ownerF==="me"}">Mine<span class="c">${cnt(x=>isMe(x.a.owner))}</span></button>`,
+      `<button class="chip" data-o="" aria-pressed="${ownerF===""}">Everyone<span class="c">${cnt(()=>true)}</span></button>`]
+      .concat(owners.map(o=>`<button class="chip" data-o="${esc(o)}" aria-pressed="${ownerF===o}">${esc(o)}<span class="c">${cnt(x=>x.a.owner===o)}</span></button>`)).join("");
+    const vis=all.filter(x=>ownerF==="me"?isMe(x.a.owner):ownerF?x.a.owner===ownerF:true)
+      .filter(x=>!query||(x.a.text+" "+(x.a.owner||"")+" "+x.m.title+" "+(x.m.proj||"")).toLowerCase().includes(query));
+    const openL=vis.filter(x=>!x.a.done), doneL=vis.filter(x=>x.a.done);
+    $("#showDone").textContent=doneL.length?(showDone?"Hide done":`Show done (${doneL.length})`):"";
+    $("#count").textContent=`${openL.length} open`;
+    const groups=[["Overdue",openL.filter(x=>dueState(x.a)==="overdue")],["Due in the next 3 days",openL.filter(x=>dueState(x.a)==="soon")],
+      ["Later",openL.filter(x=>x.a.due&&!dueState(x.a))],["No date",openL.filter(x=>!x.a.due)]];
+    if(showDone) groups.push(["Done",doneL]);
+    const sortD=l=>l.sort((p,q)=>(p.a.due||"9").localeCompare(q.a.due||"9")||q.m.date.localeCompare(p.m.date));
+    $("#list").innerHTML=groups.filter(g=>g[1].length).map(([n,l])=>`<section class="group"><div class="ghead"><span>${n}</span><span>${l.length}</span></div>
+      <div class="acard">${sortD(l).map(x=>actionRow(x.a,x.m,true)).join("")}</div></section>`).join("")
+      ||`<div class="empty">${all.length?"Nothing open here. Nice.":"Action items you add to meeting notes collect here."}</div>`;
+  }
+
+  /* ---------- tabs and filters ---------- */
+  $("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;tab=b.dataset.tab;render();window.scrollTo(0,0)});
+  $("#search").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render()});
+  $("#chips").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(!b)return;proj=b.dataset.f;render()});
+  $("#ownerChips").addEventListener("click",e=>{const b=e.target.closest("[data-o]");if(!b)return;ownerF=b.dataset.o;render()});
+  $("#showDone").addEventListener("click",()=>{showDone=!showDone;render()});
+
+  /* ---------- list actions ---------- */
+  function touch(m){m.updated=Date.now();store.persist()}
+  $("#list").addEventListener("change",ev=>{
+    const cb=ev.target;
+    if(cb.dataset.aid){
+      const m=find(cb.dataset.mid), a=m&&(m.actions||[]).find(x=>x.id===cb.dataset.aid); if(!a) return;
+      a.done=cb.checked; a.doneAt=cb.checked?Date.now():null; touch(m); setTimeout(render,cb.checked?350:0);
+    }else if(cb.dataset.pt){
+      const m=find(cb.dataset.mid), p=m&&(m.agenda||[]).find(x=>x.id===cb.dataset.pt); if(!p) return;
+      p.done=cb.checked; touch(m); cb.closest(".pt").classList.toggle("done",cb.checked);
+    }
+  });
+  $("#list").addEventListener("submit",ev=>{
+    const f=ev.target.closest("[data-addpt]"); if(!f) return; ev.preventDefault();
+    const inp=f.querySelector("input"), text=inp.value.trim(); if(!text) return;
+    const m=find(f.closest(".mt").dataset.id); if(!m) return;
+    if(!Array.isArray(m.agenda)) m.agenda=[];
+    m.agenda.push({id:uid(),text:text.slice(0,300),done:false}); touch(m); render(); toast("Point added");
+    const again=document.querySelector(`.mt[data-id="${CSS.escape(m.id)}"] .addpt input`); if(again) again.focus();
+  });
+  $("#list").addEventListener("click",ev=>{
+    const src=ev.target.closest("[data-open]"); if(src){ev.preventDefault();openMeeting(src.dataset.open);return}
+    const b=ev.target.closest("[data-act]"); if(!b) return;
+    const card=b.closest(".mt"), m=card&&find(card.dataset.id); if(!m) return;
+    const a=b.dataset.act;
+    if(a==="edit") openMeeting(m.id);
+    else if(a==="notes") openMeeting(m.id,"notes");
+    else if(a==="follow") openMeeting(null,null,m);
+    else if(a==="pin"){m.pin=!m.pin;touch(m);render()}
+    else if(a==="unskip"){m.skipped=false;touch(m);render();toast("Back on")}
+    else if(a==="nothappen"){m.skipped=true;touch(m);render();toast("Marked as not held")}
+    else if(a==="ics") saveFile(`${slug(m.title)}-${m.date}.ics`,icsOf([m]));
+    else if(a==="copy") copyText(agendaText(m),"Points copied");
+    else if(a==="more"){const t=card.querySelector(".clamp");if(t){t.classList.remove("clamp");b.remove()}}
+  });
+  const slug=s=>String(s).toLowerCase().replace(/[^\w]+/g,"-").replace(/^-|-$/g,"")||"meeting";
+  const agendaText=m=>[`${m.title}, ${whenText(m)}`,"",...(m.agenda||[]).map(p=>`- ${p.text}`)].join("\n");
+
+  /* ---------- meeting sheet ---------- */
+  const mdlg=$("#mdlg");
+  function renderRep(keep){
+    const date=$("#mDate").value||today(), m=editing?find(editing):null, stored=m&&isHead(m)?m.rep:null;
+    const prev=keep?$("#mRep").value:null;
+    repOpts=[];
+    if(stored) repOpts.push({k:"cur",rep:stored,label:repLabel(stored,m.date)});
+    for(const o of repOptions(date)) if(!repOpts.some(x=>x.label===o.label)) repOpts.push(o);
+    $("#mRep").innerHTML=repOpts.map(o=>`<option value="${o.k}">${esc(o.label)}</option>`).join("");
+    $("#mRep").value=prev&&repOpts.some(o=>o.k===prev)?prev:stored?"cur":(keep&&prev?"none":"none");
+  }
+  $("#mDate").addEventListener("change",()=>{
+    if(!repShown) return;
+    const k=$("#mRep").value; renderRep(true);
+    /* a new rule picked for the old date follows the new date */
+    if(k!=="cur"&&k!=="none"&&repOpts.some(o=>o.k===k)) $("#mRep").value=k;
+  });
+  function renderAgendaRows(){
+    $("#mAgenda").innerHTML=mAgenda.length?mAgenda.map((p,i)=>`<div class="agrow" data-i="${i}">
+      <input type="checkbox" class="ck sm" data-f="done" ${p.done?"checked":""} aria-label="Covered">
+      <input type="text" data-f="text" value="${esc(p.text)}" placeholder="Result, question or slide to show" aria-label="Point">
+      <button type="button" class="ibtn x" data-rm aria-label="Remove point" style="color:var(--danger)">✕</button></div>`).join("")
+      :`<p style="margin:0;font-size:.85rem;color:var(--muted)">Nothing yet. Add what you want to show or ask, as it comes up.</p>`;
+    const m=editing?find(editing):null, nx=m&&nextIn(m), left=mAgenda.filter(p=>!p.done&&p.text.trim()).length;
+    const show=!!(m&&nx&&left&&m.date<=today());
+    $("#mMove").classList.toggle("hidden",!show);
+    if(show) $("#mMove").textContent=`Move ${left} unticked point${left===1?"":"s"} to ${fmtDay(nx.date)}`;
+  }
+  $("#mAgenda").addEventListener("input",e=>{const row=e.target.closest(".agrow");if(!row)return;const p=mAgenda[+row.dataset.i];
+    if(e.target.dataset.f==="done")p.done=e.target.checked;else p.text=e.target.value});
+  $("#mAgenda").addEventListener("change",e=>{const row=e.target.closest(".agrow");if(row&&e.target.dataset.f==="done"){mAgenda[+row.dataset.i].done=e.target.checked;renderAgendaRows()}});
+  $("#mAgenda").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;mAgenda.splice(+b.closest(".agrow").dataset.i,1);renderAgendaRows()});
+  $("#mAddPt").addEventListener("click",()=>{
+    mAgenda.push({id:uid(),text:"",done:false}); renderAgendaRows();
+    const rows=document.querySelectorAll("#mAgenda .agrow"); rows[rows.length-1].querySelector('[data-f="text"]').focus();
+  });
+  $("#mMove").addEventListener("click",()=>{
+    const m=editing&&find(editing), nx=m&&nextIn(m); if(!nx) return;
+    const go=mAgenda.filter(p=>!p.done&&p.text.trim());
+    if(!Array.isArray(nx.agenda)) nx.agenda=[];
+    go.forEach(p=>nx.agenda.push({id:uid(),text:p.text.trim(),done:false}));
+    mAgenda=mAgenda.filter(p=>!go.includes(p));
+    m.agenda=(m.agenda||[]).filter(p=>!go.some(g=>g.id===p.id));
+    nx.updated=Date.now(); touch(m); renderAgendaRows(); render();
+    toast(`Moved to ${fmtDay(nx.date)}`);
+  });
+
+  function renderActRows(){
+    $("#mActs").innerHTML=mActs.length?mActs.map((a,i)=>`<div class="arow" data-i="${i}">
+      <input type="text" data-f="text" value="${esc(a.text)}" placeholder="What needs doing" aria-label="Action">
+      <div class="l2">
+        <input type="text" data-f="owner" list="dlPeople" value="${esc(a.owner||"")}" placeholder="Who" aria-label="Owner">
+        <input type="date" data-f="due" value="${esc(a.due||"")}" aria-label="Due date">
+        <input type="checkbox" data-f="done" ${a.done?"checked":""} aria-label="Done">
+        <button type="button" class="ibtn x" data-rm aria-label="Remove action">✕</button>
+      </div></div>`).join(""):`<p style="margin:0;font-size:.85rem;color:var(--muted)">No action items yet.</p>`;
+  }
+  $("#mActs").addEventListener("input",e=>{const row=e.target.closest(".arow");if(!row)return;const a=mActs[+row.dataset.i],f=e.target.dataset.f;
+    if(f==="done")a.done=e.target.checked;else a[f]=e.target.value});
+  $("#mActs").addEventListener("change",e=>{const row=e.target.closest(".arow");if(row&&e.target.dataset.f==="done")mActs[+row.dataset.i].done=e.target.checked});
+  $("#mActs").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;mActs.splice(+b.closest(".arow").dataset.i,1);renderActRows()});
+  $("#mAddAct").addEventListener("click",()=>{
+    mActs.push({id:uid(),text:"",owner:"Me",due:"",done:false}); renderActRows();
+    const rows=document.querySelectorAll("#mActs .arow"); rows[rows.length-1].querySelector('[data-f="text"]').focus();
+  });
+  $("#mType").addEventListener("change",()=>{$("#mPeopleLabel").textContent=$("#mType").value==="seminar"?"Speaker":"People"});
+  function renderCarry(){
+    const m=editing?find(editing):null;
+    const probe=m?{...m,title:$("#mName").value}:{id:"",series:followOf&&followOf.series||"",title:$("#mName").value,date:$("#mDate").value||today()};
+    const list=probe.title.trim()?carryFor(probe):[];
+    mCarryIds=list.map(x=>x.a.id);
+    $("#mCarry").innerHTML=list.length?`<div class="carry"><b>Open from earlier meetings</b>${list.map(x=>actionRow(x.a,x.m,true)).join("")}</div>`:"";
+  }
+  $("#mCarry").addEventListener("change",ev=>{
+    const cb=ev.target.closest("[data-aid]"); if(!cb) return;
+    const m=find(cb.dataset.mid), a=m&&(m.actions||[]).find(x=>x.id===cb.dataset.aid); if(!a) return;
+    a.done=cb.checked; a.doneAt=cb.checked?Date.now():null; touch(m);
+    cb.closest(".act").classList.toggle("done",cb.checked);
+  });
+  $("#mName").addEventListener("change",()=>{mCarryIds=[];renderCarry()});
+
+  function defaultProj(){return proj&&proj!=="__pin"?proj:(D().lastProj||"")}
+  function openMeeting(id,focus,follow){
+    editing=id||null; followOf=follow||null; $("#mHint").textContent=""; mCarryIds=[];
+    const m=id?find(id):null, src=m||follow;
+    $("#mTitle").textContent=m?(m.date<today()?"Meeting notes":"Edit meeting"):follow?"Follow-up meeting":"New meeting";
+    $("#mName").value=src?.title||"";
+    $("#mType").value=src?.mtype||"group";
+    $("#mPeopleLabel").textContent=$("#mType").value==="seminar"?"Speaker":"People";
+    $("#mProj").value=src?src.proj||"":defaultProj();
+    $("#mDate").value=m?.date||(follow?addDays(today(),7):today());
+    $("#mTime").value=src?.time||""; $("#mEnd").value=src?.end||"";
+    $("#mWarn").value=String(src?warnOf(src):3);
+    $("#mPeople").value=(src?.people||[]).join(", ");
+    $("#mWhere").value=src?.where||"";
+    $("#mNotes").value=m?.text||""; $("#mDec").value=m?.decisions||""; $("#mPin").checked=!!m?.pin;
+    /* the repeat rule is changed on the latest meeting of a series */
+    repShown=!m||isHead(m);
+    $("#mRepWrap").classList.toggle("hidden",!repShown);
+    const h=m&&!repShown?headOf(m):null;
+    $("#mRepNote").classList.toggle("hidden",repShown);
+    if(h) $("#mRepNote").textContent=`Repeats ${repShort(h.rep)||"no more"}. To change that, edit the next one, ${fmtDay(h.date)}.`;
+    if(repShown) renderRep(false);
+    mAgenda=m?(m.agenda||[]).map(p=>({...p})):[];
+    mActs=m?(m.actions||[]).map(a=>({...a})):[];
+    renderAgendaRows(); renderActRows(); renderCarry();
+    $("#mDel").style.display=m?"":"none";
+    $("#mSkip").style.display=m&&m.series&&!m.skipped&&m.date>=today()?"":"none";
+    mdlg.showModal();
+    if(focus==="notes") setTimeout(()=>{$("#mNotes").focus();$("#mNotes").scrollIntoView({block:"center"})},50);
+    else if(!src) $("#mName").focus();
+  }
+  $("#fab").addEventListener("click",()=>openMeeting());
+  $("#mform").addEventListener("submit",ev=>{
+    ev.preventDefault();
+    const title=$("#mName").value.trim();
+    if(!title){$("#mHint").textContent="Give the meeting a title.";$("#mName").focus();return}
+    const date=$("#mDate").value; if(!date){$("#mHint").textContent="Pick a date.";return}
+    const actions=mActs.map(a=>({...a,text:(a.text||"").trim(),owner:(a.owner||"").trim()})).filter(a=>a.text);
+    actions.forEach(a=>{if(a.done&&!a.doneAt)a.doneAt=Date.now();if(!a.done)a.doneAt=null});
+    const agenda=mAgenda.map(p=>({...p,text:(p.text||"").trim()})).filter(p=>p.text);
+    const data={title,mtype:$("#mType").value,proj:$("#mProj").value.trim(),date,time:$("#mTime").value,end:$("#mEnd").value,
+      warn:+$("#mWarn").value,people:$("#mPeople").value.split(",").map(s=>s.trim()).filter(Boolean),where:$("#mWhere").value.trim(),
+      agenda,text:$("#mNotes").value.trim(),decisions:$("#mDec").value.trim(),actions,pin:$("#mPin").checked,updated:Date.now()};
+    if(repShown){const o=repOpts.find(x=>x.k===$("#mRep").value);data.rep=o&&o.rep?{...o.rep}:null}
+    const m=editing?find(editing):null;
+    if(m){Object.assign(m,data);if(data.rep&&!m.series)m.series=m.id}
+    else{const id=uid();D().items.push({id,added:Date.now(),series:data.rep?id:"",...data})}
+    if(data.proj) D().lastProj=data.proj;
+    store.persist(); const made=generate(); render(); mdlg.close();
+    toast(m?"Saved":data.rep?"Meeting added. The next ones follow on their own.":"Meeting added");
+    if(made&&!m) setTimeout(()=>toast("The next one is planned already"),2500);
+  });
+  $("#mSkip").addEventListener("click",()=>{
+    const m=find(editing); if(!m) return;
+    m.skipped=true; touch(m); generate(); render(); mdlg.close(); toast(`Skipped ${fmtDay(m.date)}`);
+  });
+  $("#mDel").addEventListener("click",()=>{
+    const m=find(editing); if(!m) return;
+    const n=(m.actions||[]).filter(a=>!a.done).length, head=m.series&&isHead(m)&&m.rep;
+    const msg=head?`Delete "${m.title}" on ${fmtDay(m.date)}? It repeats, so the series stops here (earlier notes are kept). To miss just this date, use Skip this date instead.`
+      :`Delete "${m.title}"?${n?` Its ${n} open action item${n===1?"":"s"} will be deleted too.`:""}`;
+    if(!confirm(msg)) return;
+    D().items=D().items.filter(x=>x.id!==m.id);
+    if(head) D().items.forEach(x=>{if(x&&x.series===m.series)x.rep=null});
+    store.persist(); render(); mdlg.close(); toast("Deleted");
+  });
+
+  /* ---------- calendar file ---------- */
+  const icsEsc=s=>String(s||"").replace(/([,;\\])/g,"\\$1").replace(/\r?\n/g,"\\n");
+  const d8=s=>s.replace(/-/g,"");
+  const BYDAY=["SU","MO","TU","WE","TH","FR","SA"];
+  function rrule(rep){
+    if(!rep) return "";
+    if(rep.f==="w") return `FREQ=WEEKLY;INTERVAL=${rep.n||1}`;
+    if(rep.f==="md") return `FREQ=MONTHLY;BYMONTHDAY=${rep.d>=31?-1:rep.d}`;
+    if(rep.f==="mn") return `FREQ=MONTHLY;BYDAY=${rep.n}${BYDAY[rep.wd]}`;
+    if(rep.f==="ml") return `FREQ=MONTHLY;BYDAY=-1${BYDAY[rep.wd]}`;
+    if(rep.f==="y") return "FREQ=YEARLY";
+    return "";
+  }
+  function icsOf(list){
+    const now=new Date().toISOString().replace(/[-:]/g,"").replace(/\.\d+Z$/,"Z");
+    const L=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//{{APP_NAME}}//Meetings//EN","CALSCALE:GREGORIAN"];
+    for(const m of list){
+      const rep=isHead(m)?m.rep:null, timed=!!m.time;
+      const start=timed?`DTSTART:${d8(m.date)}T${m.time.replace(":","")}00`:`DTSTART;VALUE=DATE:${d8(m.date)}`;
+      let end;
+      if(timed){const [h,mi]=m.time.split(":").map(Number);let e=m.end&&m.end>m.time?m.end:pad(Math.min(23,h+1))+":"+pad(h+1>23?59:mi);end=`DTEND:${d8(m.date)}T${e.replace(":","")}00`}
+      else end=`DTEND;VALUE=DATE:${d8(addDays(m.date,1))}`;
+      const desc=[m.proj?"Project: "+m.proj:"",(m.people||[]).length?"People: "+m.people.join(", "):"",
+        (m.agenda||[]).length?"To present or discuss:\n"+m.agenda.map(p=>"- "+p.text).join("\n"):""].filter(Boolean).join("\n\n");
+      L.push("BEGIN:VEVENT","UID:"+(m.series||m.id)+"@meetings."+"{{APP_SHORT}}".toLowerCase(),"DTSTAMP:"+now,start,end,"SUMMARY:"+icsEsc(m.title));
+      if(rep) L.push("RRULE:"+rrule(rep));
+      if(m.where) L.push("LOCATION:"+icsEsc(m.where));
+      if(safeUrl(m.where)) L.push("URL:"+safeUrl(m.where));
+      if(desc) L.push("DESCRIPTION:"+icsEsc(desc));
+      const w=warnOf(m);
+      if(w>0) L.push("BEGIN:VALARM",`TRIGGER:-P${w}D`,"ACTION:DISPLAY","DESCRIPTION:"+icsEsc(m.title+" in "+w+" day"+(w===1?"":"s")),"END:VALARM");
+      if(timed) L.push("BEGIN:VALARM","TRIGGER:-PT15M","ACTION:DISPLAY","DESCRIPTION:"+icsEsc(m.title),"END:VALARM");
+      else if(w===0) L.push("BEGIN:VALARM","TRIGGER:PT9H","ACTION:DISPLAY","DESCRIPTION:"+icsEsc(m.title+" today"),"END:VALARM");
+      L.push("END:VEVENT");
+    }
+    L.push("END:VCALENDAR");
+    return L.join("\r\n")+"\r\n";
+  }
+  $("#icsBtn").addEventListener("click",()=>{
+    const T=today(), seen=new Set();
+    /* one event per series (the next meeting, repeating), plus single meetings */
+    const list=items().filter(m=>m.date>=T&&!m.skipped).sort(byWhen).filter(m=>{if(!m.series)return true;if(seen.has(m.series))return false;seen.add(m.series);return true});
+    if(!list.length){toast("No meetings coming up");return}
+    saveFile(`meetings-${stamp()}.ics`,icsOf(list));
+  });
+
+  /* ---------- markdown, backup ---------- */
+  function mdMeeting(m,out){
+    out.push(`### ${m.title}, ${whenText(m)} (${mtn(m.mtype)})`);
+    if((m.people||[]).length) out.push(`*${m.mtype==="seminar"?"Speaker":"People"}: ${m.people.join(", ")}*`);
+    if(m.proj&&!proj) out.push(`*Project: ${m.proj}*`);
+    out.push("");
+    if((m.agenda||[]).length){out.push("**To present or discuss**","");m.agenda.forEach(p=>out.push(`- [${p.done?"x":" "}] ${p.text}`));out.push("")}
+    if(m.text) out.push(m.text,"");
+    if(m.decisions) out.push("**Decisions**","",m.decisions,"");
+    if((m.actions||[]).length){out.push("**Actions**","");m.actions.forEach(a=>out.push(`- [${a.done?"x":" "}] ${a.text}${a.owner?` (${a.owner})`:""}${a.due?`, due ${a.due}`:""}`));out.push("")}
+  }
+  $("#mdBtn").addEventListener("click",()=>{
+    if(tab==="actions"){
+      const open=allActions().filter(x=>!x.a.done).sort((p,q)=>(p.a.due||"9").localeCompare(q.a.due||"9"));
+      if(!open.length){toast("No open actions");return}
+      const out=["# Open action items",""];
+      open.forEach(x=>out.push(`- [ ] ${x.a.text}${x.a.owner?` (${x.a.owner})`:""}${x.a.due?`, due ${x.a.due}`:""}. From ${x.m.title}, ${x.m.date}`));
+      saveFile(`actions-${stamp()}.md`,out.join("\n")+"\n"); return;
+    }
+    const T=today(), up=tab==="upcoming";
+    const vis=items().filter(m=>matches(m)&&!m.skipped&&(up?m.date>=T:(m.date<T||written(m)))).sort(byWhen);
+    if(!vis.length){toast("Nothing to export");return}
+    const title=(proj&&proj!=="__pin"?proj+": ":"")+(up?"Meetings coming up":"Meeting notes");
+    const out=[`# ${title}`,""]; vis.forEach(m=>mdMeeting(m,out));
+    saveFile(`${slug(title)}-${stamp()}.md`,out.join("\n").replace(/\n{3,}/g,"\n\n")+"\n");
+  });
+  $("#exportBtn").addEventListener("click",()=>saveFile(`meetings-${stamp()}.json`,JSON.stringify({version:1,exported:new Date().toISOString(),items:D().items},null,2)));
+  $("#importBtn").addEventListener("click",()=>$("#importFile").click());
+  $("#importFile").addEventListener("change",async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{const o=JSON.parse(await f.text());
+      /* a meetings backup, or an older research log backup with meetings in it */
+      const list=Array.isArray(o.items)?o.items:Array.isArray(o.entries)?o.entries.filter(x=>x&&x.kind==="meeting"):null;
+      if(!list) throw 0;
+      const ids=new Set(D().items.map(x=>x&&x.id)); let n=0;
+      for(const x of list) if(x&&x.date&&x.title&&!ids.has(x.id)){const c={...x,id:x.id||uid(),updated:Date.now()};delete c.kind;if(!Array.isArray(c.agenda))c.agenda=[];D().items.push(c);n++}
+      store.persist(); generate(); render(); toast(`Imported ${n} meeting${n===1?"":"s"}`);
+    }catch(_){toast("Choose a .json backup exported from Meetings")}
+    e.target.value="";
+  });
+
+  setupMenu(); generate(); render(); store.connect();
+  if(moved) toast(`Moved ${moved} meeting${moved===1?"":"s"} here from the research log`);
+  setInterval(()=>{if(!mdlg.open){generate();render()}},6e5);
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!mdlg.open){generate();render()}});
+})();
+</script>
+<script>window.__BACKUP={id:"meeting-notes",key:"meetings.v1"};</script>
+<script>
+(function(){
+  const C=window.__BACKUP, LK=C.id+".lastBackup", SK=C.id+".backupSnooze", WEEK=7*864e5;
+  const get=k=>{try{return +localStorage.getItem(k)||0}catch(_){return 0}};
+  const set=(k,v)=>{try{localStorage.setItem(k,String(v))}catch(_){}};
+  function hasData(){
+    try{const v=JSON.parse(localStorage.getItem(C.key)||"null");if(!v)return false;
+      if(Array.isArray(v))return v.length>0;
+      return Object.values(v).some(x=>Array.isArray(x)&&x.length>0)}catch(_){return false}
+  }
+  const bar=document.createElement("div");
+  bar.className="bk hidden"; bar.setAttribute("role","status");
+  bar.innerHTML='<div class="bkt"><b></b><span>Save a copy to Files or Downloads, or turn on sync in the control center.</span></div><button class="bkno" type="button">Later</button><button class="bkgo" type="button">Back up now</button>';
+  const wrap=document.querySelector(".wrap"), head=wrap&&wrap.querySelector(":scope > header");
+  if(head) head.insertAdjacentElement("afterend",bar); else if(wrap) wrap.prepend(bar);
+  function check(){
+    const now=Date.now(), last=get(LK), data=hasData();
+    // never backed up: start the 7-day clock from when data first appears
+    if(!last&&data&&!get(C.id+".firstData")) set(C.id+".firstData",now);
+    const ref=last||get(C.id+".firstData")||now;
+    const due=data&&now-ref>WEEK&&now>get(SK);
+    bar.classList.toggle("hidden",!due);
+    if(due){
+      const days=last?Math.floor((now-last)/864e5):0;
+      bar.querySelector("b").textContent=last?`Last backup ${days} days ago`:"Not backed up yet";
+    }
+  }
+  window.__markBackup=()=>{set(LK,Date.now());set(SK,0);check()};
+  bar.querySelector(".bkgo").addEventListener("click",()=>{const b=document.getElementById("exportBtn");if(b)b.click()});
+  bar.querySelector(".bkno").addEventListener("click",()=>{set(SK,Date.now()+864e5);check()});
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)check()});
+  window.addEventListener("storage",check);
+  setInterval(check,36e5);
+  // first check after the app has loaded its data; recheck when data changes
+  setTimeout(check,300);
+  let t=null; document.addEventListener("click",()=>{clearTimeout(t);t=setTimeout(check,600)},true);
+})();
+</script>
+</body>
+</html>

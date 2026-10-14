@@ -289,5 +289,109 @@
   "works": [],
   "snaps": [],
   "lastRun": 1791805289516
+ },
+ "meetings.v1": {
+  "lastProj": "Consortium",
+  "items": [
+   {
+    "series": "mc",
+    "title": "Consortium meeting",
+    "mtype": "collab",
+    "proj": "Consortium",
+    "people": [
+     "Partners from the four labs"
+    ],
+    "time": "14:00",
+    "end": "16:00",
+    "where": "https://zoom.us/j/0000000000",
+    "rep": {
+     "f": "mn",
+     "n": 3,
+     "wd": 2
+    },
+    "warn": 7,
+    "pin": false,
+    "added": 1789000000000,
+    "updated": 1791000000000,
+    "id": "mc",
+    "date": "2026-09-15",
+    "agenda": [
+     {
+      "id": "p1",
+      "text": "First QM/MM barriers for the wild type",
+      "done": true
+     }
+    ],
+    "text": "Lab 2 has the new crystal structure; they will share it in October.\nWP3 report is due at month 18.",
+    "decisions": "Use the same QM region in every lab.",
+    "actions": [
+     {
+      "id": "ca1",
+      "text": "Send the QM region definition to all partners",
+      "owner": "Me",
+      "due": "2026-09-25",
+      "done": true,
+      "doneAt": 1790000000000
+     },
+     {
+      "id": "ca2",
+      "text": "Upload the trajectories to the shared drive",
+      "owner": "",
+      "due": "2026-10-19",
+      "done": false
+     },
+     {
+      "id": "ca3",
+      "text": "Share the crystal structure",
+      "owner": "Lab 2",
+      "due": "2026-10-10",
+      "done": false
+     }
+    ]
+   },
+   {
+    "series": "mc",
+    "title": "Consortium meeting",
+    "mtype": "collab",
+    "proj": "Consortium",
+    "people": [
+     "Partners from the four labs"
+    ],
+    "time": "14:00",
+    "end": "16:00",
+    "where": "https://zoom.us/j/0000000000",
+    "rep": {
+     "f": "mn",
+     "n": 3,
+     "wd": 2
+    },
+    "warn": 7,
+    "pin": false,
+    "added": 1789000000000,
+    "updated": 1791000000000,
+    "id": "mc-20261020",
+    "date": "2026-10-20",
+    "text": "",
+    "decisions": "",
+    "actions": [],
+    "agenda": [
+     {
+      "id": "p2",
+      "text": "Barrier for the double mutant (slide 3)",
+      "done": false
+     },
+     {
+      "id": "p3",
+      "text": "Ask about the HPC allocation for 2027",
+      "done": false
+     },
+     {
+      "id": "p4",
+      "text": "Timeline for the WP3 report",
+      "done": false
+     }
+    ]
+   }
+  ]
  }
 }

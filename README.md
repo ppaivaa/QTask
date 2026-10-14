@@ -10,13 +10,15 @@ It is an adaptation of [CompChemKit](https://github.com/arvpinto/compchemkit) by
 
 | Suite | Apps |
 |---|---|
-| **Control center** | Today (needs attention, today's tasks, next 14 days, literature, in progress, last 7 days), Projects, Search, Apps, Backup and sync |
-| **Lab notebook** | Research log and meetings with action items, **Tasks**, Idea board, Script planner, Deadlines |
+| **Control center** | Today (needs attention, meetings, today's tasks, next 14 days, literature, in progress, last 7 days), Projects, Search, Apps, Backup and sync |
+| **Lab notebook** | Research log, **Tasks**, **Meetings** (with points to present and action items), Deadlines, Idea board, Script planner |
 | **Literature hub** | Radar (OpenAlex topics, with a **reading list**), Citations (your OpenAlex profile) |
 | **Structure studio** | 3D viewer (3Dmol.js): PDB, mmCIF, GRO, XYZ, SDF, MOL2, PQR; PDB, AlphaFold and PubChem by ID |
 | **Paper kit** | Plot guide (tested Python scripts for 31 chart types), Mechanism scheme editor (SVG and 600 dpi PNG) |
 
 **Tasks** rank themselves. Each task has a priority (low, medium, high) and, optionally, a day to do it and a due date. Points are added up: priority 10 / 20 / 35, plus 45 if overdue, 35 if due today, 28 tomorrow, 20 in 2–3 days, 12 in 4–7 days and 6 in 8–14 days, plus 5 if planned for today. The total gives a level: 60 or more is *Do now*, 35 or more *Urgent*, 20 or more *Normal*, and below that *Can wait*. The Today view lists what is planned, what is overdue and the most urgent tasks you have not planned yet. Tasks left undone move to the next day on their own. End a quick entry with `!` to make it high priority.
+
+**Meetings** are planned ahead and written up afterwards, in one place. Give a meeting a date, a time, a project and how often it repeats: every week, every 2 weeks, every month on the same day or on the same weekday (for example the third Tuesday), or every year. When a repeating meeting's day comes, the next one is planned on its own. Between meetings, add the points you want to present or discuss, from the meeting's card or from the control center's + button. Each meeting has a reminder (on the day, or 1 day to 2 weeks before). Inside that window, the control center's header names the meeting and the Today view lists its points. On the day and afterwards, the same meeting takes the notes, the decisions and the action items, with owners and due dates. Open actions from earlier meetings of the same series are shown again at the next one, so they can be ticked off there. Your own actions also appear on Today when they are due. Meetings you have not written up wait under *To write up* for two weeks. *Didn't happen* or *Skip this date* clears them.
 
 ## Install it as an app
 
@@ -47,7 +49,7 @@ Control center › Backup › **Download everything as one file**. On an iPhone,
 
 ## Alerts
 
-A web app on the home screen cannot schedule its own notifications, so alerts go through your calendar instead. In **Deadlines** and in **Tasks**, the ⋮ menu has *Export calendar file*. Open the `.ics` file and the due dates go into Calendar with an alert. The control center's Today view and its badge show everything that needs attention when you open QTask.
+A web app on the home screen cannot schedule its own notifications, so alerts go through your calendar instead. In **Deadlines** and in **Tasks**, the ⋮ menu has *Export calendar file*. Open the `.ics` file and the due dates go into Calendar with an alert. In **Meetings**, the 📅 button on a meeting (or ⋮ › *Export calendar file*) makes a repeating calendar event with an alert at the meeting's reminder and, when it has a start time, another 15 minutes before. The control center's Today view and its badge show everything that needs attention when you open QTask.
 
 ## Privacy
 
@@ -65,6 +67,7 @@ src/suites/<suite>/apps/*.html  one complete page per app
 build.py                    puts the apps into their suite pages and writes the site
 tools/smoke.py              opens every page in headless Chromium and reports errors
 tools/sync_test.py          two simulated devices syncing through a fake GitHub
+tools/meetings_test.py      repeat rules, points to present, warnings and the calendar file
 ```
 
 ```bash

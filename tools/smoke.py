@@ -12,7 +12,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DIST = os.path.join(ROOT, "dist")
 PAGES = {
     "control-center": ["today", "projects", "search", "apps", "backup"],
-    "lab-notebook": ["log", "tasks", "ideas", "plans", "deadlines"],
+    "lab-notebook": ["log", "tasks", "meetings", "deadlines", "ideas", "plans"],
     "literature-hub": ["radar", "citations"],
     "structure-studio": ["viewer"],
     "paper-kit": ["plots", "schemes"],

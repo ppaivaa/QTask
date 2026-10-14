@@ -128,6 +128,12 @@ nav#nav .dot{position:absolute;top:3px;right:12px;width:8px;height:8px;border-ra
 .txtbtn{color:var(--accent);font-size:.85rem;padding:0 8px;min-height:40px;border-radius:10px;white-space:nowrap}
 .txtbtn:hover{background:var(--raised)}
 .txtbtn:disabled{opacity:.4;cursor:default}
+a.txtbtn{display:inline-flex;align-items:center;text-decoration:none}
+.pts{display:flex;flex-direction:column;margin-top:4px}
+.pt{display:flex;align-items:flex-start;gap:8px;font-size:.86rem;padding:3px 0;cursor:pointer}
+.pt input{width:18px!important;height:18px!important}
+.pt span{overflow-wrap:anywhere}
+.pt.done span{text-decoration:line-through;color:var(--muted)}
 .more{color:var(--accent);font-size:.85rem;padding:8px 0 2px;min-height:36px}
 
 .day{margin-top:10px}
@@ -371,9 +377,10 @@ const SUITES=[
  {id:"lab-notebook",title:"Lab notebook",apps:[
   {id:"log",label:"Log",name:"Research log",file:"research-log",keys:["researchlog.v1"],reminder:"research-log",color:"--blue"},
   {id:"tasks",label:"Tasks",name:"Tasks",file:"task-list",keys:["tasks.v1"],reminder:"task-list",color:"--green"},
+  {id:"meetings",label:"Meetings",name:"Meetings",file:"meeting-notes",keys:["meetings.v1"],reminder:"meeting-notes",color:"--accent"},
+  {id:"deadlines",label:"Deadlines",name:"Deadline tracker",file:"deadline-tracker",keys:["deadlines.v1"],reminder:"deadline-radar",color:"--gold"},
   {id:"ideas",label:"Ideas",name:"Idea board",file:"idea-board",keys:["ideaboard.v1"],reminder:"idea-board",color:"--violet"},
-  {id:"plans",label:"Script plans",name:"Script planner",file:"script-planner",keys:["scriptplans.v1"],reminder:"script-planner",color:"--pink"},
-  {id:"deadlines",label:"Deadlines",name:"Deadline tracker",file:"deadline-tracker",keys:["deadlines.v1"],reminder:"deadline-radar",color:"--gold"}]},
+  {id:"plans",label:"Scripts",name:"Script planner",file:"script-planner",keys:["scriptplans.v1"],reminder:"script-planner",color:"--pink"}]},
  {id:"literature-hub",title:"Literature hub",apps:[
   {id:"radar",label:"Radar",name:"Literature radar",file:"literature-radar",keys:["litradar.v1","net.mailto"],reminder:"lit-radar",color:"--teal"},
   {id:"citations",label:"Citations",name:"Citation tracker",file:"citation-tracker",keys:["citedash.v1","net.mailto"],reminder:"cite-dash",color:"--violet"}]},
@@ -389,7 +396,7 @@ const APPS=[];
 for(const s of SUITES) for(const a of s.apps){a.suite=s;a.keys=a.keys||[];a.prefixes=a.prefixes||[];a.reminder=a.reminder||"";APPS.push(a)}
 const DATA_APPS=APPS.filter(a=>a.file);
 const APP=(s,id)=>APPS.find(a=>a.suite.id===s&&a.id===id);
-const A={log:APP("lab-notebook","log"),tasks:APP("lab-notebook","tasks"),ideas:APP("lab-notebook","ideas"),plans:APP("lab-notebook","plans"),deadlines:APP("lab-notebook","deadlines"),
+const A={log:APP("lab-notebook","log"),tasks:APP("lab-notebook","tasks"),meetings:APP("lab-notebook","meetings"),ideas:APP("lab-notebook","ideas"),plans:APP("lab-notebook","plans"),deadlines:APP("lab-notebook","deadlines"),
   radar:APP("literature-hub","radar"),citations:APP("literature-hub","citations"),
   viewer:APP("structure-studio","viewer"),schemes:APP("paper-kit","schemes"),
   settings:APP("control-center","settings")};
@@ -543,8 +550,16 @@ function buildModel(){
     schemes:Object.entries(idx).map(([id,v])=>({id,name:(v&&v.name)||"Scheme",updated:(v&&v.updated)||0})).sort((a,b)=>b.updated-a.updated),
     mailto:String(V("net.mailto","")||"")
   };
-  M.meetings=M.entries.filter(e=>e.kind==="meeting");
-  M.actions=M.meetings.flatMap(m=>arr(m.actions).filter(ok).map(a=>({a,m})));
+  /* meetings: the Meetings app, plus any meeting notes still in the research log from before it existed */
+  const mt=obj(V("meetings.v1"));
+  M.meetings=arr(mt.items).filter(x=>ok(x)&&x.title&&x.date);
+  const ids=new Set(M.meetings.map(x=>x.id));
+  M.entries.filter(e=>e.kind==="meeting"&&!ids.has(e.id)).forEach(e=>M.meetings.push({...e,legacy:true,agenda:[]}));
+  M.entries=M.entries.filter(e=>e.kind!=="meeting");
+  /* the next meeting of each repeating series, as the Meetings app will make it, so warnings never wait for the app to be opened */
+  M.nextUp=nextOccurrences(M.meetings).map(m=>({...m,virtual:true}));
+  M.allMeetings=M.meetings.concat(M.nextUp);
+  M.actions=M.meetings.flatMap(m=>arr(m.actions).filter(x=>ok(x)&&x.text).map(a=>({a,m})));
   M.unseen=M.works.filter(w=>!w.seen&&radarPasses(w,M.rf));
   return M;
 }
@@ -553,7 +568,63 @@ function buildModel(){
 const LOG_KINDS=[{id:"note",name:"Note",c:"--muted"},{id:"result",name:"Result",c:"--green"},{id:"problem",name:"Problem",c:"--red"},
   {id:"fix",name:"Fix",c:"--teal"},{id:"decision",name:"Decision",c:"--gold"},{id:"idea",name:"Idea",c:"--violet"}];
 const logKind=k=>LOG_KINDS.find(x=>x.id===k)||(k==="meeting"?{id:"meeting",name:"Meeting",c:"--accent"}:LOG_KINDS[0]);
-const MTYPES={group:"Group meeting",supervision:"Supervision",collab:"Collaboration",seminar:"Seminar or talk",oneone:"One-to-one",other:"Other"};
+const MTYPES={group:"Group meeting",collab:"Collaboration or consortium",supervision:"Supervision",seminar:"Seminar or talk",oneone:"One-to-one",other:"Other"};
+/* meetings: the same repeat rules as the Meetings app.
+   rep: {f:"w",n} every n weeks, {f:"md",d} day d of each month, {f:"mn",n,wd} nth weekday, {f:"ml",wd} last weekday, {f:"y",m,d} yearly */
+const MWD=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"], MORD=["","first","second","third","fourth"];
+const mIso=(y,m,d)=>`${y}-${String(m+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+const mDim=(y,m)=>new Date(y,m+1,0).getDate();
+function mNth(y,m,n,wd){
+  if(n<0){const last=mDim(y,m);return mIso(y,m,last-((new Date(y,m,last).getDay()-wd+7)%7))}
+  const day=1+((wd-new Date(y,m,1).getDay()+7)%7)+(n-1)*7;
+  return day<=mDim(y,m)?mIso(y,m,day):mNth(y,m,-1,wd);
+}
+function mRuleNext(rep,from){
+  if(!rep||!from) return null;
+  const [Y,Mo,Dd]=from.split("-").map(Number), p={y:Y,m:Mo-1,d:Dd}, wdOf=new Date(from+"T12:00").getDay();
+  if(rep.f==="w"){const d=new Date(from+"T12:00");d.setDate(d.getDate()+7*(rep.n||1));return mIso(d.getFullYear(),d.getMonth(),d.getDate())}
+  if(rep.f==="y"){const y=p.y+1,mm=Number.isFinite(rep.m)?rep.m:p.m,dd=rep.d||p.d;return mIso(y,mm,Math.min(dd,mDim(y,mm)))}
+  let y=p.y,m=p.m+1; if(m>11){m=0;y++}
+  if(rep.f==="md") return mIso(y,m,Math.min(rep.d||p.d,mDim(y,m)));
+  if(rep.f==="mn") return mNth(y,m,rep.n||1,rep.wd??wdOf);
+  if(rep.f==="ml") return mNth(y,m,-1,rep.wd??wdOf);
+  return null;
+}
+function mRepShort(rep){
+  if(!rep) return "";
+  if(rep.f==="w") return (rep.n||1)===1?"weekly":`every ${rep.n} weeks`;
+  if(rep.f==="md") return `monthly, day ${rep.d}`;
+  if(rep.f==="mn") return `monthly, ${MORD[rep.n]||"first"} ${MWD[rep.wd]}`;
+  if(rep.f==="ml") return `monthly, last ${MWD[rep.wd]}`;
+  return "yearly";
+}
+function nextOccurrences(list){
+  const T=todayStr(), heads=new Map(), out=[];
+  for(const m of list) if(m.series){const h=heads.get(m.series);if(!h||m.date>h.date)heads.set(m.series,m)}
+  for(const h of heads.values()){
+    if(!h.rep||h.date>T) continue;
+    let d=mRuleNext(h.rep,h.date), guard=0;
+    while(d&&d<=T&&guard++<600) d=mRuleNext(h.rep,d);
+    if(!d) continue;
+    out.push({id:h.series+"-"+d.replace(/-/g,""),series:h.series,title:h.title,mtype:h.mtype,proj:h.proj||"",people:arr(h.people).slice(),
+      date:d,time:h.time||"",end:h.end||"",where:h.where||"",rep:{...h.rep},warn:mWarn(h),agenda:[],text:"",decisions:"",actions:[],pin:false,added:Date.now(),updated:Date.now()});
+  }
+  return out;
+}
+const mWarn=m=>Number.isFinite(+m.warn)&&m.warn!==""&&m.warn!=null?+m.warn:3;
+const mWritten=m=>!!(m.text||m.decisions||arr(m.actions).length);
+const mHead=m=>m.series?D.allMeetings.filter(x=>x.series===m.series).sort((a,b)=>b.date.localeCompare(a.date))[0]:m;
+const mWhen=m=>longDate(m.date)+(m.time?", "+m.time+(m.end?"–"+m.end:""):"");
+function mRel(m){
+  const n=daysTo(m.date);
+  if(n===0) return m.time?"today "+m.time:"today";
+  if(n===1) return m.time?"tomorrow "+m.time:"tomorrow";
+  if(n>1) return `in ${n} days`;
+  return n===-1?"yesterday":`${-n} days ago`;
+}
+/* upcoming meetings (not skipped), soonest first */
+const upMeetings=(from,to)=>D.allMeetings.filter(m=>!m.skipped&&m.date>=from&&(!to||m.date<=to)).sort((a,b)=>(a.date+(a.time||"99")).localeCompare(b.date+(b.time||"99")));
+const mLink=(m,pick)=>href(A.meetings,{find:m.title.slice(0,40),pick:pick||(m.date>=todayStr()?"upcoming":"notes")});
 const IDEA_STAGES=[{id:"spark",name:"Sparks"},{id:"explore",name:"Exploring"},{id:"doing",name:"Doing"},{id:"done",name:"Done"}];
 const IDEA_CATS=[{id:"research",name:"Research"},{id:"grants",name:"Grants"},{id:"teaching",name:"Teaching"},{id:"outdoors",name:"Outdoors"},{id:"minerals",name:"Minerals"},{id:"home",name:"Home"},{id:"other",name:"Other"}];
 const DL_KINDS=[{id:"grant",name:"Grant call",c:"--blue"},{id:"abstract",name:"Abstract",c:"--green"},{id:"fellowship",name:"Fellowship",c:"--gold"},
@@ -644,11 +715,44 @@ const OPS={
     },"Added to the research log",{href:href(A.log,{find:firstLine(text,40)}),label:"Open"});
   },
   toggleAction(mid,aid,done){
-    return write(A.log,"researchlog.v1",{entries:[]},d=>{
-      const m=arr(d.entries).find(x=>x.id===mid), a=m&&arr(m.actions).find(x=>x.id===aid);
+    const legacy=D.meetings.some(m=>m.id===mid&&m.legacy);
+    const [app,key,list]=legacy?[A.log,"researchlog.v1","entries"]:[A.meetings,"meetings.v1","items"];
+    return write(app,key,{[list]:[]},d=>{
+      const m=arr(d[list]).find(x=>x&&x.id===mid), a=m&&arr(m.actions).find(x=>x.id===aid);
       if(!a) throw new Error("That action is gone; it may have been deleted");
       a.done=done; a.doneAt=done?Date.now():null; m.updated=Date.now();
     },done?"Action done":"Action reopened");
+  },
+  addMeeting(x){
+    const id=uid();
+    return write(A.meetings,"meetings.v1",{items:[]},d=>{
+      if(!Array.isArray(d.items)) d.items=[];
+      const now=Date.now();
+      d.items.push({id,added:now,updated:now,series:x.rep?id:"",title:x.title.trim().slice(0,120),mtype:x.mtype||"group",proj:(x.proj||"").trim(),
+        people:[],date:x.date,time:x.time||"",end:"",where:(x.where||"").trim(),rep:x.rep||null,warn:Number.isFinite(+x.warn)?+x.warn:3,
+        agenda:arr(x.points).map(t=>({id:uid(),text:t.slice(0,300),done:false})),text:"",decisions:"",actions:[],pin:false});
+      if(x.proj) d.lastProj=x.proj.trim();
+    },"Meeting added",{href:href(A.meetings,{find:x.title.trim().slice(0,40),pick:"upcoming"}),label:"Open"});
+  },
+  /* points to present at a meeting; the next meeting of a series is made here if the app has not made it yet */
+  addPoints(mid,points){
+    const v=D.nextUp.find(m=>m.id===mid), known=v||D.meetings.find(m=>m.id===mid);
+    return write(A.meetings,"meetings.v1",{items:[]},d=>{
+      if(!Array.isArray(d.items)) d.items=[];
+      let m=d.items.find(x=>x&&x.id===mid);
+      if(!m&&v){m={...v};delete m.virtual;d.items.push(m)}
+      if(!m) throw new Error("That meeting is gone; it may have been deleted");
+      if(!Array.isArray(m.agenda)) m.agenda=[];
+      points.forEach(t=>m.agenda.push({id:uid(),text:t.slice(0,300),done:false}));
+      m.updated=Date.now();
+    },points.length===1?"Point added":`${points.length} points added`,{href:href(A.meetings,{find:(known?known.title:"").slice(0,40),pick:"upcoming"}),label:"Open"});
+  },
+  togglePoint(mid,pid,done){
+    return write(A.meetings,"meetings.v1",{items:[]},d=>{
+      const m=arr(d.items).find(x=>x&&x.id===mid), p=m&&arr(m.agenda).find(x=>x.id===pid);
+      if(!p) throw new Error("That point is gone");
+      p.done=done; m.updated=Date.now();
+    });
   },
   addIdea(x){
     return write(A.ideas,"ideaboard.v1",[],d=>{
@@ -867,6 +971,9 @@ function renderChrome(){
   let sub="";
   if(VIEW==="today"){
     sub=att?`${plural(att,"thing")} need${att===1?"s":""} attention`:"Nothing overdue";
+    /* the next meeting inside its reminder window */
+    const nm=upMeetings(todayStr()).find(m=>daysTo(m.date)<=mWarn(m));
+    if(nm) sub+=` · ${nm.title} ${mRel(nm)}`;
 
   }else if(VIEW==="backup") sub=SRV.ok?"Backups go to "+(SRV.dir||"the suites folder"):SRV.http?(ss&&ss.configured?"Synced through GitHub, plus backup files":"Sync through GitHub, or back up to a file"):"Opened as a file";
   else if(VIEW==="projects") sub="Everything connected to one project, across apps";
@@ -902,9 +1009,26 @@ function dlRow(i,now){
 function actRow(x,showOverdue){
   const a=x.a, m=x.m, st=actDue(a);
   const due=a.due?(st==="overdue"?`overdue, ${shortDate(a.due)}`:a.due===todayStr()?"due today":`due ${shortDate(a.due)}`):"";
-  return `<label class="row ${a.done?"done":""}" style="--cc:var(--accent)"><input type="checkbox" data-op="act-done" data-mid="${esc(m.id)}" data-aid="${esc(a.id)}" ${a.done?"checked":""} ${disabled(A.log)} aria-label="Done">
+  return `<label class="row ${a.done?"done":""}" style="--cc:var(--accent)"><input type="checkbox" data-op="act-done" data-mid="${esc(m.id)}" data-aid="${esc(a.id)}" ${a.done?"checked":""} ${disabled(m.legacy?A.log:A.meetings)} aria-label="Done">
     <div class="main"><div class="t">${esc(a.text)}</div>
-    <div class="m">${!isMe(a.owner)?`<span>${esc(a.owner)}</span>`:""}${due?`<span class="${st==="overdue"?"over":st==="soon"?"soon":""}">${esc(due)}</span>`:""}<a class="app" href="${esc(href(A.log,{find:a.text.slice(0,40),pick:"actions"}))}">from ${esc(m.title)}, ${esc(shortDate(m.date))}</a>${m.proj?`<span>${esc(m.proj)}</span>`:""}</div></div></label>`;
+    <div class="m">${!isMe(a.owner)?`<span>${esc(a.owner)}</span>`:""}${due?`<span class="${st==="overdue"?"over":st==="soon"?"soon":""}">${esc(due)}</span>`:""}<a class="app" href="${esc(href(A.meetings,{find:a.text.slice(0,40),pick:"actions"}))}">from ${esc(m.title)}, ${esc(shortDate(m.date))}</a>${m.proj?`<span>${esc(m.proj)}</span>`:""}</div></div></label>`;
+}
+/* a meeting: when, how soon, points to present; + Point adds one from here */
+function meetingRow(m,opts){
+  opts=opts||{};
+  const n=daysTo(m.date), past=n<0, ag=arr(m.agenda), open=ag.filter(p=>p&&!p.done).length;
+  const cls=m.skipped?"":past?"":n===0?"ok":n<=mWarn(m)?"soon":"";
+  const h=m.series?mHead(m):m, meta=[`<span class="app">${esc(MTYPES[m.mtype]||"Meeting")}</span>`,`<span>${esc(mWhen(m))}</span>`];
+  if(!past) meta.push(`<span class="${cls}">${esc(m.skipped?"skipped":mRel(m))}</span>`);
+  if(m.proj&&!opts.noProj) meta.push(`<span style="color:var(--accent)">${esc(m.proj)}</span>`);
+  if(h&&h.rep) meta.push(`<span>↻ ${esc(mRepShort(h.rep))}</span>`);
+  if(ag.length) meta.push(`<span>${open} of ${plural(ag.length,"point")} to present</span>`);
+  if(past&&opts.write) meta.push(`<span class="soon">no notes yet</span>`);
+  const side=opts.write?`<div class="side"><a class="txtbtn" href="${esc(mLink(m,"upcoming"))}">Write up</a></div>`
+    :!past&&!m.skipped?`<div class="side"><button class="txtbtn" data-op="mt-point" data-id="${esc(m.id)}" ${disabled(A.meetings)}>+ Point</button></div>`:"";
+  const pts=opts.points&&ag.length?`<div class="pts">${ag.slice(0,6).map(p=>`<label class="pt ${p.done?"done":""}"><input type="checkbox" data-op="pt-done" data-mid="${esc(m.id)}" data-pid="${esc(p.id)}" ${p.done?"checked":""} ${m.virtual?"disabled":disabled(A.meetings)}><span>${esc(p.text)}</span></label>`).join("")}${ag.length>6?`<span class="muted" style="font-size:.8rem">and ${ag.length-6} more</span>`:""}</div>`:"";
+  return `<div class="row" style="--cc:var(--accent)"><span class="bar"></span><div class="main">
+    <div class="t"><a href="${esc(mLink(m))}">${esc(m.title)}</a></div><div class="m">${meta.join("")}</div>${pts}</div>${side}</div>`;
 }
 function taskRow(t,opts){
   opts=opts||{};
@@ -954,10 +1078,14 @@ function activity(since,m){
   for(const e of D.entries){
     if(!P(e.proj)) continue;
     const t=e.added&&localDate(e.added)===e.date?e.added:dayMs(e.date);
-    if(e.kind==="meeting"){
-      add(t,A.log,"Meeting: "+e.title,[MTYPES[e.mtype]||"",arr(e.people).join(", "),e.proj].filter(Boolean).map(esc).join(" · "),href(A.log,{find:e.title.slice(0,40),pick:"meetings"}));
-      for(const a of arr(e.actions)) if(a&&a.done&&a.doneAt) add(a.doneAt,A.log,"Action done: "+a.text,esc(e.title));
-    }else add(t,A.log,logKind(e.kind).name+": "+firstLine(e.text,140),esc(e.proj||""),href(A.log,{find:firstLine(e.text,40)}));
+    add(t,A.log,logKind(e.kind).name+": "+firstLine(e.text,140),esc(e.proj||""),href(A.log,{find:firstLine(e.text,40)}));
+  }
+  /* meetings that took place (or were written up), and actions ticked off */
+  const nowD=todayStr();
+  for(const e of D.meetings){
+    if(!P(e.proj)) continue;
+    if(!e.skipped&&e.date<=nowD&&(e.date<nowD||mWritten(e))) add(dayMs(e.date),A.meetings,"Meeting: "+e.title,[MTYPES[e.mtype]||"",arr(e.people).join(", "),e.proj].filter(Boolean).map(esc).join(" · "),mLink(e,"notes"));
+    for(const a of arr(e.actions)) if(a&&a.done&&a.doneAt) add(a.doneAt,A.meetings,"Action done: "+a.text,esc(e.title));
   }
   for(const x of D.tasks){
     if(!P(x.proj)) continue;
@@ -1063,14 +1191,20 @@ function renderToday(){
     building.length||planning.length?`<h3>Script plans</h3><div class="rows">${[...building,...planning].slice(0,6).map(p=>{const op=arr(p.checks).filter(c=>!c.done).length;return evRow(A.plans,p.name,`<span class="app">${esc(PLAN_STATUS[p.status]||p.status)}</span>${p.purpose?`<span>${esc(clip(p.purpose,70))}</span>`:""}${op?`<span class="soon">${plural(op,"open check")}</span>`:""}`,href(A.plans,{find:p.name.slice(0,40)}))}).join("")}</div>`:"",
     pinned.length?`<h3>Pinned in the log</h3><div class="rows">${pinned.map(logRow).join("")}</div>`:""
   ].join("")||empty("Ideas you move to Doing and script plans you're building show up here.");
+  /* meetings: the next two weeks, and recent ones with no notes yet */
+  const mUp=upMeetings(t,endD), mSoon=new Set(mUp.filter(m=>daysTo(m.date)<=mWarn(m)).map(m=>m.id));
+  const mWrite=M.meetings.filter(m=>!m.skipped&&!m.legacy&&m.date<t&&m.date>=localDate(now-7*DAY)&&!mWritten(m)).sort((a,b)=>b.date.localeCompare(a.date));
+  const meetBody=(mWrite.length?`<h3 style="margin-top:0">To write up</h3><div class="rows">${mWrite.map(m=>meetingRow(m,{write:true})).join("")}</div>`:"")
+    +(mUp.length?`${mWrite.length?"<h3>Coming up</h3>":""}<div class="rows">${mUp.slice(0,6).map(m=>meetingRow(m,{points:mSoon.has(m.id)})).join("")}</div>${mUp.length>6?`<a class="more" href="${esc(href(A.meetings,{pick:"upcoming"}))}">${mUp.length-6} more</a>`:""}`:"");
   const recent=activity(now-7*DAY);
   const actBody=recent.length?`<div class="rows">${actRowsHTML(recent.slice(0,10))}</div>${recent.length>10?`<button class="more" data-op="digest">${recent.length-10} more, see the digest</button>`:""}`:empty("Nothing recorded in the last 7 days.");
 
-  const empties=!M.entries.length&&!M.tasks.length&&!M.deadlines.length&&!M.ideas.length&&!M.topics.length&&!M.saved.length;
-  const welcome=empties&&SRC.mode==="auto"&&SRV.http?`<div class="infobox"><b>Welcome to QTask.</b> Add a task with +, or open the <a href="${esc(href(A.tasks))}">Tasks</a>, <a href="${esc(href(A.log))}">Lab notebook</a> and <a href="${esc(href(A.radar))}">Literature radar</a>. ${ss&&ss.configured?"Sync is on: data from your other devices appears here after the first sync.":`Already using QTask on another device? <button class="linkbtn" data-op="sync-setup" style="color:var(--accent)">Turn on sync</button> to bring your data here.`}</div>`:"";
+  const empties=!M.entries.length&&!M.tasks.length&&!M.meetings.length&&!M.deadlines.length&&!M.ideas.length&&!M.topics.length&&!M.saved.length;
+  const welcome=empties&&SRC.mode==="auto"&&SRV.http?`<div class="infobox"><b>Welcome to QTask.</b> Add a task or a meeting with +, or open <a href="${esc(href(A.tasks))}">Tasks</a>, <a href="${esc(href(A.meetings))}">Meetings</a>, the <a href="${esc(href(A.log))}">Lab notebook</a> and the <a href="${esc(href(A.radar))}">Literature radar</a>. ${ss&&ss.configured?"Sync is on: data from your other devices appears here after the first sync.":`Already using QTask on another device? <button class="linkbtn" data-op="sync-setup" style="color:var(--accent)">Turn on sync</button> to bring your data here.`}</div>`:"";
   $("#v-today").innerHTML=tiles+welcome+
   `<div class="masonry">
     ${card("Needs attention",att.length?`<div class="rows">${att.map(x=>x.h).join("")}</div>`:empty("Nothing overdue."),{id:"s-attn",right:mineToggle})}
+    ${meetBody?card("Meetings",meetBody,{id:"s-meet",right:`<a class="lk" href="${esc(href(A.meetings))}">Meetings</a>`}):""}
     ${card("Today's tasks",taskBody,{id:"s-tasks",right:`<a class="lk" href="${esc(href(A.tasks))}">Tasks</a>`})}
     ${card("Next 14 days",agHTML||empty("Nothing due in the next two weeks."),{id:"s-agenda"})}
     ${card("Literature",litBody,{id:"s-lit",right:`<a class="lk" href="${esc(href(A.radar))}">Radar</a>`})}
@@ -1085,6 +1219,7 @@ function projectList(){
   const add=(p,t)=>{p=String(p||"").trim();if(!p)return;const k=p.toLowerCase();let o=map.get(k);if(!o){o={name:p,key:k,n:0,last:0};map.set(k,o)}o.n++;if((t||0)>o.last)o.last=t||0};
   D.entries.forEach(e=>add(e.proj,e.updated||e.added||0));
   D.tasks.forEach(x=>add(x.proj,x.updated||x.added||0));
+  D.meetings.forEach(x=>add(x.proj,x.updated||x.added||0));
   for(const [k,v] of Object.entries(extra)) if(!map.has(k)) map.set(k,{name:obj(v).name||k,key:k,n:0,last:0,manual:true});
   return [...map.values()].sort((a,b)=>b.last-a.last||a.name.localeCompare(b.name));
 }
@@ -1099,9 +1234,12 @@ function projectData(name){
   const m=matcher(name);
   const entries=D.entries.filter(e=>m.proj(e.proj)).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.added||0)-(a.added||0));
   const tasks=D.tasks.filter(x=>m.proj(x.proj));
+  const T=todayStr(), meets=D.meetings.filter(x=>m.proj(x.proj));
   const P={m,entries,
-    logs:entries.filter(e=>e.kind!=="meeting"),
-    meetings:entries.filter(e=>e.kind==="meeting"),
+    logs:entries,
+    meetings:meets,
+    nextMeetings:D.allMeetings.filter(x=>m.proj(x.proj)&&!x.skipped&&x.date>=T).sort((a,b)=>(a.date+(a.time||"99")).localeCompare(b.date+(b.time||"99"))),
+    pastMeetings:meets.filter(x=>x.date<T&&!x.skipped).sort((a,b)=>b.date.localeCompare(a.date)),
     actions:D.actions.filter(x=>m.proj(x.m.proj)&&!x.a.done).sort((a,b)=>(a.a.due||"9").localeCompare(b.a.due||"9")),
     tasks:tasks.filter(x=>!x.done).sort(byUrgency),
     tasksDone:tasks.filter(x=>x.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0)),
@@ -1112,7 +1250,7 @@ function projectData(name){
     topics:D.topics.filter(tp=>m.text(tp.q)),
     schemes:D.schemes.filter(s=>m.text(s.name))
   };
-  P.last=Math.max(0,...entries.map(e=>e.updated||e.added||0),...tasks.map(x=>x.updated||x.added||0));
+  P.last=Math.max(0,...entries.map(e=>e.updated||e.added||0),...tasks.map(x=>x.updated||x.added||0),...meets.map(x=>x.updated||x.added||0));
   return P;
 }
 function renderProjects(){
@@ -1121,14 +1259,14 @@ function renderProjects(){
   if(!list.some(p=>p.key===cur)) cur=list[0]?list[0].key:"";
   const chips=`<div class="chips">${list.map(p=>`<button class="chip" data-op="proj" data-key="${esc(p.key)}" aria-pressed="${p.key===cur}">${esc(p.name)}${p.n?`<span class="c">${p.n}</span>`:""}</button>`).join("")}<button class="chip" data-op="proj-new" style="color:var(--accent)">+ Project</button></div>`;
   if(!list.length){
-    $("#v-projects").innerHTML=chips+`<div class="infobox">Projects come from the <b>Project</b> field of tasks and of research log entries. Give a task or an entry a project, or add one here with a few keywords, and everything related across your apps collects on one page: open tasks and actions, deadlines, log entries, ideas, script plans, radar topics, papers to read and schemes.</div>`;
+    $("#v-projects").innerHTML=chips+`<div class="infobox">Projects come from the <b>Project</b> field of tasks, meetings and research log entries. Give one a project, or add one here with a few keywords, and everything related across your apps collects on one page: open tasks and actions, meetings, deadlines, log entries, ideas, script plans, radar topics, papers to read and schemes.</div>`;
     return;
   }
   const p=list.find(x=>x.key===cur), P=projectData(p.name), now=Date.now();
   const head=`<div class="projhead"><div style="min-width:0"><h2>${esc(p.name)}</h2>
     <div class="kv" style="margin-top:4px"><span>${plural(P.tasks.length,"open task")}</span><span>${plural(P.tasksDone.length,"task")} done</span><span>${plural(P.logs.length,"log entry","log entries")}</span><span>${plural(P.meetings.length,"meeting")}</span><span>${plural(P.actions.length,"open action")}</span><span>last activity ${esc(ago(P.last))}</span></div>
     ${P.m.kw.length?`<div class="kv" style="margin-top:4px"><span>Also matching: ${esc(P.m.kw.join(", "))}</span></div>`:""}</div>
-    <div class="btnrow"><button class="btn" data-op="cap" data-kind="task" data-proj="${esc(p.name)}" ${disabled(A.tasks)}>Task</button><button class="btn" data-op="cap" data-kind="log" data-proj="${esc(p.name)}" ${disabled(A.log)}>Log entry</button><button class="btn" data-op="digest" data-proj="${esc(p.name)}">Digest</button><button class="btn ghost" data-op="proj-kw" data-key="${esc(p.key)}">Keywords</button></div></div>`;
+    <div class="btnrow"><button class="btn" data-op="cap" data-kind="task" data-proj="${esc(p.name)}" ${disabled(A.tasks)}>Task</button><button class="btn" data-op="cap" data-kind="meeting" data-proj="${esc(p.name)}" ${disabled(A.meetings)}>Meeting</button><button class="btn" data-op="cap" data-kind="log" data-proj="${esc(p.name)}" ${disabled(A.log)}>Log entry</button><button class="btn" data-op="digest" data-proj="${esc(p.name)}">Digest</button><button class="btn ghost" data-op="proj-kw" data-key="${esc(p.key)}">Keywords</button></div></div>`;
   const lit=[
     P.topics.length?`<h3>Radar topics</h3><div class="rows">${P.topics.map(tp=>{const n=D.unseen.filter(w=>w.topic===tp.id).length;return evRow(A.radar,tp.q,`<span class="app">Literature radar</span>${n?`<span class="soon">${n} new</span>`:"<span>nothing new</span>"}`,href(A.radar))}).join("")}</div>`:"",
     P.saved.length?`<h3>Reading list</h3><div class="rows">${P.saved.slice(0,6).map(savedRow).join("")}</div>${P.saved.length>6?`<p class="muted" style="font-size:.82rem;margin:6px 0 0">${P.saved.length-6} more</p>`:""}`:""
@@ -1140,9 +1278,13 @@ function renderProjects(){
   ].join("")||empty("No ideas, script plans or schemes mention this project. Add keywords to widen the match.");
   $("#v-projects").innerHTML=chips+head+`<div class="grid two">
     ${card("Open tasks",P.tasks.length?`<div class="rows">${P.tasks.map(x=>taskRow(x,{noProj:true})).join("")}</div>`:empty("No open tasks in this project."),{right:`<a class="lk" href="${esc(href(A.tasks,{find:p.name}))}">Tasks</a>`})}
+    ${card("Meetings",P.nextMeetings.length||P.pastMeetings.length?
+      `${P.nextMeetings.length?`<div class="rows">${P.nextMeetings.slice(0,5).map((x,i)=>meetingRow(x,{noProj:true,points:i===0})).join("")}</div>${P.nextMeetings.length>5?`<a class="more" href="${esc(href(A.meetings,{find:p.name,pick:"upcoming"}))}">${P.nextMeetings.length-5} more coming up</a>`:""}`:""}
+       ${P.pastMeetings.length?`<h3>Earlier</h3><div class="rows">${P.pastMeetings.slice(0,4).map(x=>meetingRow(x,{noProj:true})).join("")}</div>`:""}`
+      :empty("No meetings in this project yet."),{right:`<a class="lk" href="${esc(href(A.meetings,{find:p.name}))}">Meetings</a>`})}
     ${card("Open actions",P.actions.length?`<div class="rows">${P.actions.map(x=>actRow(x)).join("")}</div>`:empty("No open actions from this project's meetings."))}
     ${card("Deadlines",P.deadlines.length?`<div class="rows">${P.deadlines.map(i=>dlRow(i,now)).join("")}</div>`:empty("No upcoming deadline mentions this project."))}
-    ${card("Research log",P.entries.length?`<div class="rows">${P.entries.slice(0,8).map(logRow).join("")}</div>${P.entries.length>8?`<a class="more" href="${esc(href(A.log,{find:p.name}))}">${P.entries.length-8} more in the log</a>`:""}`:empty("No log entries or meetings with this project yet."))}
+    ${card("Research log",P.entries.length?`<div class="rows">${P.entries.slice(0,8).map(logRow).join("")}</div>${P.entries.length>8?`<a class="more" href="${esc(href(A.log,{find:p.name}))}">${P.entries.length-8} more in the log</a>`:""}`:empty("No log entries in this project yet."))}
     ${card("Literature",lit)}
     ${card("Ideas, plans and schemes",other)}
   </div>`;
@@ -1152,11 +1294,10 @@ function renderProjects(){
 let IDX=null, IDXGEN=-1, QF="";
 function buildIndex(){
   const out=[], add=(app,title,sub,text,link,extra)=>out.push({app,title:String(title||""),sub:sub||"",hay:(title+" "+text).toLowerCase(),link:link||"",extra:extra||null});
-  for(const e of D.entries){
-    if(e.kind==="meeting") add(A.log,e.title,`Meeting · ${shortDate(e.date)}${arr(e.people).length?" · "+arr(e.people).join(", "):""}${e.proj?" · "+e.proj:""}`,[e.text,e.decisions,arr(e.people).join(" "),e.proj,MTYPES[e.mtype]].join(" "),href(A.log,{find:e.title.slice(0,40),pick:"meetings"}));
-    else add(A.log,firstLine(e.text,120),`${logKind(e.kind).name} · ${shortDate(e.date)}${e.proj?" · "+e.proj:""}`,[e.text,e.proj].join(" "),href(A.log,{find:firstLine(e.text,40)}));
-  }
-  for(const x of D.actions) add(A.log,x.a.text,`Action${x.a.done?" (done)":""} · ${x.a.owner||"Me"}${x.a.due?" · due "+shortDate(x.a.due):""} · ${x.m.title}`,[x.a.owner,x.m.title].join(" "),href(A.log,{find:x.a.text.slice(0,40),pick:"actions"}));
+  for(const e of D.entries) add(A.log,firstLine(e.text,120),`${logKind(e.kind).name} · ${shortDate(e.date)}${e.proj?" · "+e.proj:""}`,[e.text,e.proj].join(" "),href(A.log,{find:firstLine(e.text,40)}));
+  for(const e of D.meetings) add(A.meetings,e.title,`${e.date>=todayStr()?"Meeting coming up":"Meeting"} · ${shortDate(e.date)}${e.skipped?" (skipped)":""}${arr(e.people).length?" · "+arr(e.people).join(", "):""}${e.proj?" · "+e.proj:""}`,
+    [e.text,e.decisions,e.where,arr(e.people).join(" "),e.proj,MTYPES[e.mtype],arr(e.agenda).map(p=>p&&p.text).join(" ")].join(" "),mLink(e));
+  for(const x of D.actions) add(A.meetings,x.a.text,`Action${x.a.done?" (done)":""} · ${x.a.owner||"Me"}${x.a.due?" · due "+shortDate(x.a.due):""} · ${x.m.title}`,[x.a.owner,x.m.title].join(" "),href(A.meetings,{find:x.a.text.slice(0,40),pick:"actions"}));
   for(const i of D.ideas) add(A.ideas,i.title,`Idea · ${(IDEA_STAGES.find(s=>s.id===i.stage)||{}).name||""} · ${(IDEA_CATS.find(c=>c.id===i.cat)||{}).name||""}`,[i.notes,arr(i.tags).join(" ")].join(" "),href(A.ideas,{find:i.title.slice(0,40),pick:i.stage}));
   for(const p of D.plans) add(A.plans,p.name,`Script plan · ${PLAN_STATUS[p.status]||""}${p.purpose?" · "+clip(p.purpose,80):""}`,[p.purpose,p.desc,p.deps,arr(p.fns).map(f=>f.name).join(" ")].join(" "),href(A.plans,{find:p.name.slice(0,40)}));
   for(const x of D.tasks) add(A.tasks,x.title,`Task${x.done?" (done)":""} · ${(TPRIO[x.prio]||TPRIO.medium).n} priority${x.due?" · due "+shortDate(x.due):""}${x.proj?" · "+x.proj:""}`,[x.notes,x.proj,arr(x.subs).map(s=>s&&s.text).join(" ")].join(" "),href(A.tasks,{find:x.title.slice(0,40),pick:x.done?"done":"all"}));
@@ -1176,7 +1317,7 @@ function renderSearch(){
   $("#qChips").innerHTML=toks.length&&hits.length?[`<button class="chip" data-op="qf" data-f="" aria-pressed="${!QF}">All<span class="c">${hits.length}</span></button>`]
     .concat([...byApp.entries()].map(([a,n])=>`<button class="chip" data-op="qf" data-f="${esc(a.suite.id+"/"+a.id)}" aria-pressed="${QF===a.suite.id+"/"+a.id}" style="--cc:${cc(a)}"><span class="dot"></span>${esc(a.name)}<span class="c">${n}</span></button>`)).join(""):"";
   if(!toks.length){
-    $("#qOut").innerHTML=`<div class="infobox">Searches your tasks, the research log (entries, meetings and actions), ideas, script plans, deadlines, radar results, the reading list, your cited works and schemes. Tap a result to open that app filtered to it.</div>`;
+    $("#qOut").innerHTML=`<div class="infobox">Searches your tasks, meetings (notes, points and actions), the research log, ideas, script plans, deadlines, radar results, the reading list, your cited works and schemes. Tap a result to open that app filtered to it.</div>`;
     return;
   }
   const scored=hits.filter(r=>!QF||r.app.suite.id+"/"+r.app.id===QF)
@@ -1198,7 +1339,9 @@ function searchRow(r){
 function appStat(a){
   const now=Date.now(), M=D;
   switch(a.suite.id+"/"+a.id){
-    case "lab-notebook/log":{const o=M.actions.filter(x=>!x.a.done).length;return `${plural(M.entries.length-M.meetings.length,"entry","entries")}, ${plural(M.meetings.length,"meeting")}${o?`, ${o} open actions`:""}`}
+    case "lab-notebook/log":return plural(M.entries.length,"entry","entries");
+    case "lab-notebook/meetings":{const up=upMeetings(todayStr()), o=M.actions.filter(x=>!x.a.done).length;
+      return up.length?`Next: ${esc(clip(up[0].title,40))}, ${esc(mRel(up[0]))}${o?`, ${o} open actions`:""}`:`${plural(M.meetings.length,"meeting")}${o?`, ${o} open actions`:""}`}
     case "lab-notebook/tasks":{const o=M.tasks.filter(x=>!x.done);return `${o.length} open, ${o.filter(taskToday).length} for today`}
     case "lab-notebook/ideas":return `${plural(M.ideas.length,"idea")}, ${M.ideas.filter(i=>i.stage==="doing").length} doing`;
     case "lab-notebook/plans":return `${plural(M.plans.length,"plan")}, ${M.plans.filter(p=>p.status==="building").length} building`;
@@ -1238,6 +1381,7 @@ function renderApps(){
 const COUNT={
   "research-log":j=>arr(obj(j["researchlog.v1"]).entries).length,
   "task-list":j=>arr(obj(j["tasks.v1"]).items).length,
+  "meeting-notes":j=>arr(obj(j["meetings.v1"]).items).length,
   "idea-board":j=>arr(j["ideaboard.v1"]).length,
   "script-planner":j=>arr(obj(j["scriptplans.v1"]).plans).length,
   "deadline-tracker":j=>arr(obj(j["deadlines.v1"]).items).length,
@@ -1247,7 +1391,7 @@ const COUNT={
   "mechanism-scheme-editor":j=>Object.keys(obj(j["mech.index"])).length,
   "settings":j=>j["controlcenter.v1"]?1:0
 };
-const UNIT={"research-log":["entry","entries"],"task-list":["task"],"idea-board":["idea"],"script-planner":["plan"],"deadline-tracker":["deadline"],
+const UNIT={"research-log":["entry","entries"],"task-list":["task"],"meeting-notes":["meeting"],"idea-board":["idea"],"script-planner":["plan"],"deadline-tracker":["deadline"],
   "literature-radar":["topic or saved paper","topics and saved papers"],"citation-tracker":["work"],"structure-viewer":["preference set"],"mechanism-scheme-editor":["scheme"],"settings":["settings file"]};
 const unitOf=(a,n)=>{const u=UNIT[a.file]||["item"];return plural(n,u[0],u[1])};
 const HEALTH={}; let healthBusy=false;
@@ -1394,7 +1538,20 @@ const nval=id=>num(val(id));
 const projOptions=()=>`<datalist id="dlProjects">${projectList().map(p=>`<option>${esc(p.name)}</option>`).join("")}</datalist>`;
 
 /* ---------------- add to an app ---------------- */
-const CAP_TYPES=[["task","Task","tasks"],["log","Log entry","log"],["idea","Idea","ideas"],["deadline","Deadline","deadlines"],["paper","Paper","radar"]];
+const CAP_TYPES=[["task","Task","tasks"],["meeting","Meeting","meetings"],["log","Log entry","log"],["idea","Idea","ideas"],["deadline","Deadline","deadlines"],["paper","Paper","radar"]];
+const MWARNS=[[0,"On the day"],[1,"1 day before"],[2,"2 days before"],[3,"3 days before"],[5,"5 days before"],[7,"1 week before"],[14,"2 weeks before"]];
+/* the repeat choices for a date, as in the Meetings app */
+function mRepOptions(date){
+  if(!date) return [{k:"none",rep:null,label:"Doesn't repeat"}];
+  const [y,mo,d]=date.split("-").map(Number), wd=new Date(date+"T12:00").getDay(), wn=MWD[wd], n=Math.ceil(d/7), last=d+7>mDim(y,mo-1);
+  const MONS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const o=[{k:"none",rep:null,label:"Doesn't repeat"},{k:"w1",rep:{f:"w",n:1},label:`Every week on ${wn}`},{k:"w2",rep:{f:"w",n:2},label:`Every 2 weeks on ${wn}`},
+    {k:"md",rep:{f:"md",d},label:`Every month on day ${d}`}];
+  if(n<=4) o.push({k:"mn",rep:{f:"mn",n,wd},label:`Every month on the ${MORD[n]} ${wn}`});
+  if(last) o.push({k:"ml",rep:{f:"ml",wd},label:`Every month on the last ${wn}`});
+  o.push({k:"y",rep:{f:"y",m:mo-1,d},label:`Every year on ${d} ${MONS[mo-1]}`});
+  return o;
+}
 let CAP={kind:"log",pre:{},logKind:"note",dlKind:"grant",hits:[]};
 function openCapture(kind,pre){
   if(SRC.mode!=="auto"||!STORAGE_OK){toast("Switch to live data to add things");return}
@@ -1414,8 +1571,35 @@ function renderCap(kind,pre){
   CAP.kind=kind; CAP.pre=pre; UI.set("capKind",kind); hint("");
   $$(".seg [data-cap]",sheet).forEach(b=>b.setAttribute("aria-pressed",b.dataset.cap===kind));
   const box=$("#capBody"), go=$("#capGo");
-  go.textContent={task:"Add task",log:"Add to log",idea:"Add idea",deadline:"Add deadline",paper:"Save to reading list"}[kind];
-  if(kind==="task"){
+  go.textContent={task:"Add task",meeting:"Add meeting",log:"Add to log",idea:"Add idea",deadline:"Add deadline",paper:"Save to reading list"}[kind];
+  if(kind==="meeting"){
+    /* a new meeting, or points to bring to one that is coming up */
+    const T=todayStr(), soon=upMeetings(T,localDate(Date.now()+90*DAY)).filter(m=>!m.legacy);
+    const seen=new Set(), opts=soon.filter(m=>{const k=m.date===T?m.id:(m.series||m.id);if(seen.has(k))return false;seen.add(k);return true});
+    const sel=pre.meeting&&soon.some(m=>m.id===pre.meeting)?pre.meeting:"";
+    box.innerHTML=`<label>Meeting<select id="mSel"><option value="">New meeting</option>${opts.length?`<optgroup label="Add points to">${opts.map(m=>`<option value="${esc(m.id)}" ${m.id===sel?"selected":""}>${esc(m.title)} · ${esc(longDate(m.date))}</option>`).join("")}</optgroup>`:""}</select></label>
+      <div id="mNew" style="display:flex;flex-direction:column;gap:12px">
+        <label>Title<input id="mTitle" maxlength="120" value="${esc(pre.title||"")}" placeholder="Consortium meeting"></label>
+        <div class="f2"><label>Type<select id="mType">${Object.entries(MTYPES).map(([k,n])=>`<option value="${k}">${n}</option>`).join("")}</select></label><label>Project<input id="mProj" list="dlProjects" value="${esc(pre.proj||"")}" autocomplete="off"></label></div>
+        <div class="f2"><label>Date<input id="mDate" type="date" value="${esc(pre.date||"")}"></label><label>Starts (optional)<input id="mTime" type="time"></label></div>
+        <div class="f2"><label>Repeats<select id="mRep"></select></label><label>Remind me<select id="mWarn">${MWARNS.map(([v,l])=>`<option value="${v}" ${v===3?"selected":""}>${l}</option>`).join("")}</select></label></div>
+        <label>Where or link<input id="mWhere" placeholder="Room, or a Zoom or Teams link" autocapitalize="off"></label>
+      </div>
+      <label><span id="mPtsLab">Points to present or discuss</span><textarea id="mPts" placeholder="One per line. You can add more later, as they come up.">${esc(pre.points||"")}</textarea></label>
+      <p class="note" id="mNote"></p>`;
+    let repOpts=[];
+    const paintRep=()=>{const k=val("mRep");repOpts=mRepOptions(val("mDate"));$("#mRep").innerHTML=repOpts.map(o=>`<option value="${o.k}">${esc(o.label)}</option>`).join("");$("#mRep").value=repOpts.some(o=>o.k===k)?k:"none"};
+    const paint=()=>{
+      const m=soon.find(x=>x.id===val("mSel"));
+      $("#mNew").style.display=m?"none":"flex"; $("#capGo").textContent=m?"Add points":"Add meeting";
+      $("#mNote").textContent=m?`${m.title}, ${mWhen(m)}${m.proj?" ("+m.proj+")":""}. ${arr(m.agenda).length?plural(arr(m.agenda).length,"point")+" so far.":"No points yet."}`:"Goes to Meetings. Repeating meetings plan the next one on their own.";
+    };
+    CAP.repOpts=()=>repOpts;
+    $("#mSel").addEventListener("change",()=>{paint();(val("mSel")?$("#mPts"):$("#mTitle")).focus()});
+    $("#mDate").addEventListener("change",paintRep);
+    paintRep(); paint();
+    (sel?$("#mPts"):$("#mTitle")).focus();
+  }else if(kind==="task"){
     box.innerHTML=`<label>Task<input id="tTitle" maxlength="200" value="${esc(pre.title||"")}" placeholder="What needs doing"></label>
       <div class="f2"><label>Project<input id="tProj" list="dlProjects" value="${esc(pre.proj||"")}" autocomplete="off"></label><label>Priority<select id="tPrio"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></label></div>
       <div class="f2"><label>Do on<input id="tPlan" type="date" value="${esc(pre.plan??todayStr())}"></label><label>Due (optional)<input id="tDue" type="date" value="${esc(pre.due||"")}"></label></div>
@@ -1514,7 +1698,19 @@ function fillPaper(h){
 }
 async function submitCapture(){
   const k=CAP.kind; let ok=false;
-  if(k==="task"){
+  if(k==="meeting"){
+    const points=$("#mPts").value.split("\n").map(s=>s.trim().replace(/^[-*•]\s*/,"")).filter(Boolean).slice(0,40), mid=val("mSel");
+    if(mid){
+      if(!points.length){hint("Write at least one point.");return}
+      ok=await OPS.addPoints(mid,points);
+    }else{
+      const title=val("mTitle"); if(!title){hint("Give the meeting a title.");return}
+      if(!val("mDate")){hint("Pick a date.");return}
+      const where=val("mWhere");
+      const o=CAP.repOpts().find(x=>x.k===val("mRep"));
+      ok=await OPS.addMeeting({title,mtype:val("mType"),proj:val("mProj"),date:val("mDate"),time:val("mTime"),rep:o&&o.rep?o.rep:null,warn:+val("mWarn"),where,points});
+    }
+  }else if(k==="task"){
     const title=val("tTitle"); if(!title){hint("What is the task?");return}
     ok=await OPS.addTask({title,proj:val("tProj"),prio:val("tPrio"),plan:val("tPlan"),due:val("tDue"),notes:val("tNotes")});
   }else if(k==="log"){
@@ -1544,9 +1740,10 @@ function digestMD(days,proj){
   const oneLine=s=>String(s||"").replace(/\s*\n+\s*/g," ").trim();
   const logs=D.entries.filter(e=>e.kind!=="meeting"&&e.date>=sinceD&&P(e.proj)).sort((a,b)=>a.date.localeCompare(b.date)||(a.added||0)-(b.added||0));
   if(logs.length){L.push("## Research log","");logs.forEach(e=>L.push(`- ${e.date}, **${logKind(e.kind).name}**${!proj&&e.proj?` (${e.proj})`:""}: ${oneLine(e.text)}`));L.push("")}
-  const mts=D.meetings.filter(e=>e.date>=sinceD&&P(e.proj)).sort((a,b)=>a.date.localeCompare(b.date));
+  const mts=D.meetings.filter(e=>e.date>=sinceD&&e.date<=todayStr()&&!e.skipped&&(e.date<todayStr()||mWritten(e))&&P(e.proj)).sort((a,b)=>a.date.localeCompare(b.date));
   if(mts.length){L.push("## Meetings","");mts.forEach(x=>{
     L.push(`### ${x.title}, ${x.date}`); if(arr(x.people).length) L.push(`*${x.mtype==="seminar"?"Speaker":"People"}: ${x.people.join(", ")}*`);
+    if(arr(x.agenda).length) L.push("",`Points brought: ${x.agenda.map(p=>p.text).join("; ")}`);
     if(x.decisions) L.push("",`Decisions: ${oneLine(x.decisions)}`);
     if(arr(x.actions).length){L.push("");x.actions.forEach(a=>L.push(`- [${a.done?"x":" "}] ${a.text}${a.owner?` (${a.owner})`:""}${a.due?`, due ${a.due}`:""}`))}
     L.push("");
@@ -1557,6 +1754,11 @@ function digestMD(days,proj){
   if(topen.length){L.push("## Open tasks","");topen.forEach(x=>L.push(`- [ ] ${x.title}${!proj&&x.proj?` (${x.proj})`:""}${x.due?`, due ${x.due}`:""}${x.prio==="high"?", high priority":""}`));L.push("")}
   const acts=D.actions.filter(x=>!x.a.done&&P(x.m.proj)).sort((a,b)=>(a.a.due||"9").localeCompare(b.a.due||"9"));
   if(acts.length){L.push("## Open actions","");acts.forEach(x=>L.push(`- [ ] ${x.a.text}${x.a.owner?` (${x.a.owner})`:""}${x.a.due?`, due ${x.a.due}`:""}. From ${x.m.title}, ${x.m.date}`));L.push("")}
+  const nextM=upMeetings(todayStr(),localDate(now+30*DAY)).filter(x=>P(x.proj));
+  if(nextM.length){L.push("## Meetings in the next 30 days","");nextM.forEach(x=>{
+    L.push(`- ${x.date}${x.time?" "+x.time:""}: ${x.title}${!proj&&x.proj?` (${x.proj})`:""}`);
+    arr(x.agenda).forEach(p=>L.push(`  - [${p.done?"x":" "}] ${p.text}`));
+  });L.push("")}
   const dls=D.deadlines.filter(i=>!i.done&&dlWhen(i)>=now&&dlWhen(i)<now+30*DAY&&T(i.title,i.notes)).sort((a,b)=>dlWhen(a)-dlWhen(b));
   if(dls.length){L.push("## Deadlines in the next 30 days","");dls.forEach(i=>L.push(`- ${i.date}${i.time?" "+i.time:""}: ${i.title} (${dlKind(i.kind).name.toLowerCase()})`));L.push("")}
   const pps=D.saved.filter(p=>(p.saved||0)>=since&&(!m||T(p.title,p.topic)));
@@ -1642,7 +1844,7 @@ function openSettings(){
     ${themeHTML}
     <h4>You</h4>
     <label>Your names in meeting actions<input id="meName" value="${esc(LS.get("suite.me")||"")}" placeholder="for example Alex, A. Pinto" autocomplete="off"></label>
-    <p class="note">An action counts as yours under <b>My actions</b> when its owner is empty, "me", or one of these names (separate them with commas). The research log uses the same list.</p>
+    <p class="note">An action counts as yours under <b>My actions</b> when its owner is empty, "me", or one of these names (separate them with commas). The Meetings app uses the same list.</p>
     <h4>Online services</h4>
     <label>OpenAlex API key<input id="netKey" class="mono" value="${esc(LS.get("net.openalexKey")||"")}" placeholder="paste the key from openalex.org/settings/api" autocomplete="off" spellcheck="false" autocapitalize="off"></label>
     <p class="note">The literature radar and the citation tracker search OpenAlex, which has asked for a free API key since February 2026. Sign in at <a href="https://openalex.org/settings/api" target="_blank" rel="noopener">openalex.org/settings/api</a>, copy your key and paste it here.</p>
@@ -1904,6 +2106,8 @@ document.addEventListener("click",e=>{
     case "sync-drop": if(SYNC()){SYNC().dropConflict(+b.dataset.i);render()} break;
     case "digest": openDigest(b.dataset.proj||""); break;
     case "cap": openCapture(b.dataset.kind,{proj:b.dataset.proj||""}); break;
+    case "mt-point": openCapture("meeting",{meeting:id}); break;
+    case "goto-meet": scrollToId("s-meet"); break;
     case "proj": UI.set("proj",b.dataset.key); renderProjects(); break;
     case "proj-new": openProjectSheet(null); break;
     case "proj-kw": openProjectSheet(b.dataset.key); break;
@@ -1922,6 +2126,7 @@ document.addEventListener("change",e=>{
   const op=t.dataset.op;
   if(op==="act-done") OPS.toggleAction(t.dataset.mid,t.dataset.aid,t.checked);
   else if(op==="task-done") OPS.toggleTask(t.dataset.id,t.checked);
+  else if(op==="pt-done") OPS.togglePoint(t.dataset.mid,t.dataset.pid,t.checked);
   else if(op==="auto"){
     if(!canWrite(A.settings)){t.checked=!t.checked;toast("Settings are showing a backup");return}
     saveSettings({auto:t.checked}); toast(t.checked?"Backing up changes while this page is open":"Automatic backups here are off");

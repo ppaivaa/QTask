@@ -21,13 +21,13 @@ NAME = "QTask"
 SHORT = "QTask"
 TAGLINE = "Your research day in one place"
 SYNC_REPO = "ppaivaa/QTask-data"     # suggested in the sync set-up
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 
 # suite id -> (title, [(app id, label)]) in the order of the bottom bar
 SUITES = {
     "control-center": ("Control center", []),
-    "lab-notebook": ("Lab notebook", [("log", "Log"), ("tasks", "Tasks"), ("ideas", "Ideas"),
-                                      ("plans", "Script plans"), ("deadlines", "Deadlines")]),
+    "lab-notebook": ("Lab notebook", [("log", "Log"), ("tasks", "Tasks"), ("meetings", "Meetings"),
+                                      ("deadlines", "Deadlines"), ("ideas", "Ideas"), ("plans", "Scripts")]),
     "literature-hub": ("Literature hub", [("radar", "Radar"), ("citations", "Citations")]),
     "structure-studio": ("Structure studio", [("viewer", "Viewer")]),
     "paper-kit": ("Paper kit", [("plots", "Plot guide"), ("schemes", "Schemes")]),
@@ -37,6 +37,7 @@ SUITES = {
 ICONS = {
     "log": '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/><path d="M9 8h6"/>',
     "tasks": '<path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.5 6l1.5 1.5L7.5 5"/><path d="M3.5 12l1.5 1.5L7.5 11"/><path d="M3.5 18l1.5 1.5L7.5 17"/>',
+    "meetings": '<circle cx="8" cy="8" r="3"/><circle cx="16.5" cy="9" r="2.5"/><path d="M2.5 19c.6-3.2 2.7-5 5.5-5s4.9 1.8 5.5 5"/><path d="M14.5 14.3c.6-.2 1.3-.3 2-.3 2.4 0 4.2 1.6 4.8 4.5"/>',
     "ideas": '<path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"/>',
     "plans": '<rect x="3" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="16" width="7" height="5" rx="1.5"/><path d="M6.5 8v5a3 3 0 0 0 3 3H14"/>',
     "deadlines": '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M12 14v3l2 1"/>',
@@ -54,6 +55,7 @@ def _app(aid, file, label, keys=(), prefixes=(), reminder=""):
 BACKUP = {
     "lab-notebook": [_app("log", "research-log", "Log", ["researchlog.v1"], reminder="research-log"),
                      _app("tasks", "task-list", "Tasks", ["tasks.v1"], reminder="task-list"),
+                     _app("meetings", "meeting-notes", "Meetings", ["meetings.v1"], reminder="meeting-notes"),
                      _app("ideas", "idea-board", "Ideas", ["ideaboard.v1"], reminder="idea-board"),
                      _app("plans", "script-planner", "Script plans", ["scriptplans.v1"], reminder="script-planner"),
                      _app("deadlines", "deadline-tracker", "Deadlines", ["deadlines.v1"], reminder="deadline-radar")],
@@ -64,7 +66,7 @@ BACKUP = {
 }
 # apps reloaded when their data changes elsewhere (another tab, the control center, another device)
 LIVE = {
-    "lab-notebook": {"log": ["researchlog.v1"], "tasks": ["tasks.v1"], "ideas": ["ideaboard.v1"],
+    "lab-notebook": {"log": ["researchlog.v1"], "tasks": ["tasks.v1"], "meetings": ["meetings.v1"], "ideas": ["ideaboard.v1"],
                      "plans": ["scriptplans.v1"], "deadlines": ["deadlines.v1"]},
     "literature-hub": {"radar": ["litradar.v1"], "citations": ["citedash.v1"]},
     "structure-studio": {},
@@ -72,7 +74,7 @@ LIVE = {
 }
 # control-center links can open an app on one tab or filter: ?pick=NAME
 PICKS = {
-    "lab-notebook": {"log": {"actions": '#tabs [data-tab="actions"]', "meetings": '#tabs [data-tab="meetings"]'},
+    "lab-notebook": {"meetings": {s: f'#tabs [data-tab="{s}"]' for s in ("upcoming", "notes", "actions")},
                      "ideas": {s: f'#tabs [data-stage="{s}"]' for s in ("spark", "explore", "doing", "done")},
                      "deadlines": {"done": "#showDone"},
                      "tasks": {s: f'#chips [data-f="{s}"]' for s in ("today", "upcoming", "someday", "all", "done")}},

@@ -182,10 +182,8 @@ dialog{background:var(--raised)}
     </div>
   </header>
 
-  <nav class="tabs" role="tablist" id="tabs"></nav>
-
   <label class="sr" for="search">Search</label>
-  <input class="search" id="search" type="search" placeholder="Search entries, meetings, people, #tags">
+  <input class="search" id="search" type="search" placeholder="Search entries, projects, #tags">
 
   <div id="logFilters">
     <div class="chips" id="chips"></div>
@@ -195,18 +193,13 @@ dialog{background:var(--raised)}
       <select id="rangeF"><option value="">Any time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option><option value="90">Last 3 months</option><option value="365">Last year</option></select>
     </div>
   </div>
-  <div id="actFilters" class="hidden">
-    <div class="chips" id="ownerChips"></div>
-  </div>
 
-  <div class="bar"><span id="count"></span><button class="linkbtn hidden" id="showDone"></button></div>
+  <div class="bar"><span id="count"></span></div>
   <main id="list"></main>
   <p class="sync" id="sync"></p>
 </div>
 <button class="fab" id="fab" aria-label="New entry">+</button>
 <datalist id="dlProj"></datalist>
-<datalist id="dlPeople"></datalist>
-<datalist id="dlTitles"></datalist>
 
 <!-- quick entry -->
 <dialog id="dlg">
@@ -230,44 +223,6 @@ dialog{background:var(--raised)}
   </form>
 </dialog>
 
-<!-- meeting -->
-<dialog id="mdlg">
-  <form class="sheet" id="mform" autocomplete="off" novalidate>
-    <h2 id="mTitle">New meeting</h2>
-    <label>Title<input id="mName" list="dlTitles" maxlength="120" placeholder="Weekly group meeting"></label>
-    <div class="row">
-      <label>Type<select id="mType"></select></label>
-      <label>Date<input id="mDate" type="date"></label>
-    </div>
-    <label><span id="mPeopleLabel">People</span><input id="mPeople" list="dlPeople" maxlength="400" placeholder="Comma separated"></label>
-    <label>Project<input id="mProj" list="dlProj" maxlength="60"></label>
-    <div id="mCarry"></div>
-    <label>Notes<textarea id="mNotes" maxlength="12000" placeholder="Discussion, results shown, questions raised. #tags and `code` work here."></textarea></label>
-    <label>Decisions<textarea id="mDec" maxlength="4000" style="min-height:70px" placeholder="What was agreed"></textarea></label>
-    <h4>Action items</h4>
-    <div id="mActs" style="display:flex;flex-direction:column;gap:8px"></div>
-    <button type="button" class="btn" id="mAddAct" style="background:var(--surface);color:var(--accent)">+ Add action item</button>
-    <label class="check"><input type="checkbox" id="mPin"> Pin as important</label>
-    <p class="hint" id="mHint"></p>
-    <div class="sbar">
-      <button type="button" class="btn danger" id="mDel">Delete</button>
-      <span style="display:flex;gap:6px;margin-left:auto">
-        <button type="button" class="btn ghost" data-close>Cancel</button>
-        <button type="submit" class="btn primary">Save</button>
-      </span>
-    </div>
-  </form>
-</dialog>
-
-<!-- choose what to add -->
-<dialog id="pick">
-  <div class="sheet">
-    <h2>Add</h2>
-    <button class="btn primary" id="pickEntry">Log entry</button>
-    <button class="btn" id="pickMeeting" style="background:var(--surface)">Meeting notes</button>
-  </div>
-</dialog>
-
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
 const $=s=>document.querySelector(s);
@@ -277,11 +232,6 @@ const num=v=>{const n=parseFloat(v);return isFinite(n)?n:null};
 const stamp=()=>new Date().toISOString().slice(0,10);
 let _tt=null;
 function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("show");clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove("show"),2400)}
-async function copyText(t,msg){
-  try{await navigator.clipboard.writeText(t);toast(msg||"Copied")}
-  catch(_){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();
-    try{document.execCommand("copy");toast(msg||"Copied")}catch(__){toast("Copy not available")}a.remove()}
-}
 function storageWorks(){try{const k="__probe"+Math.random();localStorage.setItem(k,"1");localStorage.removeItem(k);return true}catch(_){return false}}
 function saveFile(filename,data){
   try{
@@ -317,198 +267,119 @@ function makeStore(lsKey,docName,listKeys,onChange){
   };
   return S;
 }
+/* Meetings now have their own app. Move any meeting notes still kept in the log there (same ids, nothing lost). */
+function migrateLogMeetings(){
+  try{
+    const lg=JSON.parse(localStorage.getItem("researchlog.v1")||"null");
+    if(!lg||!Array.isArray(lg.entries)||!lg.entries.some(e=>e&&e.kind==="meeting")) return 0;
+    let mt=JSON.parse(localStorage.getItem("meetings.v1")||"null");
+    if(!mt||typeof mt!=="object"||Array.isArray(mt)) mt={items:[]};
+    if(!Array.isArray(mt.items)) mt.items=[];
+    const ids=new Set(mt.items.map(x=>x&&x.id)); let n=0;
+    for(const e of lg.entries){
+      if(!e||e.kind!=="meeting"||ids.has(e.id)) continue;
+      mt.items.push({id:e.id||uid(),added:e.added||Date.now(),updated:Date.now(),series:"",title:e.title||"Meeting",mtype:e.mtype||"group",
+        proj:e.proj||"",people:Array.isArray(e.people)?e.people:[],date:e.date||stamp(),time:"",end:"",where:"",rep:null,warn:3,
+        agenda:[],text:e.text||"",decisions:e.decisions||"",actions:Array.isArray(e.actions)?e.actions:[],pin:!!e.pin});
+      n++;
+    }
+    if(!mt.lastProj&&lg.lastProj) mt.lastProj=lg.lastProj;
+    localStorage.setItem("meetings.v1",JSON.stringify(mt));
+    lg.entries=lg.entries.filter(e=>!(e&&e.kind==="meeting"));
+    localStorage.setItem("researchlog.v1",JSON.stringify(lg));
+    return n;
+  }catch(_){return 0}
+}
 
 (function(){
   const KINDS=[
     {id:"note",name:"Note",c:"--muted"},{id:"result",name:"Result",c:"--green"},{id:"problem",name:"Problem",c:"--danger"},
     {id:"fix",name:"Fix",c:"--teal"},{id:"decision",name:"Decision",c:"--gold"},{id:"idea",name:"Idea",c:"--violet"}
   ];
-  const MEETING={id:"meeting",name:"Meeting",c:"--accent"};
-  const MTYPES=[["group","Group meeting"],["supervision","Supervision"],["collab","Collaboration"],["seminar","Seminar or talk"],["oneone","One-to-one"],["other","Other"]];
-  let tab="log",proj="",kind="",range="",query="",editing=null,fKind="note",ownerF="me",showDone=false;
-  let mEditing=null,mActs=[],mCarryIds=[];
+  let proj="",kind="",range="",query="",editing=null,fKind="note";
+  const moved=migrateLogMeetings();
   const store=makeStore("researchlog.v1","log",["entries"],render);
   const D=()=>store.data;
-  const allKinds=[...KINDS,MEETING];
-  const kc=k=>`var(${(allKinds.find(x=>x.id===k)||KINDS[0]).c})`;
-  const kn=k=>(allKinds.find(x=>x.id===k)||KINDS[0]).name;
-  const mtn=t=>(MTYPES.find(x=>x[0]===t)||MTYPES[MTYPES.length-1])[1];
-  const isM=e=>e.kind==="meeting";
+  /* meeting notes live in the Meetings app; any left here (before they move) are not shown */
+  const entries=()=>D().entries.filter(e=>e&&e.kind!=="meeting"&&typeof e.text==="string");
+  const kc=k=>`var(${(KINDS.find(x=>x.id===k)||KINDS[0]).c})`;
+  const kn=k=>(KINDS.find(x=>x.id===k)||KINDS[0]).name;
   const fmt=t=>esc(t).replace(/`([^`\n]+)`/g,"<code>$1</code>").replace(/(^|\s)#([\w\-/.]+)/g,'$1<span style="color:var(--accent)">#$2</span>');
   function localDate(ms){const d=new Date(ms);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
   const localToday=()=>localDate(Date.now());
-  const shortDate=d=>new Date(d+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"});
   const dayLabel=d=>{
     if(d===localToday()) return "Today"; if(d===localDate(Date.now()-864e5)) return "Yesterday";
     return new Date(d+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",year:"numeric"});
   };
-  /* "me" in action owners: blank, me/myself/eu/yo, or a name set in the control center (stored as suite.me) */
-  const MY_NAMES=(()=>{try{return (localStorage.getItem("suite.me")||"").split(/[,;]/).map(s=>s.trim().toLowerCase()).filter(Boolean)}catch(_){return []}})();
-  const isMe=o=>!o||/^(me|myself|eu|yo)$/i.test(o.trim())||MY_NAMES.includes(o.trim().toLowerCase());
-  function dueState(a){
-    if(a.done||!a.due) return "";
-    const t=localToday(); if(a.due<t) return "overdue";
-    const soon=localDate(Date.now()+3*864e5); return a.due<=soon?"soon":"";
-  }
-  const dueLabel=a=>{if(!a.due)return"";const s=dueState(a);return s==="overdue"?`overdue, ${shortDate(a.due)}`:(a.due===localToday()?"due today":`due ${shortDate(a.due)}`)};
-  const allActions=()=>D().entries.filter(isM).flatMap(m=>(m.actions||[]).map(a=>({a,m})));
 
-  $("#kindF").innerHTML=`<option value="">All types</option>`+allKinds.map(k=>`<option value="${k.id}">${k.name}${k.id==="meeting"?"s":""}</option>`).join("");
-  $("#mType").innerHTML=MTYPES.map(t=>`<option value="${t[0]}">${t[1]}</option>`).join("");
+  $("#kindF").innerHTML=`<option value="">All types</option>`+KINDS.map(k=>`<option value="${k.id}">${k.name}</option>`).join("");
 
   // ---------- filtering ----------
-  function haystack(e){
-    return isM(e)?[e.title,mtn(e.mtype),(e.people||[]).join(" "),e.text,e.decisions,(e.actions||[]).map(a=>a.text+" "+(a.owner||"")).join(" "),e.proj].join(" ")
-      :(e.text+" "+(e.proj||"")+" "+kn(e.kind));
-  }
   function visible(e){
-    if(tab==="meetings"&&!isM(e)) return false;
     if(proj==="__pin"){ if(!e.pin) return false; }
     else if(proj&&e.proj!==proj) return false;
-    if(tab==="log"&&kind&&e.kind!==kind) return false;
+    if(kind&&e.kind!==kind) return false;
     if(range){const lim=localDate(Date.now()-range*864e5); if(e.date<lim) return false}
     if(!query) return true;
-    return haystack(e).toLowerCase().includes(query);
+    return (e.text+" "+(e.proj||"")+" "+kn(e.kind)).toLowerCase().includes(query);
   }
 
   // ---------- rendering ----------
-  function renderTabs(){
-    const open=allActions().filter(x=>!x.a.done).length;
-    const nm=D().entries.filter(isM).length;
-    $("#tabs").innerHTML=[["log","Log",D().entries.length],["meetings","Meetings",nm],["actions","Actions",open]]
-      .map(([id,n,c])=>`<button class="tab" role="tab" data-tab="${id}" aria-selected="${tab===id}">${n}${c?`<span class="c">${c}</span>`:""}</button>`).join("");
-  }
   function refreshLists(){
-    const E=D().entries;
+    const E=entries();
     const projects=[...new Set(E.map(e=>e.proj).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
-    $("#dlProj").innerHTML=projects.map(p=>`<option>${esc(p)}</option>`).join("");
-    const people=new Set(); E.filter(isM).forEach(m=>{(m.people||[]).forEach(p=>people.add(p));(m.actions||[]).forEach(a=>{if(a.owner)people.add(a.owner)})});
-    people.add("Me");
-    $("#dlPeople").innerHTML=[...people].sort((a,b)=>a.localeCompare(b)).map(p=>`<option>${esc(p)}</option>`).join("");
-    $("#dlTitles").innerHTML=[...new Set(E.filter(isM).map(m=>m.title))].sort().map(t=>`<option>${esc(t)}</option>`).join("");
+    const all=new Set(projects);
+    try{const mt=JSON.parse(localStorage.getItem("meetings.v1")||"null");(mt&&mt.items||[]).forEach(m=>{if(m&&m.proj)all.add(m.proj)})}catch(_){}
+    try{const tk=JSON.parse(localStorage.getItem("tasks.v1")||"null");(tk&&tk.items||[]).forEach(t=>{if(t&&t.proj)all.add(t.proj)})}catch(_){}
+    $("#dlProj").innerHTML=[...all].sort((a,b)=>a.localeCompare(b)).map(p=>`<option>${esc(p)}</option>`).join("");
     return projects;
   }
   function render(){
     const projects=refreshLists();
     if(proj&&proj!=="__pin"&&!projects.includes(proj)) proj="";
-    const E=D().entries;
+    const E=entries();
     $("#total").textContent=E.length||"";
-    renderTabs();
-    $("#logFilters").classList.toggle("hidden",tab==="actions");
-    $("#actFilters").classList.toggle("hidden",tab!=="actions");
-    $("#kindF").parentElement.querySelector("#kindF").classList.toggle("hidden",tab!=="log");
-    $("#showDone").classList.toggle("hidden",tab!=="actions");
-    $("#fab").setAttribute("aria-label",tab==="log"?"Add":"New meeting");
-    if(tab==="actions"){renderActions();return}
-    const pool=tab==="meetings"?E.filter(isM):E;
-    $("#chips").innerHTML=[`<button class="chip" data-f="" aria-pressed="${!proj}">All<span class="c">${pool.length}</span></button>`,
-      `<button class="chip" data-f="__pin" aria-pressed="${proj==="__pin"}">📌 Pinned<span class="c">${pool.filter(e=>e.pin).length}</span></button>`]
-      .concat(projects.map(p=>`<button class="chip" data-f="${esc(p)}" aria-pressed="${proj===p}">${esc(p)}<span class="c">${pool.filter(e=>e.proj===p).length}</span></button>`)).join("");
+    $("#chips").innerHTML=[`<button class="chip" data-f="" aria-pressed="${!proj}">All<span class="c">${E.length}</span></button>`,
+      `<button class="chip" data-f="__pin" aria-pressed="${proj==="__pin"}">📌 Pinned<span class="c">${E.filter(e=>e.pin).length}</span></button>`]
+      .concat(projects.map(p=>`<button class="chip" data-f="${esc(p)}" aria-pressed="${proj===p}">${esc(p)}<span class="c">${E.filter(e=>e.proj===p).length}</span></button>`)).join("");
     const vis=E.filter(visible).sort((a,b)=>b.date.localeCompare(a.date)||b.added-a.added);
-    const noun=tab==="meetings"?["meeting","meetings"]:["entry","entries"];
-    $("#count").textContent=`${vis.length} ${vis.length===1?noun[0]:noun[1]}`;
+    $("#count").textContent=`${vis.length} ${vis.length===1?"entry":"entries"}`;
     if(!vis.length){
-      $("#list").innerHTML=`<div class="empty">${E.length&&(tab==="log"||E.some(isM))?"Nothing matches.":tab==="meetings"?"Tap + to take notes in your next meeting.":"Tap + to write your first entry or meeting notes."}</div>`;
+      $("#list").innerHTML=`<div class="empty">${E.length?"Nothing matches.":"Tap + to write your first entry: a result, a problem, a fix or a decision. Meeting notes go in Meetings."}</div>`;
       return;
     }
     const days=[...new Set(vis.map(e=>e.date))];
     $("#list").innerHTML=days.map(d=>{
       const es=vis.filter(e=>e.date===d);
       return `<section class="day"><div class="dayhead"><span>${dayLabel(d)}</span><span>${es.length}</span></div>
-        <div class="list">${es.map(e=>isM(e)?meetingCard(e):entryCard(e)).join("")}</div></section>`;
+        <div class="list">${es.map(entryCard).join("")}</div></section>`;
     }).join("");
-  }
-  function pinEdit(e){
-    return `<span style="margin-left:auto;display:flex">
-      ${isM(e)?`<button class="ibtn" data-act="follow" aria-label="Follow-up meeting" title="Follow-up meeting" style="min-width:40px;min-height:40px">↻</button>`:""}
-      <button class="ibtn ${e.pin?"star-on":""}" data-act="pin" aria-label="${e.pin?"Unpin":"Pin"}" style="min-width:40px;min-height:40px">${e.pin?"📌":"⚲"}</button>
-      <button class="ibtn" data-act="edit" aria-label="Edit" style="min-width:40px;min-height:40px">✎</button></span>`;
   }
   function entryCard(e){
     return `<article class="entry" data-id="${e.id}" style="--cc:${kc(e.kind)}">
       <div class="body">${fmt(e.text)}</div>
-      <div class="meta"><span class="kind">${kn(e.kind)}</span>${e.proj?`<span class="proj">${esc(e.proj)}</span>`:""}${pinEdit(e)}</div>
+      <div class="meta"><span class="kind">${kn(e.kind)}</span>${e.proj?`<span class="proj">${esc(e.proj)}</span>`:""}
+      <span style="margin-left:auto;display:flex">
+      <button class="ibtn ${e.pin?"star-on":""}" data-act="pin" aria-label="${e.pin?"Unpin":"Pin"}" style="min-width:40px;min-height:40px">${e.pin?"📌":"⚲"}</button>
+      <button class="ibtn" data-act="edit" aria-label="Edit" style="min-width:40px;min-height:40px">✎</button></span></div>
     </article>`;
-  }
-  function actionRow(a,m,showSrc){
-    const st=dueState(a);
-    return `<label class="act ${a.done?"done":""}"><input type="checkbox" data-aid="${a.id}" data-mid="${m.id}" ${a.done?"checked":""} aria-label="Done">
-      <div class="at"><div>${fmt(a.text)}</div><div class="am">${a.owner?`<span>${esc(a.owner)}</span>`:""}${a.due?`<span class="${st}">${dueLabel(a)}</span>`:""}
-      ${showSrc?`<span class="src" data-open="${m.id}">${esc(m.title)}, ${shortDate(m.date)}</span>`:""}</div></div></label>`;
-  }
-  function meetingCard(m){
-    const long=(m.text||"").length>320||(m.text||"").split("\n").length>5;
-    const acts=m.actions||[], open=acts.filter(a=>!a.done).length;
-    return `<article class="entry mtg" data-id="${m.id}" style="--cc:${kc("meeting")}">
-      <div class="mtitle">${esc(m.title)}</div>
-      ${(m.people||[]).length?`<div class="people">${m.mtype==="seminar"?"Speaker: ":""}${esc(m.people.join(", "))}</div>`:""}
-      ${m.text?`<div class="msec"><span>Notes</span><div class="txt ${long?"clamp":""}">${fmt(m.text)}</div>${long?`<button class="more" data-act="more">Show more</button>`:""}</div>`:""}
-      ${m.decisions?`<div class="msec"><span>Decisions</span><div class="txt">${fmt(m.decisions)}</div></div>`:""}
-      ${acts.length?`<div class="msec"><span>Actions${open?` (${open} open)`:""}</span>${acts.map(a=>actionRow(a,m,false)).join("")}</div>`:""}
-      <div class="meta"><span class="kind">${esc(mtn(m.mtype))}</span>${m.proj?`<span class="proj">${esc(m.proj)}</span>`:""}${pinEdit(m)}</div>
-    </article>`;
-  }
-  function renderActions(){
-    const all=allActions();
-    const owners=[...new Set(all.map(x=>x.a.owner).filter(o=>o&&!isMe(o)))].sort((a,b)=>a.localeCompare(b));
-    if(ownerF!=="me"&&ownerF!==""&&!owners.includes(ownerF)) ownerF="me";
-    const cnt=f=>all.filter(x=>!x.a.done&&f(x)).length;
-    $("#ownerChips").innerHTML=[`<button class="chip" data-o="me" aria-pressed="${ownerF==="me"}">Mine<span class="c">${cnt(x=>isMe(x.a.owner))}</span></button>`,
-      `<button class="chip" data-o="" aria-pressed="${ownerF===""}">Everyone<span class="c">${cnt(()=>true)}</span></button>`]
-      .concat(owners.map(o=>`<button class="chip" data-o="${esc(o)}" aria-pressed="${ownerF===o}">${esc(o)}<span class="c">${cnt(x=>x.a.owner===o)}</span></button>`)).join("");
-    let vis=all.filter(x=>ownerF==="me"?isMe(x.a.owner):ownerF?x.a.owner===ownerF:true)
-      .filter(x=>!query||(x.a.text+" "+(x.a.owner||"")+" "+x.m.title).toLowerCase().includes(query));
-    const openL=vis.filter(x=>!x.a.done), doneL=vis.filter(x=>x.a.done);
-    $("#showDone").textContent=doneL.length?(showDone?"Hide done":`Show done (${doneL.length})`):"";
-    $("#count").textContent=`${openL.length} open`;
-    const groups=[
-      ["Overdue",openL.filter(x=>dueState(x.a)==="overdue")],
-      ["Due in the next 3 days",openL.filter(x=>dueState(x.a)==="soon")],
-      ["Later",openL.filter(x=>x.a.due&&!dueState(x.a))],
-      ["No date",openL.filter(x=>!x.a.due)]
-    ];
-    if(showDone) groups.push(["Done",doneL]);
-    const sortD=l=>l.sort((p,q)=>(p.a.due||"9").localeCompare(q.a.due||"9")||q.m.date.localeCompare(p.m.date));
-    const html=groups.filter(g=>g[1].length).map(([n,l])=>`<section class="group"><div class="ghead"><span>${n}</span><span>${l.length}</span></div>
-      <div class="acard">${sortD(l).map(x=>actionRow(x.a,x.m,true)).join("")}</div></section>`).join("");
-    $("#list").innerHTML=html||`<div class="empty">${all.length?"Nothing open here. Nice.":"Action items from your meeting notes will collect here."}</div>`;
   }
 
-  // ---------- tabs and filters ----------
-  $("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(!b)return;tab=b.dataset.tab;if(tab!=="log")kind="";$("#kindF").value=kind;render();window.scrollTo(0,0)});
+  // ---------- filters ----------
   $("#search").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();render()});
   $("#chips").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(!b)return;proj=b.dataset.f;render()});
-  $("#ownerChips").addEventListener("click",e=>{const b=e.target.closest("[data-o]");if(!b)return;ownerF=b.dataset.o;render()});
-  $("#showDone").addEventListener("click",()=>{showDone=!showDone;render()});
   $("#kindF").addEventListener("change",e=>{kind=e.target.value;render()});
   $("#rangeF").addEventListener("change",e=>{range=num(e.target.value)||"";render()});
 
   // ---------- list actions ----------
-  $("#list").addEventListener("change",ev=>{
-    const cb=ev.target.closest("[data-aid]"); if(!cb) return;
-    const m=D().entries.find(x=>x.id===cb.dataset.mid); const a=m&&(m.actions||[]).find(x=>x.id===cb.dataset.aid); if(!a) return;
-    a.done=cb.checked; a.doneAt=cb.checked?Date.now():null; m.updated=Date.now(); store.persist();
-    setTimeout(render,cb.checked?350:0);
-  });
   $("#list").addEventListener("click",ev=>{
-    const src=ev.target.closest("[data-open]");
-    if(src){ev.preventDefault();openMeeting(src.dataset.open);return}
     const b=ev.target.closest("[data-act]"); if(!b) return;
     const card=b.closest(".entry"); const e=card&&D().entries.find(x=>x.id===card.dataset.id); if(!e) return;
-    const a=b.dataset.act;
-    if(a==="pin"){e.pin=!e.pin;e.updated=Date.now();store.persist();render()}
-    else if(a==="edit") isM(e)?openMeeting(e.id):openEdit(e.id);
-    else if(a==="follow") openMeeting(null,e);
-    else if(a==="more"){const t=card.querySelector(".clamp");if(t){t.classList.remove("clamp");b.remove()}}
+    if(b.dataset.act==="pin"){e.pin=!e.pin;e.updated=Date.now();store.persist();render()}
+    else if(b.dataset.act==="edit") openEdit(e.id);
   });
 
-  // ---------- add ----------
-  const pick=$("#pick");
-  $("#fab").addEventListener("click",()=>{if(tab==="log")pick.showModal();else openMeeting()});
-  $("#pickEntry").addEventListener("click",()=>{pick.close();openEdit()});
-  $("#pickMeeting").addEventListener("click",()=>{pick.close();openMeeting()});
-
-  // ---------- log entry sheet ----------
+  // ---------- entry sheet ----------
   const dlg=$("#dlg");
   function renderKinds(){$("#kinds").innerHTML=KINDS.map(k=>`<button type="button" data-k="${k.id}" style="--cc:var(${k.c})" aria-pressed="${fKind===k.id}">${k.name}</button>`).join("")}
   $("#kinds").addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b)return;fKind=b.dataset.k;renderKinds()});
@@ -517,11 +388,12 @@ function makeStore(lsKey,docName,listKeys,onChange){
     editing=id||null; $("#hint").textContent="";
     const e=id?D().entries.find(x=>x.id===id):null;
     $("#dTitle").textContent=e?"Edit entry":"New entry";
-    fKind=e?.kind||(kind&&kind!=="meeting"?kind:"note"); renderKinds();
+    fKind=e?.kind||kind||"note"; renderKinds();
     $("#fText").value=e?.text||""; $("#fProj").value=e?e.proj||"":defaultProj();
     $("#fDate").value=e?.date||localToday(); $("#fPin").checked=!!e?.pin;
     $("#delBtn").style.display=e?"":"none"; dlg.showModal(); if(!e) $("#fText").focus();
   }
+  $("#fab").addEventListener("click",()=>openEdit());
   $("#form").addEventListener("submit",ev=>{
     ev.preventDefault();
     const text=$("#fText").value.trim(); if(!text){$("#hint").textContent="Write something first.";return}
@@ -536,109 +408,15 @@ function makeStore(lsKey,docName,listKeys,onChange){
     D().entries=D().entries.filter(x=>x.id!==editing); store.persist(); render(); dlg.close(); toast("Deleted");
   });
 
-  // ---------- meeting sheet ----------
-  const mdlg=$("#mdlg");
-  function renderActRows(){
-    $("#mActs").innerHTML=mActs.length?mActs.map((a,i)=>`<div class="arow" data-i="${i}">
-      <input type="text" data-f="text" value="${esc(a.text)}" placeholder="What needs doing" aria-label="Action">
-      <div class="l2">
-        <input type="text" data-f="owner" list="dlPeople" value="${esc(a.owner||"")}" placeholder="Who" aria-label="Owner">
-        <input type="date" data-f="due" value="${esc(a.due||"")}" aria-label="Due date">
-        <input type="checkbox" data-f="done" ${a.done?"checked":""} aria-label="Done">
-        <button type="button" class="ibtn x" data-rm aria-label="Remove action">✕</button>
-      </div></div>`).join(""):`<p style="margin:0;font-size:.85rem;color:var(--muted)">No action items yet.</p>`;
-  }
-  $("#mActs").addEventListener("input",e=>{
-    const row=e.target.closest(".arow"); if(!row) return; const a=mActs[+row.dataset.i], f=e.target.dataset.f;
-    if(f==="done") a.done=e.target.checked; else a[f]=e.target.value;
-  });
-  $("#mActs").addEventListener("change",e=>{const row=e.target.closest(".arow");if(row&&e.target.dataset.f==="done")mActs[+row.dataset.i].done=e.target.checked});
-  $("#mActs").addEventListener("click",e=>{const b=e.target.closest("[data-rm]");if(!b)return;mActs.splice(+b.closest(".arow").dataset.i,1);renderActRows()});
-  $("#mAddAct").addEventListener("click",()=>{
-    mActs.push({id:uid(),text:"",owner:"Me",due:"",done:false}); renderActRows();
-    const rows=document.querySelectorAll("#mActs .arow"); rows[rows.length-1].querySelector('[data-f="text"]').focus();
-  });
-  $("#mType").addEventListener("change",()=>{$("#mPeopleLabel").textContent=$("#mType").value==="seminar"?"Speaker":"People"});
-
-  function renderCarry(title,excludeId){
-    // open actions from earlier meetings with the same title
-    const prev=D().entries.filter(x=>isM(x)&&x.id!==excludeId&&title&&x.title.trim().toLowerCase()===title.trim().toLowerCase());
-    const items=prev.flatMap(m=>(m.actions||[]).filter(a=>!a.done||mCarryIds.includes(a.id)).map(a=>({a,m})));
-    mCarryIds=items.map(x=>x.a.id);
-    $("#mCarry").innerHTML=items.length?`<div class="carry"><b>Open from earlier meetings</b>${items.map(x=>actionRow(x.a,x.m,false)).join("")}</div>`:"";
-  }
-  $("#mCarry").addEventListener("change",ev=>{
-    const cb=ev.target.closest("[data-aid]"); if(!cb) return;
-    const m=D().entries.find(x=>x.id===cb.dataset.mid); const a=m&&m.actions.find(x=>x.id===cb.dataset.aid); if(!a) return;
-    a.done=cb.checked; a.doneAt=cb.checked?Date.now():null; m.updated=Date.now(); store.persist();
-    cb.closest(".act").classList.toggle("done",cb.checked);
-  });
-  $("#mName").addEventListener("change",()=>{if(!mEditing){mCarryIds=[];renderCarry($("#mName").value,null)}});
-
-  function openMeeting(id,followOf){
-    mEditing=id||null; $("#mHint").textContent=""; mCarryIds=[];
-    const m=id?D().entries.find(x=>x.id===id):null;
-    const src=m||followOf;
-    $("#mTitle").textContent=m?"Edit meeting":followOf?"Follow-up meeting":"New meeting";
-    $("#mName").value=src?.title||"";
-    $("#mType").value=src?.mtype||"group";
-    $("#mPeopleLabel").textContent=$("#mType").value==="seminar"?"Speaker":"People";
-    $("#mDate").value=m?.date||localToday();
-    $("#mPeople").value=(src?.people||[]).join(", ");
-    $("#mProj").value=src?src.proj||"":defaultProj();
-    $("#mNotes").value=m?.text||""; $("#mDec").value=m?.decisions||""; $("#mPin").checked=!!m?.pin;
-    mActs=m?(m.actions||[]).map(a=>({...a})):[];
-    renderActRows(); renderCarry(src?.title||"",m?.id||null);
-    $("#mDel").style.display=m?"":"none";
-    mdlg.showModal(); if(!src) $("#mName").focus();
-  }
-  $("#mform").addEventListener("submit",ev=>{
-    ev.preventDefault();
-    const title=$("#mName").value.trim();
-    if(!title){$("#mHint").textContent="Give the meeting a title.";$("#mName").focus();return}
-    const actions=mActs.map(a=>({...a,text:(a.text||"").trim(),owner:(a.owner||"").trim()})).filter(a=>a.text);
-    actions.forEach(a=>{if(a.done&&!a.doneAt)a.doneAt=Date.now();if(!a.done)a.doneAt=null});
-    const data={kind:"meeting",title,mtype:$("#mType").value,date:$("#mDate").value||localToday(),
-      people:$("#mPeople").value.split(",").map(s=>s.trim()).filter(Boolean),proj:$("#mProj").value.trim(),
-      text:$("#mNotes").value.trim(),decisions:$("#mDec").value.trim(),actions,pin:$("#mPin").checked,updated:Date.now()};
-    const m=mEditing?D().entries.find(x=>x.id===mEditing):null;
-    if(m) Object.assign(m,data); else D().entries.push({id:uid(),added:Date.now(),...data});
-    if(data.proj) D().lastProj=data.proj;
-    store.persist(); render(); mdlg.close(); toast(m?"Saved":"Meeting saved");
-  });
-  $("#mDel").addEventListener("click",()=>{
-    const m=D().entries.find(x=>x.id===mEditing); if(!m) return;
-    const n=(m.actions||[]).filter(a=>!a.done).length;
-    if(!confirm(`Delete "${m.title}"?${n?` Its ${n} open action item${n===1?"":"s"} will be deleted too.`:""}`)) return;
-    D().entries=D().entries.filter(x=>x.id!==mEditing); store.persist(); render(); mdlg.close(); toast("Deleted");
-  });
-
   // ---------- export ----------
-  function mdMeeting(m,out){
-    out.push(`### ${m.title} (${mtn(m.mtype)})`);
-    if((m.people||[]).length) out.push(`*${m.mtype==="seminar"?"Speaker":"People"}: ${m.people.join(", ")}*`);
-    if(m.proj&&!proj) out.push(`*Project: ${m.proj}*`);
-    out.push("");
-    if(m.text) out.push(m.text,"");
-    if(m.decisions) out.push("**Decisions**","",m.decisions,"");
-    if((m.actions||[]).length){out.push("**Actions**","");m.actions.forEach(a=>out.push(`- [${a.done?"x":" "}] ${a.text}${a.owner?` (${a.owner})`:""}${a.due?`, due ${a.due}`:""}`));out.push("")}
-  }
   $("#mdBtn").addEventListener("click",()=>{
-    if(tab==="actions"){
-      const open=allActions().filter(x=>!x.a.done).sort((p,q)=>(p.a.due||"9").localeCompare(q.a.due||"9"));
-      if(!open.length){toast("No open actions");return}
-      const out=["# Open action items",""];
-      open.forEach(x=>out.push(`- [ ] ${x.a.text}${x.a.owner?` (${x.a.owner})`:""}${x.a.due?`, due ${x.a.due}`:""}. From ${x.m.title}, ${x.m.date}`));
-      saveFile(`actions-${stamp()}.md`,out.join("\n")+"\n"); return;
-    }
-    const vis=D().entries.filter(visible).sort((a,b)=>a.date.localeCompare(b.date)||a.added-b.added);
+    const vis=entries().filter(visible).sort((a,b)=>a.date.localeCompare(b.date)||a.added-b.added);
     if(!vis.length){toast("Nothing to export");return}
-    const title=proj==="__pin"?"Pinned entries":proj||(tab==="meetings"?"Meeting notes":"Research log");
+    const title=proj==="__pin"?"Pinned entries":proj||"Research log";
     const out=[`# ${title}`,""]; let cur="";
     for(const e of vis){
       if(e.date!==cur){cur=e.date;out.push(`## ${e.date}`,"")}
-      if(isM(e)) mdMeeting(e,out);
-      else out.push(`- **${kn(e.kind)}**${e.proj&&!proj?` (${e.proj})`:""}: ${e.text.replace(/\n/g,"\n  ")}`,"");
+      out.push(`- **${kn(e.kind)}**${e.proj&&!proj?` (${e.proj})`:""}: ${e.text.replace(/\n/g,"\n  ")}`,"");
     }
     saveFile(`${title.toLowerCase().replace(/[^\w]+/g,"-").replace(/^-|-$/g,"")}-${stamp()}.md`,out.join("\n").replace(/\n{3,}/g,"\n\n")+"\n");
   });
@@ -649,12 +427,17 @@ function makeStore(lsKey,docName,listKeys,onChange){
     try{const o=JSON.parse(await f.text()); if(!Array.isArray(o.entries)) throw 0;
       const ids=new Set(D().entries.map(x=>x.id)); let n=0;
       for(const x of o.entries) if(x&&x.date&&(x.text||x.title)&&!ids.has(x.id)){D().entries.push({...x,id:x.id||uid(),updated:Date.now()});n++}
-      store.persist(); render(); toast(`Imported ${n} entr${n===1?"y":"ies"}`);
+      store.persist();
+      /* meeting notes in an older backup go on to the Meetings app */
+      const m=migrateLogMeetings();
+      if(m){const r=JSON.parse(localStorage.getItem("researchlog.v1")||"{}");D().entries=Array.isArray(r.entries)?r.entries:D().entries}
+      render(); toast(`Imported ${n-m} entr${n-m===1?"y":"ies"}${m?`, and ${m} meeting${m===1?"":"s"} into Meetings`:""}`);
     }catch(_){toast("Choose a .json backup exported from this log")}
     e.target.value="";
   });
 
   setupMenu(); render(); store.connect();
+  if(moved) toast(`Meeting notes now have their own app: ${moved} moved to Meetings`);
 })();
 </script>
 <script>window.__BACKUP={id:"research-log",key:"researchlog.v1"};</script>
