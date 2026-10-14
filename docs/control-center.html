@@ -1,0 +1,1974 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="suite-theme.js" data-suite-theme></script>
+<script src="suite-sync.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#5A4360">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="QTask">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="app.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/control-center-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<title>QTask</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:var(--t-bg,#000000);--surface:var(--t-surface,#131316);--raised:var(--t-raised,#1D1D22);--raised2:var(--t-raised2,#26262C);--field:var(--t-field,#0F0F12);--ink:var(--t-ink,#F2F2F4);--muted:var(--t-muted,#9D9DA5);--dim:var(--t-dim,#6F6F77);--faint:var(--t-faint,#28282E);--edge:var(--t-edge,#3B3B43);
+  --accent:var(--t-accent,#EBA8E4);--accent2:var(--t-accent2,#A7CBF4);
+  --grad:linear-gradient(90deg,var(--t-grad1,#F0A8DC) 0%,var(--t-grad2,#C9B6EF) 50%,var(--t-grad3,#A6CCF5) 100%);
+  --danger:var(--t-danger,#EF5A50);--red:var(--t-red,#F28B82);--gold:var(--t-gold,#E6C170);--green:var(--t-green,#7DCB9C);--violet:var(--t-violet,#C3A6F0);--pink:var(--t-pink,#EE93AF);--teal:var(--t-teal,#8CC3CC);--sky:var(--t-sky,#A6CCF5);--blue:var(--t-blue,#9DB2FF);
+  --pinbg:var(--t-pinbg,#2A2413);
+  --font:Roboto,"Google Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Roboto Mono","Droid Sans Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%}
+body{
+  margin:0;height:100%;height:100dvh;display:grid;grid-template-rows:minmax(0,1fr) auto;
+  padding-top:env(safe-area-inset-top,0px);
+  background:var(--t-bg,#000) linear-gradient(var(--t-head,#5A4360),var(--t-head,#5A4360)) top/100% env(safe-area-inset-top,0px) no-repeat;
+  color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:8px}
+.hidden{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- frame ---------- */
+.stage{position:relative;min-height:0;min-width:0;overflow:hidden}
+.scroller{position:absolute;inset:0;overflow-y:auto;overscroll-behavior:contain;
+  background-color:var(--t-bg,#000);background-image:linear-gradient(172deg,var(--t-head,#5A4360) 0%,var(--t-head2,#352C3F) 90px,var(--t-head3,#15121A) 210px,var(--t-bg,#000) 320px);background-repeat:no-repeat;background-size:100% 340px}
+.wrap{max-width:1180px;margin:0 auto;padding:16px 16px calc(104px + env(safe-area-inset-bottom,0px))}
+header.top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin:4px 0 14px}
+h1{font-weight:500;font-size:clamp(1.5rem,6vw,1.85rem);margin:0;line-height:1.15}
+.sub{margin:4px 0 0;color:var(--muted);font-size:.88rem}
+.hbtns{display:flex;gap:4px;align-items:center;flex:0 0 auto}
+.ibtn{min-width:44px;min-height:44px;border-radius:12px;color:var(--muted);display:inline-grid;place-items:center;font-size:1.1rem}
+.ibtn:hover{background:var(--surface)}
+.ibtn svg,.btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.srcchip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--edge);border-radius:999px;padding:6px 12px;min-height:40px;font-size:.82rem;color:var(--ink);background:var(--t-bg,#000);white-space:nowrap}
+.srcchip i{width:8px;height:8px;border-radius:50%;background:var(--green);flex:0 0 auto}
+.srcchip[data-mode="backup"] i,.srcchip[data-mode="file"] i{background:var(--gold)}
+.srcchip[data-mode="mixed"] i{background:var(--gold)}
+
+nav#nav{display:flex;gap:2px;background:var(--t-bg,#000);border-top:1px solid var(--faint);padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+nav#nav button{flex:1 1 0;min-width:0;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted);font-size:.74rem;padding:2px}
+nav#nav .ic{width:56px;height:30px;border-radius:999px;display:grid;place-items:center;position:relative}
+nav#nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav#nav .lb{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav#nav button[aria-current="page"]{color:var(--ink);font-weight:500}
+nav#nav button[aria-current="page"] .ic{background:var(--grad);color:var(--t-on-grad,#17161C)}
+nav#nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:12px}
+nav#nav .badge{position:absolute;top:0;right:8px;min-width:16px;height:16px;border-radius:999px;background:var(--danger);color:#fff;font-size:.62rem;font-weight:700;display:grid;place-items:center;padding:0 4px;box-shadow:0 0 0 2px var(--t-bg,#000)}
+nav#nav .dot{position:absolute;top:3px;right:12px;width:8px;height:8px;border-radius:50%;box-shadow:0 0 0 2px var(--t-bg,#000)}
+@media (min-width:900px){
+  body{grid-template-rows:minmax(0,1fr);grid-template-columns:auto minmax(0,1fr)}
+  nav#nav{order:-1;flex-direction:column;justify-content:flex-start;gap:10px;width:96px;border-top:0;border-right:1px solid var(--faint);padding:18px 6px calc(18px + env(safe-area-inset-bottom,0px))}
+  nav#nav button{flex:none}
+  .wrap{padding:22px 28px 60px}
+}
+
+.fab{position:absolute;right:18px;bottom:calc(18px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:18px;background:var(--t-fab,#17171C);border:1px solid var(--t-edge,#3A3A42);color:var(--t-fab-ink,#D9B9EE);font-size:1.9rem;line-height:1;box-shadow:0 8px 22px var(--t-shadow,rgba(0,0,0,.7));z-index:4;display:grid;place-items:center}
+.fab:disabled{opacity:.4}
+
+/* ---------- building blocks ---------- */
+.grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+@media (min-width:760px){.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.grid .span2{grid-column:1/-1}}
+@media (min-width:1100px){.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.card{background:var(--surface);border-radius:18px;padding:14px 14px 10px;min-width:0}
+.card > h2,.sech{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px;font-size:1rem;font-weight:500}
+.card > h2 small,.sech small{color:var(--muted);font-weight:400;font-size:.8rem}
+.card > h2 .lk,.sech .lk{font-size:.82rem;color:var(--accent);font-weight:400;text-decoration:none;white-space:nowrap}
+.card h3{margin:14px 0 4px;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.card h3:first-of-type{margin-top:4px}
+.empty{color:var(--muted);font-size:.9rem;padding:12px 2px}
+.muted{color:var(--muted)}
+.mono{font-family:var(--mono)}
+.warnbox{background:var(--pinbg);border-radius:14px;padding:12px 14px;margin:0 0 14px;font-size:.9rem;line-height:1.45;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.warnbox b{font-weight:500}
+.warnbox .grow{flex:1 1 220px;min-width:0}
+.infobox{background:var(--t-info-bg,#12141B);border:1px solid var(--t-info-line,#232838);border-radius:14px;padding:12px 14px;margin:0 0 14px;font-size:.88rem;color:var(--muted)}
+.infobox code,.note code{font-family:var(--mono);font-size:.82rem;color:var(--ink)}
+
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0 0 14px}
+@media (min-width:600px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (min-width:1000px){.tiles{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.tile{background:var(--surface);border-radius:16px;padding:12px 14px;text-align:left;display:flex;flex-direction:column;gap:2px;min-height:78px;border:1.5px solid transparent}
+.tile b{font-size:1.6rem;font-weight:500;line-height:1.1;color:var(--tc,var(--ink))}
+.tile span{font-size:.8rem;color:var(--muted)}
+.tile.zero b{color:var(--dim)}
+.tile:hover{border-color:var(--edge)}
+
+.rows{display:flex;flex-direction:column}
+.row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-top:1px solid var(--faint);min-width:0}
+.rows > .row:first-child{border-top:0}
+.row .bar{width:3px;align-self:stretch;border-radius:3px;background:var(--cc,var(--muted));flex:0 0 auto}
+.row .main{flex:1;min-width:0}
+.row .t{overflow-wrap:anywhere;font-size:.95rem}
+.row .t a{text-decoration:none}
+.row .t a:hover{text-decoration:underline}
+.row .m{display:flex;flex-wrap:wrap;gap:2px 10px;font-size:.78rem;color:var(--muted);margin-top:2px}
+.row .m .app{color:var(--cc)}
+.row .side{display:flex;align-items:center;gap:2px;flex:0 0 auto;margin:-6px -6px -6px 0}
+.row .side .ibtn{min-width:40px;min-height:40px;font-size:.95rem}
+.row input[type="checkbox"]{width:22px;height:22px;margin:1px 0 0;accent-color:var(--accent);flex:0 0 auto}
+.row.done .t{text-decoration:line-through;color:var(--muted)}
+.tag{display:inline-block;font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px;color:var(--cc,var(--muted));background:color-mix(in srgb,var(--cc,var(--muted)) 16%,transparent);white-space:nowrap}
+.over{color:var(--red)!important}
+.soon{color:var(--gold)!important}
+.ok{color:var(--green)!important}
+.txtbtn{color:var(--accent);font-size:.85rem;padding:0 8px;min-height:40px;border-radius:10px;white-space:nowrap}
+.txtbtn:hover{background:var(--raised)}
+.txtbtn:disabled{opacity:.4;cursor:default}
+.more{color:var(--accent);font-size:.85rem;padding:8px 0 2px;min-height:36px}
+
+.day{margin-top:10px}
+.day:first-child{margin-top:0}
+.dayh{font-size:.8rem;font-weight:700;color:var(--muted);display:flex;justify-content:space-between;margin:0 0 2px}
+.dayh.today{color:var(--accent)}
+
+.prog{margin-top:6px}
+.track{height:6px;background:var(--t-track,#2A2A31);border-radius:999px;overflow:hidden}
+.fill{height:100%;background:var(--pc,var(--grad));border-radius:999px}
+.plab{display:flex;justify-content:space-between;gap:8px;font-size:.76rem;color:var(--muted);margin-top:4px;flex-wrap:wrap}
+
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 -16px 12px;padding:0 16px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border-radius:999px;padding:7px 13px;min-height:38px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;background:var(--t-bg,#000);border:1.5px solid var(--edge);color:var(--ink);font-size:.9rem}
+.chip .c{opacity:.65;font-size:.82rem}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--cc)}
+.chip[aria-pressed="true"]{background:var(--grad);border-color:transparent;color:var(--t-on-grad,#17161C);font-weight:500}
+.search{width:100%;background:var(--t-field,#0E0E11);border:1.5px solid var(--t-line,#2E2E35);border-radius:999px;padding:12px 18px;min-height:50px;color:var(--ink);margin:0 0 12px}
+.search:focus{border-color:var(--t-focus,#9C8BC0);outline:none}
+.search::placeholder{color:var(--muted)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:11px 16px;min-height:46px;background:var(--raised);color:var(--ink);text-decoration:none;font-size:.95rem;border:0}
+.btn.primary{background:var(--grad);color:var(--t-on-grad,#17161C);font-weight:700}
+.btn.ghost{background:transparent;color:var(--muted)}
+.btn.danger{color:var(--red)}
+.btn:disabled{opacity:.45;cursor:default}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap}
+
+.masonry{display:flex;flex-direction:column;gap:14px}
+@media (min-width:760px){.masonry{display:block;column-count:2;column-gap:14px}.masonry > .card{display:block;break-inside:avoid;margin:0 0 14px}}
+@media (min-width:1600px){.masonry{column-count:3}}
+.bkapp .state{vertical-align:2px;margin-left:4px}
+
+/* ---------- apps ---------- */
+.suite{display:flex;flex-direction:column;gap:10px}
+.suitehead{display:flex;gap:12px;align-items:center;text-decoration:none}
+.suitehead img{width:48px;height:48px;border-radius:14px;flex:0 0 auto;background:var(--t-headicon,#241e2b)}
+.suitehead b{display:block;font-weight:500;font-size:1.05rem}
+.suitehead span{display:block;font-size:.8rem;color:var(--muted)}
+.applist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.appbtn{display:flex;flex-direction:column;gap:2px;background:var(--t-field,#0B0B0E);border:1px solid var(--faint);border-radius:14px;padding:10px 12px;text-decoration:none;min-height:62px;min-width:0}
+.appbtn b{font-weight:500;font-size:.92rem;display:flex;align-items:flex-start;gap:6px}
+.appbtn b::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--cc);flex:0 0 auto;margin-top:.45em}
+.appbtn span{font-size:.76rem;color:var(--muted);overflow-wrap:anywhere}
+.appbtn:hover{border-color:var(--edge)}
+
+/* ---------- projects ---------- */
+.projhead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin:2px 0 12px;flex-wrap:wrap}
+.projhead h2{margin:0;font-size:1.35rem;font-weight:500}
+.kv{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.82rem;color:var(--muted)}
+.kv b{color:var(--ink);font-weight:500}
+
+/* ---------- backup ---------- */
+.bkgrid{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.bkapp{display:flex;gap:10px;align-items:flex-start;background:var(--t-field,#0B0B0E);border:1px solid var(--faint);border-radius:14px;padding:10px 12px}
+.bkapp .main{flex:1;min-width:0}
+.bkapp b{font-weight:500}
+.bkapp .m{font-size:.78rem;color:var(--muted);overflow-wrap:anywhere}
+.state{font-size:.72rem;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;flex:0 0 auto}
+.state.ok{background:color-mix(in srgb,var(--green) 16%,transparent)}
+.state.chg{color:var(--gold);background:color-mix(in srgb,var(--gold) 16%,transparent)}
+.state.err{color:var(--red);background:color-mix(in srgb,var(--red) 16%,transparent)}
+.state.none{color:var(--muted);background:var(--t-track,#1B1B20)}
+.meter{height:8px;background:var(--t-track,#2A2A31);border-radius:999px;overflow:hidden;margin:6px 0 4px}
+.meter > div{height:100%;background:var(--grad)}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--t-field,#0B0B0E);border:1px solid var(--faint);border-radius:14px;padding:12px 14px;min-height:56px;cursor:pointer}
+.sw span{flex:1;min-width:0}
+.sw small{display:block;color:var(--muted);font-size:.8rem}
+.sw input{appearance:none;width:46px;height:28px;border-radius:999px;background:var(--t-edge,#3B3B43);position:relative;flex:0 0 auto;cursor:pointer;margin:0}
+.sw input::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--t-knob,#F2F2F4);transition:left .15s}
+.sw input:checked{background:var(--grad)}
+.sw input:checked::after{left:21px;background:var(--t-on-grad,#17161C)}
+.sw input:disabled{opacity:.4}
+
+/* ---------- sheets ---------- */
+dialog{border:0;padding:0;background:var(--raised);color:var(--ink);width:100%;max-width:600px;margin:auto auto 0;border-radius:20px 20px 0 0;max-height:92vh;max-height:92dvh;font-family:var(--font)}
+@media (min-width:600px){dialog{margin:auto;border-radius:20px}}
+dialog::backdrop{background:var(--t-backdrop,rgba(0,0,0,.62))}
+.sheet{padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.sheet h2{margin:0;font-size:1.15rem;font-weight:700;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sheet h4{margin:6px 0 -4px;font-size:.8rem;font-weight:500;color:var(--accent)}
+.sheet p{margin:0}
+.sheet .note{font-size:.85rem;color:var(--muted);line-height:1.45}
+.sheet label{display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--muted);min-width:0}
+.sheet input:not([type="checkbox"]),.sheet select,.sheet textarea{background:var(--field);border:0;border-radius:12px;padding:12px;color:var(--ink);min-height:48px;width:100%;min-width:0}
+.sheet textarea{min-height:96px;resize:vertical}
+.sheet .check{flex-direction:row;align-items:center;gap:10px;color:var(--ink);font-size:.95rem}
+.sheet .check input{width:20px;height:20px;accent-color:var(--accent);flex:0 0 auto}
+.f2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.f3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.seg{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;background:var(--field);border-radius:14px;padding:4px}
+.seg::-webkit-scrollbar{display:none}
+.seg button{flex:1 0 auto;padding:9px 12px;border-radius:10px;color:var(--muted);font-size:.88rem;min-height:40px;white-space:nowrap}
+.seg button[aria-pressed="true"],.seg button[aria-checked="true"]{background:var(--grad);color:var(--t-on-grad,#17161C);font-weight:500}
+.kinds{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.kinds button{padding:10px 4px;border-radius:12px;background:var(--field);color:var(--cc);font-weight:500;font-size:.88rem}
+.kinds button[aria-pressed="true"]{background:color-mix(in srgb,var(--cc) 22%,var(--field));outline:1px solid var(--cc)}
+.hint{font-size:.82rem;color:var(--red);min-height:1em;margin:0}
+.sbar{display:flex;justify-content:space-between;gap:8px;margin-top:4px;flex-wrap:wrap}
+.calc{background:var(--t-info-bg,#12141B);border:1px solid var(--t-info-line,#232838);border-radius:12px;padding:10px 12px;font-size:.86rem;color:var(--muted);line-height:1.5}
+.calc b{color:var(--ink);font-weight:500}
+.pre{background:var(--field);border-radius:12px;padding:12px;font-family:var(--mono);font-size:.8rem;white-space:pre-wrap;overflow-wrap:anywhere;max-height:44vh;overflow:auto;margin:0}
+.cmdrow{background:var(--field);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.cmdrow .cmd{font-family:var(--mono);font-size:.8rem;white-space:pre-wrap;overflow-wrap:anywhere}
+.cmdrow .cmd .v{color:var(--gold)}
+.cmdrow .cmd .f{color:var(--green)}
+.picklist{display:flex;flex-direction:column;gap:6px;max-height:48vh;overflow:auto}
+.pick{display:flex;gap:10px;align-items:flex-start;background:var(--field);border-radius:12px;padding:10px 12px;cursor:pointer}
+.pick input{width:20px;height:20px;accent-color:var(--accent);margin-top:2px;flex:0 0 auto}
+.pick .m{font-size:.78rem;color:var(--muted)}
+.res{display:block;width:100%;text-align:left;background:var(--field);border-radius:12px;padding:10px 12px;font-size:.9rem}
+.res small{display:block;color:var(--muted);font-size:.78rem}
+.res.hit{cursor:pointer;border:1.5px solid var(--faint);color:inherit}
+.res.hit:hover,.res.hit:focus-visible{border-color:var(--edge)}
+.res.hit b{font-weight:500;overflow-wrap:anywhere}
+.res.hit .mono{font-size:.76rem;overflow-wrap:anywhere}
+.res .have{color:var(--accent2)}
+.hithead{display:block;color:var(--muted);font-size:.78rem}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent2);font:inherit;text-decoration:underline;cursor:pointer}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--edge);border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--t-raised2,#26262C);color:var(--ink);padding:10px 16px;border-radius:12px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s;max-width:92vw;text-align:center;z-index:20;display:flex;gap:12px;align-items:center}
+.toast.show{opacity:1;pointer-events:auto}
+.toast a{color:var(--accent);font-weight:500;text-decoration:none;white-space:nowrap}
+@media (min-width:900px){.toast{bottom:28px}}
+/* ---------- settings ---------- */
+.pals{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.pal{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:8px;border-radius:14px;background:var(--field);border:1.5px solid transparent;color:var(--ink);font-size:.85rem;text-align:center}
+.pal[aria-checked="true"]{border-color:var(--accent)}
+.pal .bar3{height:30px;border-radius:999px;box-shadow:inset 0 0 0 1px var(--faint)}
+.pal .bg2{display:flex;gap:4px;justify-content:center}
+.pal .bg2 i{width:14px;height:14px;border-radius:50%;box-shadow:inset 0 0 0 1px var(--edge)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="stage">
+  <div class="scroller" id="scroller">
+    <div class="wrap">
+      <header class="top">
+        <div style="min-width:0"><h1 id="h1">Today</h1><p class="sub" id="sub"></p></div>
+        <div class="hbtns">
+          <button type="button" class="srcchip" id="srcBtn" aria-haspopup="dialog" data-mode="live"><i></i><span id="srcLabel">Live</span></button>
+          <button type="button" class="ibtn" id="refreshBtn" aria-label="Reload data" title="Reload data"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg></button>
+          <button type="button" class="ibtn" id="setBtn" aria-label="Settings: colour scheme, your name, storage" title="Settings" aria-haspopup="dialog"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13.5" cy="6.5" r="1.6"/><circle cx="17.5" cy="10.5" r="1.6"/><circle cx="8.5" cy="7.5" r="1.6"/><circle cx="6.5" cy="12.5" r="1.6"/><path d="M12 2a10 10 0 0 0 0 20c1.1 0 2-.9 2-2 0-.5-.2-1-.5-1.3-.3-.4-.5-.8-.5-1.3 0-1.1.9-2 2-2h2.4A5.6 5.6 0 0 0 22 10.9C22 6 17.5 2 12 2z"/></svg></button>
+        </div>
+      </header>
+      <div id="banner"></div>
+      <section class="view" id="v-today" aria-label="Today"></section>
+      <section class="view" id="v-projects" aria-label="Projects" hidden></section>
+      <section class="view" id="v-search" aria-label="Search" hidden>
+        <label class="sr" for="q">Search everything</label>
+        <input class="search" id="q" type="search" placeholder="Search every app: tasks, entries, ideas, papers..." autocomplete="off" enterkeyhint="search">
+        <div class="chips" id="qChips"></div>
+        <div id="qOut"></div>
+      </section>
+      <section class="view" id="v-apps" aria-label="Apps" hidden></section>
+      <section class="view" id="v-backup" aria-label="Backup" hidden></section>
+    </div>
+  </div>
+  <button type="button" class="fab" id="fab" aria-label="Add to an app" title="Add to an app">+</button>
+</main>
+<nav id="nav" aria-label="Control center">
+  <button type="button" data-v="today"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="8" rx="2"/><rect x="14" y="3" width="7" height="5" rx="2"/><rect x="14" y="12" width="7" height="9" rx="2"/><rect x="3" y="15" width="7" height="6" rx="2"/></svg><span class="badge hidden" id="bdToday"></span></span><span class="lb">Today</span></button>
+  <button type="button" data-v="projects"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span><span class="lb">Projects</span></button>
+  <button type="button" data-v="search"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></span><span class="lb">Search</span></button>
+  <button type="button" data-v="apps"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8.5 6h7M6 8.5v7M18 8.5v7M8.5 18h7"/></svg></span><span class="lb">Apps</span></button>
+  <button type="button" data-v="backup"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11"/><path d="M8 10l4 4 4-4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg><span class="dot hidden" id="bdBackup"></span></span><span class="lb">Backup</span></button>
+</nav>
+<dialog id="dlg" aria-labelledby="dlgTitle"><form class="sheet" id="dlgBody" method="dialog" novalidate></form></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="fileIn" accept=".json,application/json" multiple hidden>
+<script>
+"use strict";
+/* =====================================================================
+   QTask control center (adapted from the CompChemKit control
+   center by A. R. V. Pinto, MIT licence)
+   Reads every app's data from this browser's storage, shows the day,
+   projects and search across apps, syncs through GitHub (suite-sync.js)
+   and backs everything up to a file.
+   ===================================================================== */
+
+/* ---------------- basics ---------------- */
+const $=s=>document.querySelector(s), $$=(s,r)=>[...(r||document).querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const DAY=864e5, HOUR=36e5;
+const arr=v=>Array.isArray(v)?v:[];
+const obj=v=>v&&typeof v==="object"&&!Array.isArray(v)?v:{};
+const num=v=>{const n=parseFloat(v);return isFinite(n)?n:null};
+const clone=o=>JSON.parse(JSON.stringify(o));
+const has=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
+function localDate(ms){const d=new Date(ms);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+const todayStr=()=>localDate(Date.now());
+const dayMs=d=>new Date(d+"T12:00").getTime();
+const shortDate=d=>new Date(d+"T12:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+const longDate=d=>new Date(d+"T12:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short",...(String(d).slice(0,4)===String(new Date().getFullYear())?{}:{year:"numeric"})});
+const fmtWhen=t=>new Date(t).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+const fmtTime=t=>new Date(t).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+function ago(t){
+  if(!t) return "never";
+  const s=(Date.now()-t)/1000;
+  if(s<60) return "just now"; if(s<3600) return Math.floor(s/60)+" min ago"; if(s<86400) return Math.floor(s/3600)+" h ago";
+  const d=Math.floor(s/86400); return d===1?"yesterday":d+" days ago";
+}
+function fmtDur(ms){const neg=ms<0;ms=Math.abs(ms);const d=Math.floor(ms/DAY),h=Math.floor(ms%DAY/HOUR),m=Math.floor(ms%HOUR/6e4);const s=d?`${d}d ${h}h`:h?`${h}h ${m}m`:`${m}m`;return neg?"-"+s:s}
+const fmtN=n=>n==null||!isFinite(n)?"":(Math.abs(n)>=1e4?Math.round(n).toLocaleString("en-GB"):(+(+n).toFixed(2)).toLocaleString("en-GB"));
+const f3=n=>n==null||!isFinite(n)?"-":n>=100?Math.round(n).toLocaleString("en-GB"):(+n.toPrecision(3)).toLocaleString("en-GB");
+const size=b=>b<1024?b+" B":b<1048576?(b/1024).toFixed(b<10240?1:0)+" KB":(b/1048576).toFixed(1)+" MB";
+const plural=(n,w,p)=>`${n.toLocaleString("en-GB")} ${n===1?w:(p||w+"s")}`;
+const safeUrl=u=>/^https?:\/\//i.test(String(u||"").trim())?String(u).trim():"";
+const firstLine=(t,n)=>String(t||"").split("\n")[0].trim().slice(0,n||80);
+const clip=(t,n)=>{t=String(t||"").replace(/\s+/g," ").trim();return t.length>n?t.slice(0,n-1)+"…":t};
+
+let _tt=null;
+function toast(t,link){
+  const el=$("#toast");
+  el.innerHTML=`<span>${esc(t)}</span>`+(link?`<a href="${esc(link.href)}">${esc(link.label||"Open")}</a>`:"");
+  el.classList.add("show"); clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove("show"),link?5200:2600);
+}
+async function copyText(t,msg){
+  try{await navigator.clipboard.writeText(t);toast(msg||"Copied")}
+  catch(_){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();
+    try{document.execCommand("copy");toast(msg||"Copied")}catch(__){toast("Copy not available")}a.remove()}
+}
+function saveFile(filename,data,type){
+  try{
+    const blob=data instanceof Blob?data:new Blob([data],{type:(type||"application/json")+";charset=utf-8"});
+    const url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url;a.download=filename;a.style.display="none";document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),15000);
+    return true;
+  }catch(_){toast("Couldn't save the file");return false}
+}
+
+/* ---------------- the suites and what each app keeps ----------------
+   Mirrors BACKUP_APPS in each suite file, so backups made here are the
+   same files the suites make and can be restored from either place. */
+const SUITES=[
+ {id:"lab-notebook",title:"Lab notebook",apps:[
+  {id:"log",label:"Log",name:"Research log",file:"research-log",keys:["researchlog.v1"],reminder:"research-log",color:"--blue"},
+  {id:"tasks",label:"Tasks",name:"Tasks",file:"task-list",keys:["tasks.v1"],reminder:"task-list",color:"--green"},
+  {id:"ideas",label:"Ideas",name:"Idea board",file:"idea-board",keys:["ideaboard.v1"],reminder:"idea-board",color:"--violet"},
+  {id:"plans",label:"Script plans",name:"Script planner",file:"script-planner",keys:["scriptplans.v1"],reminder:"script-planner",color:"--pink"},
+  {id:"deadlines",label:"Deadlines",name:"Deadline tracker",file:"deadline-tracker",keys:["deadlines.v1"],reminder:"deadline-radar",color:"--gold"}]},
+ {id:"literature-hub",title:"Literature hub",apps:[
+  {id:"radar",label:"Radar",name:"Literature radar",file:"literature-radar",keys:["litradar.v1","net.mailto"],reminder:"lit-radar",color:"--teal"},
+  {id:"citations",label:"Citations",name:"Citation tracker",file:"citation-tracker",keys:["citedash.v1","net.mailto"],reminder:"cite-dash",color:"--violet"}]},
+ {id:"structure-studio",title:"Structure studio",apps:[
+  {id:"viewer",label:"Viewer",name:"Structure viewer",file:"structure-viewer",keys:["structviewer.prefs"],color:"--sky"}]},
+ {id:"paper-kit",title:"Paper kit",apps:[
+  {id:"plots",label:"Plot guide",name:"Python plot guide",color:"--sky",blurb:"Pick a plot type and its code"},
+  {id:"schemes",label:"Schemes",name:"Mechanism scheme editor",file:"mechanism-scheme-editor",keys:[],prefixes:["mech."],color:"--pink"}]},
+ {id:"control-center",title:"Control center",hidden:true,apps:[
+  {id:"settings",label:"Control center",name:"Control center settings",file:"settings",keys:["controlcenter.v1"],color:"--accent"}]}
+];
+const APPS=[];
+for(const s of SUITES) for(const a of s.apps){a.suite=s;a.keys=a.keys||[];a.prefixes=a.prefixes||[];a.reminder=a.reminder||"";APPS.push(a)}
+const DATA_APPS=APPS.filter(a=>a.file);
+const APP=(s,id)=>APPS.find(a=>a.suite.id===s&&a.id===id);
+const A={log:APP("lab-notebook","log"),tasks:APP("lab-notebook","tasks"),ideas:APP("lab-notebook","ideas"),plans:APP("lab-notebook","plans"),deadlines:APP("lab-notebook","deadlines"),
+  radar:APP("literature-hub","radar"),citations:APP("literature-hub","citations"),
+  viewer:APP("structure-studio","viewer"),schemes:APP("paper-kit","schemes"),
+  settings:APP("control-center","settings")};
+const cc=a=>`var(${a.color||"--muted"})`;
+/* link into a suite, optionally filtered to one item (needs the live-sync patch in the suite) */
+function href(a,opt){
+  if(a.suite.id==="control-center") return "control-center.html";
+  const q=new URLSearchParams(); if(opt&&opt.find) q.set("find",opt.find); if(opt&&opt.pick) q.set("pick",opt.pick);
+  const s=q.toString(); return `${a.suite.id}.html${s?"?"+s:""}#${a.id}`;
+}
+
+/* open a structure in the viewer: structure-studio.html?load=pdb:5XJH#viewer (af:ACCESSION for AlphaFold) */
+const viewerHref=(src,id)=>`structure-studio.html?load=${encodeURIComponent(src+":"+id)}#viewer`;
+/* ---------------- browser storage ---------------- */
+/* kept on this device only, never written into backup files */
+const PRIVATE_KEYS=new Set(["net.openalexKey"]);
+const isPrivate=k=>PRIVATE_KEYS.has(k)||String(k).startsWith("sync.");
+const SYNC=()=>window.SuiteSync||null;
+const LS={
+  keys(){const out=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k!=null)out.push(k)}}catch(_){}return out},
+  get(k){try{return localStorage.getItem(k)}catch(_){return null}},
+  set(k,v){localStorage.setItem(k,v)},
+  del(k){try{localStorage.removeItem(k)}catch(_){}},
+  json(k,fb){try{const r=localStorage.getItem(k);return r?JSON.parse(r):fb}catch(_){return fb}}
+};
+const STORAGE_OK=(()=>{try{const k="__cc"+Math.random();localStorage.setItem(k,"1");localStorage.removeItem(k);return true}catch(_){return false}})();
+const owned=(a,k)=>a.keys.includes(k)||a.prefixes.some(p=>k.startsWith(p));
+const keysOf=a=>LS.keys().filter(k=>owned(a,k)).sort();
+function snapshot(a){
+  const json={}, text={};
+  for(const k of keysOf(a)){const v=LS.get(k);if(v==null)continue;try{json[k]=JSON.parse(v)}catch(_){text[k]=v}}
+  return {json,text};
+}
+/* identical to the suites' fingerprint, so both sides agree on "changed since the last backup" */
+function fingerprint(a){
+  let h=0x811c9dc5;
+  for(const k of keysOf(a)){const v=k+"\u0000"+(LS.get(k)||"")+"\u0001";
+    for(let i=0;i<v.length;i++){h^=v.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0}}
+  return h.toString(16);
+}
+function payloadOf(a){
+  const {json,text}=snapshot(a);
+  if(!Object.keys(json).length&&!Object.keys(text).length) return null;
+  return {format:"suite-backup",version:1,suite:a.suite.id,suiteTitle:a.suite.title,app:a.file,label:a.label,saved:new Date().toISOString(),json,text};
+}
+const bytesOfKey=k=>(k.length+(LS.get(k)||"").length)*2;
+const bytesOf=a=>keysOf(a).reduce((n,k)=>n+bytesOfKey(k),0);
+const ownedByAny=k=>DATA_APPS.some(a=>owned(a,k));
+function suiteState(id){let s=LS.json("suite."+id+".backup",null);if(!s||typeof s!=="object")s={on:false,apps:{}};if(!s.apps||typeof s.apps!=="object")s.apps={};return s}
+function setSuiteState(id,fn){const s=suiteState(id);fn(s);try{LS.set("suite."+id+".backup",JSON.stringify(s))}catch(_){}}
+
+/* control center settings (backed up like an app) and view state (not backed up) */
+const SET_KEY="controlcenter.v1";
+const SETDEF={auto:false,mine:true,projects:{},digestDays:7};
+function settings(){const s=LS.json(SET_KEY,null);return {...SETDEF,...obj(s)}}
+function saveSettings(patch){const s={...settings(),...patch};try{LS.set(SET_KEY,JSON.stringify(s))}catch(_){toast("Couldn't save the setting")}if(window.SuiteSync)window.SuiteSync.changed();return s}
+const UI={get(k,fb){const v=LS.json("controlcenter.ui",{});return has(obj(v),k)?v[k]:fb},set(k,val){const v=obj(LS.json("controlcenter.ui",{}));v[k]=val;try{LS.set("controlcenter.ui",JSON.stringify(v))}catch(_){}}};
+
+/* ---------------- backup server (serve_apps.py) ----------------
+   Static hosts such as GitHub Pages never run it, so they are not asked. */
+const STATIC_HOST=/(^|\.)(github\.io|gitlab\.io|netlify\.app|pages\.dev|vercel\.app|codeberg\.page)$/i.test(location.hostname);
+const SRV={
+  ok:null, dir:"", keep:null, files:{}, listed:0, cache:new Map(),
+  http:location.protocol==="http:"||location.protocol==="https:",
+  async ping(){
+    if(!this.http||STATIC_HOST){this.ok=false;return false}
+    try{const r=await fetch("/api/backup/ping",{cache:"no-store"});const j=r.ok?await r.json():{};this.ok=j.ok===true;this.dir=j.dir||"";this.keep=j.keep??null}
+    catch(_){this.ok=false}
+    return this.ok;
+  },
+  async listAll(){
+    if(!this.ok) return this.files;
+    const out={};
+    await Promise.all(SUITES.map(async s=>{
+      try{const r=await fetch(`/api/backup/list?suite=${encodeURIComponent(s.id)}`,{cache:"no-store"});const j=await r.json();out[s.id]=j.ok?arr(j.files):[]}
+      catch(_){out[s.id]=[]}
+    }));
+    this.files=out; this.listed=Date.now(); return out;
+  },
+  filesOf(a){return arr(this.files[a.suite.id]).filter(f=>f.app===a.file)},
+  latest(a,upTo){return this.filesOf(a).filter(f=>!f.tag&&(!upTo||f.date<=upTo))[0]||null},
+  dates(){const s=new Set();for(const a of DATA_APPS)this.filesOf(a).forEach(f=>{if(!f.tag)s.add(f.date)});return [...s].sort().reverse()},
+  async read(name){
+    if(this.cache.has(name)) return this.cache.get(name);
+    const r=await fetch("/"+encodeURIComponent(name),{cache:"no-store"});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const j=await r.json(); this.cache.set(name,j); return j;
+  },
+  async save(a,payload,tag){
+    const r=await fetch("/api/backup/save",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({suite:a.suite.id,app:a.file,tag:tag||"",payload})});
+    let j={}; try{j=await r.json()}catch(_){}
+    if(!r.ok||!j.ok) throw new Error(j.error||("HTTP "+r.status));
+    this.cache.delete(j.file);
+    return j.file;
+  }
+};
+
+/* ---------------- where the data comes from ----------------
+   auto:   this device; apps with nothing stored here fall back to their latest backup
+   backup: latest backup of every app on the server (read only)
+   file:   backup files picked by hand (read only)                           */
+const SRC={mode:"auto",files:{},names:[]};
+let SNAP={}, D=null, GEN=0;
+async function loadData(){
+  const snaps={}, jobs=[];
+  for(const a of DATA_APPS){
+    if(SRC.mode==="file"){
+      const p=SRC.files[a.suite.id+"/"+a.file];
+      if(p) snaps[a.file]={src:"file",json:obj(p.json),text:obj(p.text),saved:p.saved||"",name:p.__name||""};
+      continue;
+    }
+    if(SRC.mode==="auto"){
+      const s=snapshot(a);
+      if(Object.keys(s.json).length||Object.keys(s.text).length){snaps[a.file]={src:"live",...s};continue}
+    }
+    const f=SRV.ok?SRV.latest(a):null;
+    if(f) jobs.push(SRV.read(f.file).then(p=>{
+      if(p&&p.format==="suite-backup"&&p.app===a.file) snaps[a.file]={src:"backup",json:obj(p.json),text:obj(p.text),saved:p.saved||f.date,name:f.file};
+    }).catch(()=>{}));
+  }
+  await Promise.all(jobs);
+  SNAP=snaps; D=buildModel(); GEN++;
+}
+function V(key,fb){
+  for(const a of DATA_APPS){
+    if(!owned(a,key)) continue;
+    const s=SNAP[a.file]; if(!s) continue;
+    if(has(s.json,key)) return s.json[key];
+    if(has(s.text,key)) return s.text[key];
+  }
+  return fb;
+}
+const srcOf=a=>SNAP[a.file]?SNAP[a.file].src:"none";
+const canWrite=a=>SRC.mode==="auto"&&STORAGE_OK&&(!SNAP[a.file]||SNAP[a.file].src==="live");
+
+/* ---------------- one model of everything ---------------- */
+const RADAR_DEF={mode:"days",days:45,from:"",to:"",types:[],oa:false,abs:false,en:false,minCites:0,sort:"date",max:100};
+function buildModel(){
+  const lg=obj(V("researchlog.v1")), rd=obj(V("litradar.v1")), cd=obj(V("citedash.v1")), idx=obj(V("mech.index")), tk=obj(V("tasks.v1"));
+  const ok=x=>x&&typeof x==="object";
+  const M={
+    entries:arr(lg.entries).filter(ok), lastProj:lg.lastProj||"",
+    ideas:arr(V("ideaboard.v1")).filter(ok),
+    plans:arr(obj(V("scriptplans.v1")).plans).filter(ok),
+    deadlines:arr(obj(V("deadlines.v1")).items).filter(ok),
+    tasks:arr(tk.items).filter(x=>ok(x)&&x.title),
+    topics:arr(rd.topics).filter(ok), works:arr(rd.works).filter(ok), rf:{...RADAR_DEF,...obj(rd.filters)}, radarRun:rd.lastRun||0,
+    saved:arr(rd.saved).filter(x=>ok(x)&&x.title),
+    author:ok(cd.author)?cd.author:null, cworks:arr(cd.works).filter(ok), snaps:arr(cd.snaps).filter(ok), citeRun:cd.lastRun||0,
+    schemes:Object.entries(idx).map(([id,v])=>({id,name:(v&&v.name)||"Scheme",updated:(v&&v.updated)||0})).sort((a,b)=>b.updated-a.updated),
+    mailto:String(V("net.mailto","")||"")
+  };
+  M.meetings=M.entries.filter(e=>e.kind==="meeting");
+  M.actions=M.meetings.flatMap(m=>arr(m.actions).filter(ok).map(a=>({a,m})));
+  M.unseen=M.works.filter(w=>!w.seen&&radarPasses(w,M.rf));
+  return M;
+}
+
+/* ---------------- app rules, kept the same as inside the apps ---------------- */
+const LOG_KINDS=[{id:"note",name:"Note",c:"--muted"},{id:"result",name:"Result",c:"--green"},{id:"problem",name:"Problem",c:"--red"},
+  {id:"fix",name:"Fix",c:"--teal"},{id:"decision",name:"Decision",c:"--gold"},{id:"idea",name:"Idea",c:"--violet"}];
+const logKind=k=>LOG_KINDS.find(x=>x.id===k)||(k==="meeting"?{id:"meeting",name:"Meeting",c:"--accent"}:LOG_KINDS[0]);
+const MTYPES={group:"Group meeting",supervision:"Supervision",collab:"Collaboration",seminar:"Seminar or talk",oneone:"One-to-one",other:"Other"};
+const IDEA_STAGES=[{id:"spark",name:"Sparks"},{id:"explore",name:"Exploring"},{id:"doing",name:"Doing"},{id:"done",name:"Done"}];
+const IDEA_CATS=[{id:"research",name:"Research"},{id:"grants",name:"Grants"},{id:"teaching",name:"Teaching"},{id:"outdoors",name:"Outdoors"},{id:"minerals",name:"Minerals"},{id:"home",name:"Home"},{id:"other",name:"Other"}];
+const DL_KINDS=[{id:"grant",name:"Grant call",c:"--blue"},{id:"abstract",name:"Abstract",c:"--green"},{id:"fellowship",name:"Fellowship",c:"--gold"},
+  {id:"report",name:"Report",c:"--sky"},{id:"teaching",name:"Teaching",c:"--violet"},{id:"other",name:"Other",c:"--muted"}];
+const dlKind=k=>DL_KINDS.find(x=>x.id===k)||DL_KINDS[5];
+const PLAN_STATUS={planning:"Planning",building:"Building",done:"Done"};
+/* tasks: the same ranking as the Tasks app. points = priority (low 10, medium 20, high 35)
+   + due date (overdue +45, today +35, tomorrow +28, 2-3 days +20, 4-7 days +12, 8-14 days +6)
+   + 5 when planned for today or carried over; 60+ do now, 35+ urgent, 20+ normal */
+const TPRIO={low:{n:"Low",w:10,c:"--muted"},medium:{n:"Medium",w:20,c:"--sky"},high:{n:"High",w:35,c:"--red"}};
+const TLEVELS={critical:{n:"Do now",c:"--red"},urgent:{n:"Urgent",c:"--gold"},normal:{n:"Normal",c:"--sky"},low:{n:"Can wait",c:"--muted"}};
+const daysTo=d=>Math.round((dayMs(d)-dayMs(todayStr()))/DAY);
+function taskUrgency(t){
+  const T=todayStr(), p=TPRIO[t.prio]||TPRIO.medium; let s=p.w; const why=[p.n.toLowerCase()+" priority"];
+  if(t.due){const n=daysTo(t.due);
+    if(n<0){s+=45;why.push(n===-1?"due yesterday":`${-n} days overdue`)}
+    else if(n===0){s+=35;why.push("due today")}
+    else if(n===1){s+=28;why.push("due tomorrow")}
+    else if(n<=3){s+=20;why.push(`due in ${n} days`)}
+    else if(n<=7){s+=12;why.push(`due in ${n} days`)}
+    else if(n<=14){s+=6;why.push(`due in ${n} days`)}}
+  if(t.plan&&t.plan<=T){s+=5;why.push(t.plan<T?"carried over":"planned for today")}
+  return {s,lvl:s>=60?"critical":s>=35?"urgent":s>=20?"normal":"low",why:why.join(", ")};
+}
+const taskToday=t=>!t.done&&((t.plan&&t.plan<=todayStr())||(t.due&&t.due<=todayStr()));
+const taskOverdue=t=>!t.done&&!!t.due&&t.due<todayStr();
+const byUrgency=(a,b)=>taskUrgency(b).s-taskUrgency(a).s||(a.due||"9").localeCompare(b.due||"9")||(a.added||0)-(b.added||0);
+const doneOn=t=>t.done&&t.doneAt?localDate(t.doneAt):"";
+const firstAuthor=s=>String(s||"").split(/;|,\s(?=[A-Z][^,]*\s)/)[0].trim();
+
+/* "me" in action owners: blank, me/myself/eu/yo, or one of the names set in Settings (kept as suite.me, shared with the log) */
+const myNames=()=>String(LS.get("suite.me")||"").split(/[,;]/).map(s=>s.trim().toLowerCase()).filter(Boolean);
+const isMe=o=>{const s=String(o??"").trim();return !s||/^(me|myself|eu|yo)$/i.test(s)||myNames().includes(s.toLowerCase())};
+function actDue(a){
+  if(a.done||!a.due) return "";
+  if(a.due<todayStr()) return "overdue";
+  return a.due<=localDate(Date.now()+3*DAY)?"soon":"";
+}
+const dlWhen=i=>new Date(i.date+"T"+(i.time||"23:59")).getTime();
+function dlCountdown(i,now){
+  const ms=dlWhen(i)-now;
+  if(ms<0) return {t:"passed",cls:"over"};
+  const d=Math.floor(ms/DAY), h=Math.floor(ms%DAY/HOUR);
+  return {t:d>0?`${d} day${d===1?"":"s"}`:`${h} h`,cls:d<=7?"soon":""};
+}
+function radarPasses(w,f){
+  const dstr=d=>new Date(d).toISOString().slice(0,10);
+  const win=f.mode==="range"?{from:f.from||"",to:f.to||""}:{from:dstr(Date.now()-Math.max(1,f.days|0)*DAY),to:""};
+  if(win.from&&w.date&&w.date<win.from) return false;
+  if(win.to&&w.date&&w.date>win.to) return false;
+  if(arr(f.types).length&&w.type&&!f.types.includes(w.type)) return false;
+  if(f.oa&&w.oa===false) return false;
+  if(f.abs&&!w.abs) return false;
+  if(f.en&&w.lang&&w.lang!=="en") return false;
+  if(f.minCites>0&&(w.cites||0)<f.minCites) return false;
+  return true;
+}
+/* ---------------- writing into the apps ----------------
+   Always read, change and write back the freshest stored copy in one step.
+   The patched suites reload an app when its data changes from here. */
+function mutate(a,key,def,fn){
+  if(!STORAGE_OK) throw new Error("Browser storage is blocked here");
+  if(!canWrite(a)) throw new Error(`${a.name} is showing a backup. Restore it or switch to live data first.`);
+  let d=null; try{const r=localStorage.getItem(key); d=r?JSON.parse(r):null}catch(_){throw new Error(`${a.name} data could not be read`)}
+  if(d===null) d=clone(def);
+  else if(typeof d!=="object"||Array.isArray(d)!==Array.isArray(def)) throw new Error(`${a.name} data has an unexpected shape; open the app instead`);
+  const out=fn(d);
+  try{localStorage.setItem(key,JSON.stringify(d))}catch(_){throw new Error("Couldn't save: storage is full or blocked")}
+  return out;
+}
+async function write(a,key,def,fn,msg,link){
+  let out;
+  try{out=mutate(a,key,def,fn)}catch(e){toast(e&&e.message?e.message:"Couldn't save");return false}
+  if(SYNC()) SYNC().changed();
+  await refresh(false);
+  if(msg) toast(msg,link);
+  autoSoon();
+  return out===undefined?true:out;
+}
+const OPS={
+  addLog(x){
+    const text=x.text.trim();
+    return write(A.log,"researchlog.v1",{entries:[]},d=>{
+      if(!Array.isArray(d.entries)) d.entries=[];
+      const now=Date.now();
+      d.entries.push({id:uid(),added:now,text,kind:x.kind||"note",proj:(x.proj||"").trim(),date:x.date||todayStr(),pin:!!x.pin,updated:now});
+      d.lastProj=(x.proj||"").trim();
+    },"Added to the research log",{href:href(A.log,{find:firstLine(text,40)}),label:"Open"});
+  },
+  toggleAction(mid,aid,done){
+    return write(A.log,"researchlog.v1",{entries:[]},d=>{
+      const m=arr(d.entries).find(x=>x.id===mid), a=m&&arr(m.actions).find(x=>x.id===aid);
+      if(!a) throw new Error("That action is gone; it may have been deleted");
+      a.done=done; a.doneAt=done?Date.now():null; m.updated=Date.now();
+    },done?"Action done":"Action reopened");
+  },
+  addIdea(x){
+    return write(A.ideas,"ideaboard.v1",[],d=>{
+      const now=Date.now();
+      d.push({id:uid(),title:x.title.trim(),notes:(x.notes||"").trim(),cat:IDEA_CATS.some(c=>c.id===x.cat)?x.cat:"research",stage:"spark",
+        tags:(x.tags||[]).slice(0,12),star:false,created:now,updated:now});
+    },"Added to Sparks on the idea board",{href:href(A.ideas,{find:x.title.trim().slice(0,40),pick:"spark"}),label:"Open"});
+  },
+  moveIdea(id,stage){
+    return write(A.ideas,"ideaboard.v1",[],d=>{
+      const i=d.find(x=>x&&x.id===id); if(!i) throw new Error("That idea is gone");
+      i.stage=stage; i.updated=Date.now();
+    },"Moved to "+(IDEA_STAGES.find(s=>s.id===stage)||{}).name);
+  },
+  addDeadline(x){
+    return write(A.deadlines,"deadlines.v1",{items:[]},d=>{
+      if(!Array.isArray(d.items)) d.items=[];
+      const now=Date.now();
+      d.items.push({id:uid(),done:false,added:now,title:x.title.trim(),kind:x.kind||"grant",date:x.date,time:x.time||"",yearly:!!x.yearly,
+        url:(x.url||"").trim(),notes:(x.notes||"").trim(),updated:now});
+    },"Deadline added",{href:href(A.deadlines,{find:x.title.trim().slice(0,40)}),label:"Open"});
+  },
+  tickDeadline(id){
+    let msg="Marked done";
+    return write(A.deadlines,"deadlines.v1",{items:[]},d=>{
+      const i=arr(d.items).find(x=>x.id===id); if(!i) throw new Error("That deadline is gone");
+      if(!i.done&&i.yearly){
+        const dt=new Date(i.date+"T12:00"); dt.setFullYear(dt.getFullYear()+1); dt.setMinutes(dt.getMinutes()-dt.getTimezoneOffset());
+        i.date=dt.toISOString().slice(0,10); i.updated=Date.now(); msg="Moved to next year"; return;
+      }
+      i.done=!i.done; i.updated=Date.now(); msg=i.done?"Marked done":"Reopened";
+    }).then(r=>{if(r)toast(msg);return r});
+  },
+  addTask(x){
+    return write(A.tasks,"tasks.v1",{items:[]},d=>{
+      if(!Array.isArray(d.items)) d.items=[];
+      const now=Date.now();
+      d.items.push({id:uid(),title:x.title.trim().slice(0,200),notes:(x.notes||"").trim(),proj:(x.proj||"").trim(),prio:TPRIO[x.prio]?x.prio:"medium",
+        plan:x.plan||"",due:x.due||"",done:false,doneAt:null,added:now,updated:now,subs:[]});
+    },"Task added",{href:href(A.tasks,{find:x.title.trim().slice(0,40),pick:"all"}),label:"Open"});
+  },
+  toggleTask(id,done){
+    return write(A.tasks,"tasks.v1",{items:[]},d=>{
+      const t=arr(d.items).find(x=>x&&x.id===id); if(!t) throw new Error("That task is gone; it may have been deleted");
+      t.done=done; t.doneAt=done?Date.now():null; t.updated=Date.now();
+    },done?"Task done":"Task reopened");
+  },
+  planTask(id,day){
+    return write(A.tasks,"tasks.v1",{items:[]},d=>{
+      const t=arr(d.items).find(x=>x&&x.id===id); if(!t) throw new Error("That task is gone");
+      t.plan=day; t.updated=Date.now();
+    },day===todayStr()?"Planned for today":"Moved");
+  },
+  /* the reading list lives inside the literature radar's data */
+  addPaper(x){
+    return write(A.radar,"litradar.v1",{topics:[],works:[],saved:[]},d=>{
+      if(!Array.isArray(d.saved)) d.saved=[];
+      if(x.doi&&d.saved.some(p=>(p.doi||"").toLowerCase()===x.doi.toLowerCase())) throw new Error("Already in your reading list");
+      d.saved.unshift({id:"m"+uid(),title:x.title,doi:x.doi||"",authors:x.authors||"",venue:x.venue||"",date:x.year?String(x.year):"",type:x.type||"",
+        cites:x.cites||0,abs:"",topic:"",read:false,saved:Date.now(),notes:""});
+    },"Saved to your reading list",{href:href(A.radar,{pick:"saved"}),label:"Open"});
+  },
+  radarSave(id,topic){
+    const w=D.works.find(x=>x.id===id&&x.topic===topic); if(!w) return;
+    return write(A.radar,"litradar.v1",{topics:[],works:[],saved:[]},d=>{
+      if(!Array.isArray(d.saved)) d.saved=[];
+      const ww=arr(d.works).find(x=>x.id===id&&x.topic===topic); if(ww) ww.seen=true;
+      if(d.saved.some(s=>s.id===w.id||(w.doi&&(s.doi||"").toLowerCase()===w.doi.toLowerCase()))) return;
+      const tq=(arr(d.topics).find(tp=>tp.id===w.topic)||{}).q||"";
+      d.saved.unshift({id:w.id,title:w.title,doi:w.doi||"",authors:w.authors||"",venue:w.venue||"",date:w.date||"",type:w.type||"",
+        cites:w.cites||0,abs:w.abs||"",topic:tq,read:false,saved:Date.now(),notes:""});
+    },"Saved to your reading list",{href:href(A.radar,{pick:"saved"}),label:"Open"});
+  },
+  radarSeen(id,topic,quiet){
+    return write(A.radar,"litradar.v1",{topics:[],works:[]},d=>{
+      const w=arr(d.works).find(x=>x.id===id&&x.topic===topic); if(w) w.seen=true;
+    },quiet?"":"Marked seen");
+  },
+  openScheme(id){
+    if(canWrite(A.schemes)){try{LS.set("mech.last",id)}catch(_){}}
+    location.href=href(A.schemes);
+  }
+};
+
+/* ---------------- Crossref lookup, as in the paper library ---------------- */
+const normDoi=s=>{s=String(s||"").trim().replace(/^doi:\s*/i,"").replace(/^https?:\/\/(dx\.)?doi\.org\//i,"");try{s=decodeURIComponent(s)}catch(_){}return s.trim()};
+const validDoi=d=>/^10\.\d{4,9}\/\S+$/.test(d);
+function withMail(url){const m=D&&D.mailto;return m?url+(url.includes("?")?"&":"?")+"mailto="+encodeURIComponent(m):url}
+async function getJSON(url){
+  const c=new AbortController(), t=setTimeout(()=>c.abort(),20000);
+  try{const r=await fetch(withMail(url),{signal:c.signal,headers:{Accept:"application/json"}});if(!r.ok)throw new Error("HTTP "+r.status);return await r.json()}
+  catch(e){throw new Error(e&&e.name==="AbortError"?"The service did not answer in time":e&&/HTTP/.test(e.message)?e.message:"No connection, or the service refused the request")}
+  finally{clearTimeout(t)}
+}
+const yearOf=m=>{for(const k of ["issued","published-print","published-online","posted"]){const y=(((m[k]||{})["date-parts"]||[[]])[0]||[])[0];if(y)return String(y)}return ""};
+function fromCrossref(m){
+  const au=(m.author||[]).map(a=>a.family?`${a.family}, ${(a.given||"").split(/\s+/).map(x=>x[0]?x[0]+".":"").join(" ")}`.trim():(a.name||"")).filter(Boolean);
+  const server=(m.institution&&m.institution[0]&&m.institution[0].name)||"";
+  return {title:(m.title&&m.title[0]||"").replace(/\s+/g," ").trim(),authors:au.join("; "),
+    venue:(m["container-title"]&&m["container-title"][0])||(m.type==="posted-content"?(server||"Preprint"):server),
+    year:yearOf(m),doi:(m.DOI||"").toLowerCase(),type:m.type||"",
+    cites:typeof m["is-referenced-by-count"]==="number"?m["is-referenced-by-count"]:null};
+}
+/* Crossref only accepts its own list of fields in select, and answers 400 to anything else */
+const CR_ROWS=10, CR_MAX=100;
+const CR_SEL="DOI,title,author,container-title,issued,published-print,published-online,posted,type,is-referenced-by-count";
+async function crossrefSearch(q,offset){
+  const base=`https://api.crossref.org/works?rows=${CR_ROWS}&offset=${offset||0}&query.bibliographic=${encodeURIComponent(q)}`;
+  let r;
+  try{r=await getJSON(base+"&select="+CR_SEL)}
+  catch(e){if(/HTTP 400/.test(e.message))r=await getJSON(base);else throw e}
+  const m=(r&&r.message)||{};
+  return {hits:arr(m.items).map(fromCrossref).filter(x=>x.title),total:+m["total-results"]||0};
+}
+async function crossrefDoi(doi){
+  const r=await getJSON(`https://api.crossref.org/works/${encodeURIComponent(doi)}`);
+  return fromCrossref((r&&r.message)||{});
+}
+
+/* ---------------- recent structures (structure viewer, IndexedDB) ---------------- */
+const IDB={
+  async exists(){try{if(indexedDB.databases){const l=await indexedDB.databases();return l.some(d=>d.name==="structviewer")}}catch(_){}return true},
+  open(){return new Promise((res,rej)=>{let r;try{r=indexedDB.open("structviewer",1)}catch(e){rej(e);return}
+    r.onupgradeneeded=()=>r.result.createObjectStore("files",{keyPath:"name"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})},
+  async meta(){
+    try{ if(!(await this.exists())) return [];
+      const db=await this.open();
+      return await new Promise(res=>{const out=[];const q=db.transaction("files").objectStore("files").openCursor();
+        q.onsuccess=()=>{const c=q.result;if(!c){res(out.sort((a,b)=>b.at-a.at));return}const v=c.value||{};out.push({name:v.name,fmt:v.fmt,at:v.at||0,size:v.size||(v.text||"").length});c.continue()};
+        q.onerror=()=>res(out)});
+    }catch(_){return []}
+  },
+  async all(){
+    try{ if(!(await this.exists())) return [];
+      const db=await this.open();
+      return await new Promise(res=>{const q=db.transaction("files").objectStore("files").getAll();q.onsuccess=()=>res(q.result||[]);q.onerror=()=>res([])});
+    }catch(_){return []}
+  },
+  async put(items){
+    const db=await this.open();
+    await new Promise((res,rej)=>{const tx=db.transaction("files","readwrite"),s=tx.objectStore("files");
+      items.forEach(x=>{if(x&&x.name&&typeof x.text==="string")s.put(x)});tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});
+  }
+};
+
+/* =====================================================================
+   Views
+   ===================================================================== */
+const VIEWS={today:"Today",projects:"Projects",search:"Search",apps:"Apps",backup:"Backup"};
+let VIEW="today";
+function show(v,keepScroll){
+  if(!VIEWS[v]) v="today";
+  VIEW=v;
+  for(const k in VIEWS) $("#v-"+k).hidden=k!==v;
+  $$("#nav button").forEach(b=>b.dataset.v===v?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  document.title=(v==="today"?"":VIEWS[v]+" - ")+"QTask";
+  if(location.hash!=="#"+v) history.replaceState(null,"","#"+v);
+  UI.set("view",v);
+  if(!keepScroll) $("#scroller").scrollTop=0;
+  render();
+  if(v==="backup") loadHealth();
+  if(v==="search") setTimeout(()=>$("#q").focus({preventScroll:true}),30);
+}
+function render(){
+  if(!D) return;
+  renderChrome();
+  ({today:renderToday,projects:renderProjects,search:renderSearch,apps:renderApps,backup:renderBackup})[VIEW]();
+}
+
+/* ---------------- chrome: title, source, banner, badges ---------------- */
+function attentionCount(){
+  const now=Date.now(), mine=settings().mine; let n=0;
+  D.deadlines.forEach(i=>{if(!i.done&&dlWhen(i)<now)n++});
+  D.actions.forEach(x=>{if(!x.a.done&&actDue(x.a)==="overdue"&&(!mine||isMe(x.a.owner)))n++});
+  D.tasks.forEach(x=>{if(taskOverdue(x))n++});
+  return n;
+}
+function backupSummary(){
+  const out={changed:[],never:[],err:[],ok:[],none:[]};
+  for(const a of DATA_APPS){const s=bkState(a);(out[s.k]||out.none).push(a)}
+  return out;
+}
+function bkState(a){
+  const rec=obj(suiteState(a.suite.id).apps[a.file]);
+  if(!keysOf(a).length) return {k:"none",rec};
+  if(rec.err) return {k:"err",rec};
+  if(!rec.fp) return {k:"never",rec};
+  if(rec.fp!==fingerprint(a)) return {k:"changed",rec};
+  return {k:"ok",rec};
+}
+function renderChrome(){
+  const now=new Date();
+  $("#h1").textContent=VIEW==="today"?now.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"}):VIEWS[VIEW];
+  const srcs=DATA_APPS.map(srcOf);
+  let mode="live", label="Live";
+  if(SRC.mode==="backup"){mode="backup";label="Latest backups"}
+  else if(SRC.mode==="file"){mode="file";label="Backup files"}
+  else if(srcs.includes("backup")){mode="mixed";label=srcs.includes("live")?"Live + backup":"Backups only"}
+  $("#srcBtn").dataset.mode=mode; $("#srcLabel").textContent=label;
+  const att=attentionCount();
+  $("#bdToday").textContent=att>9?"9+":att; $("#bdToday").classList.toggle("hidden",!att);
+  const dot=$("#bdBackup"), ss=SYNC()?SYNC().status():null;
+  if(SRV.ok){
+    const bs=backupSummary();
+    dot.classList.toggle("hidden",!(bs.err.length||bs.changed.length||bs.never.length));
+    dot.style.background=bs.err.length?"var(--danger)":"var(--gold)";
+  }else{
+    /* hosted copy: red when sync fails, gold when there is neither sync nor a recent download */
+    const err=ss&&ss.configured&&ss.state==="error";
+    const stale=!(ss&&ss.configured)&&DATA_APPS.some(a=>keysOf(a).length)&&Date.now()-(+LS.get("controlcenter.lastBundle")||0)>7*DAY;
+    dot.classList.toggle("hidden",!(err||stale));
+    dot.style.background=err?"var(--danger)":"var(--gold)";
+  }
+  $("#fab").disabled=SRC.mode!=="auto"||!STORAGE_OK;
+  $("#banner").innerHTML=bannerHTML();
+  let sub="";
+  if(VIEW==="today"){
+    sub=att?`${plural(att,"thing")} need${att===1?"s":""} attention`:"Nothing overdue";
+
+  }else if(VIEW==="backup") sub=SRV.ok?"Backups go to "+(SRV.dir||"the suites folder"):SRV.http?(ss&&ss.configured?"Synced through GitHub, plus backup files":"Sync through GitHub, or back up to a file"):"Opened as a file";
+  else if(VIEW==="projects") sub="Everything connected to one project, across apps";
+  else if(VIEW==="search") sub="One search across all your apps";
+  else if(VIEW==="apps") sub="Open a suite at the app you need";
+  $("#sub").textContent=sub;
+}
+function bannerHTML(){
+  const out=[];
+  if(!SRV.http) out.push(`<div class="warnbox"><div class="grow"><b>Opened as a file.</b> This page can only see your apps' data when it is opened from the same web address as your suites: through <code>serve_apps.py</code> (for example <code>http://127.0.0.1:8765/control-center.html</code>) or from the site where the suites are hosted. You can still look at backup files.</div><button class="btn" data-op="pick-files">Open backup files</button></div>`);
+  else if(!STORAGE_OK) out.push(`<div class="warnbox"><div class="grow"><b>Browser storage is blocked here,</b> so live data can't be read. Backups can still be viewed.</div></div>`);
+  if(SRC.mode==="auto"){
+    const fb=DATA_APPS.filter(a=>srcOf(a)==="backup");
+    const newest=fb.map(a=>String(SNAP[a.file].saved||"").slice(0,10)).sort().pop()||"";
+    if(fb.length) out.push(`<div class="warnbox"><div class="grow"><b>No data on this device for ${fb.length>3?plural(fb.length,"app"):esc(listNames(fb))}.</b> Showing ${fb.length===1?"its":"their"} latest backup${newest?` (newest ${esc(shortDate(newest))})`:""} instead, read only.</div><button class="btn primary" data-op="restore-open" data-files="${esc(fb.map(a=>a.file).join(","))}">Restore</button></div>`);
+  }else{
+    const when=SRC.mode==="file"?plural(SRC.names.length,"file"):"the latest backups";
+    out.push(`<div class="warnbox"><div class="grow"><b>Viewing ${esc(when)}.</b> Nothing can be changed in this view. Restore from the Backup tab to bring this data back.</div><button class="btn" data-op="mode" data-mode="auto">Back to live data</button></div>`);
+  }
+  return out.join("");
+}
+const listNames=as=>{const n=as.map(a=>a.name);return n.length<=2?n.join(" and "):n.slice(0,-1).join(", ")+" and "+n[n.length-1]};
+
+/* ---------------- shared row templates ---------------- */
+const disabled=a=>canWrite(a)?"":"disabled";
+function dlRow(i,now){
+  const c=dlCountdown(i,now), k=dlKind(i.kind), url=safeUrl(i.url);
+  return `<div class="row" style="--cc:var(${k.c})"><span class="bar"></span><div class="main">
+    <div class="t"><a href="${esc(href(A.deadlines,{find:i.title.slice(0,40)}))}">${esc(i.title)}</a></div>
+    <div class="m"><span class="app">${esc(k.name)}</span><span>${esc(longDate(i.date))}${i.time?", "+esc(i.time):""}</span><span class="${c.cls}">${c.t==="passed"?"passed":"in "+c.t}</span>${i.yearly?"<span>yearly</span>":""}${url?`<a href="${esc(url)}" target="_blank" rel="noopener" style="color:var(--accent2)">link</a>`:""}</div>
+  </div><div class="side"><button class="ibtn" data-op="dl-done" data-id="${esc(i.id)}" aria-label="${i.yearly?"Done, move to next year":"Mark done"}" title="${i.yearly?"Done, move to next year":"Mark done"}" ${disabled(A.deadlines)}>✓</button></div></div>`;
+}
+function actRow(x,showOverdue){
+  const a=x.a, m=x.m, st=actDue(a);
+  const due=a.due?(st==="overdue"?`overdue, ${shortDate(a.due)}`:a.due===todayStr()?"due today":`due ${shortDate(a.due)}`):"";
+  return `<label class="row ${a.done?"done":""}" style="--cc:var(--accent)"><input type="checkbox" data-op="act-done" data-mid="${esc(m.id)}" data-aid="${esc(a.id)}" ${a.done?"checked":""} ${disabled(A.log)} aria-label="Done">
+    <div class="main"><div class="t">${esc(a.text)}</div>
+    <div class="m">${!isMe(a.owner)?`<span>${esc(a.owner)}</span>`:""}${due?`<span class="${st==="overdue"?"over":st==="soon"?"soon":""}">${esc(due)}</span>`:""}<a class="app" href="${esc(href(A.log,{find:a.text.slice(0,40),pick:"actions"}))}">from ${esc(m.title)}, ${esc(shortDate(m.date))}</a>${m.proj?`<span>${esc(m.proj)}</span>`:""}</div></div></label>`;
+}
+function taskRow(t,opts){
+  opts=opts||{};
+  const u=taskUrgency(t), p=TPRIO[t.prio]||TPRIO.medium, T=todayStr(), lv=TLEVELS[u.lvl], meta=[];
+  if(t.proj&&!opts.noProj) meta.push(`<span style="color:var(--accent)">${esc(t.proj)}</span>`);
+  if(t.due){const n=daysTo(t.due);meta.push(`<span class="${t.done?"":n<0?"over":n<=2?"soon":""}">${n<0&&!t.done?(n===-1?"due yesterday":`${-n} days overdue`):n===0?"due today":n===1?"due tomorrow":"due "+esc(shortDate(t.due))}</span>`)}
+  if(!t.done&&t.plan&&t.plan<T) meta.push(`<span>carried over</span>`);
+  else if(!t.done&&t.plan&&t.plan>T) meta.push(`<span>do ${esc(shortDate(t.plan))}</span>`);
+  const subs=arr(t.subs); if(subs.length) meta.push(`<span>${subs.filter(s=>s&&s.done).length}/${subs.length} subtasks</span>`);
+  if(!t.done&&(u.lvl==="critical"||u.lvl==="urgent")) meta.push(`<span class="tag" style="--cc:var(${lv.c})" title="${esc(u.why)}">${lv.n}</span>`);
+  const side=opts.plan&&!t.done?`<div class="side"><button class="txtbtn" data-op="task-plan" data-id="${esc(t.id)}" data-day="${esc(T)}" ${disabled(A.tasks)}>Do today</button></div>`:"";
+  return `<label class="row ${t.done?"done":""}" style="--cc:var(${p.c})"><input type="checkbox" data-op="task-done" data-id="${esc(t.id)}" ${t.done?"checked":""} ${disabled(A.tasks)} aria-label="Done">
+    <div class="main"><div class="t"><a href="${esc(href(A.tasks,{find:t.title.slice(0,40),pick:t.done?"done":"all"}))}">${esc(t.title)}</a></div>${meta.length?`<div class="m">${meta.join("")}</div>`:""}</div>${side}</label>`;
+}
+function evRow(app,title,meta,link){
+  return `<div class="row" style="--cc:${cc(app)}"><span class="bar"></span><div class="main"><div class="t">${link?`<a href="${esc(link)}">${esc(title)}</a>`:esc(title)}</div>${meta?`<div class="m">${meta}</div>`:""}</div></div>`;
+}
+function workRow(w){
+  const topic=(D.topics.find(t=>t.id===w.topic)||{}).q||"";
+  const link=w.doi?"https://doi.org/"+encodeURI(w.doi):"";
+  const ok=canWrite(A.radar), kept=D.saved.some(s=>s.id===w.id||(w.doi&&(s.doi||"").toLowerCase()===w.doi.toLowerCase()));
+  return `<div class="row" style="--cc:var(--teal)"><span class="bar"></span><div class="main">
+    <div class="t">${link?`<a href="${esc(link)}" target="_blank" rel="noopener">${esc(w.title)}</a>`:esc(w.title)}</div>
+    <div class="m">${topic?`<span class="app">${esc(topic)}</span>`:""}${w.venue?`<span>${esc(clip(w.venue,40))}</span>`:""}${w.date?`<span>${esc(w.date)}</span>`:""}${w.preprint?"<span>preprint</span>":""}${w.cites?`<span>${w.cites} cit.</span>`:""}</div>
+    <div class="btnrow" style="margin:2px 0 0 -8px"><button class="txtbtn" data-op="radar-save" data-id="${esc(w.id)}" data-topic="${esc(w.topic)}" ${ok&&!kept?"":"disabled"}>${kept?"In reading list":"Save to read"}</button><button class="txtbtn" data-op="radar-seen" data-id="${esc(w.id)}" data-topic="${esc(w.topic)}" ${canWrite(A.radar)?"":"disabled"}>Seen</button></div>
+  </div></div>`;
+}
+function savedRow(s){
+  const link=s.doi?"https://doi.org/"+encodeURI(s.doi):href(A.radar,{pick:"saved"});
+  return evRow(A.radar,s.title,[firstAuthor(s.authors),s.venue&&clip(s.venue,40),(s.date||"").slice(0,4),s.read?"read":""].filter(Boolean).map(x=>`<span>${esc(x)}</span>`).join(""),link);
+}
+function logRow(e){
+  const k=logKind(e.kind);
+  const title=e.kind==="meeting"?e.title:firstLine(e.text,140);
+  return `<div class="row" style="--cc:var(${k.c})"><span class="bar"></span><div class="main">
+    <div class="t"><a href="${esc(href(A.log,{find:(e.kind==="meeting"?e.title:firstLine(e.text,40)).slice(0,40),pick:e.kind==="meeting"?"meetings":""}))}">${esc(title)}</a></div>
+    <div class="m"><span class="app">${esc(e.kind==="meeting"?MTYPES[e.mtype]||"Meeting":k.name)}</span><span>${esc(shortDate(e.date))}</span>${e.proj?`<span>${esc(e.proj)}</span>`:""}${e.pin?"<span>pinned</span>":""}</div>
+  </div></div>`;
+}
+const card=(title,body,extra)=>`<section class="card ${extra&&extra.cls||""}" ${extra&&extra.id?`id="${extra.id}"`:""}><h2>${title}${extra&&extra.right?extra.right:""}</h2>${body}</section>`;
+const empty=t=>`<div class="empty">${t}</div>`;
+
+/* ---------------- activity across apps ---------------- */
+function activity(since,m){
+  const out=[], P=m?m.proj:()=>true, T=m?m.text:()=>true;
+  const add=(t,app,title,meta,link)=>{if(t&&t>=since)out.push({t,app,title,meta:meta||"",link:link||""})};
+  for(const e of D.entries){
+    if(!P(e.proj)) continue;
+    const t=e.added&&localDate(e.added)===e.date?e.added:dayMs(e.date);
+    if(e.kind==="meeting"){
+      add(t,A.log,"Meeting: "+e.title,[MTYPES[e.mtype]||"",arr(e.people).join(", "),e.proj].filter(Boolean).map(esc).join(" · "),href(A.log,{find:e.title.slice(0,40),pick:"meetings"}));
+      for(const a of arr(e.actions)) if(a&&a.done&&a.doneAt) add(a.doneAt,A.log,"Action done: "+a.text,esc(e.title));
+    }else add(t,A.log,logKind(e.kind).name+": "+firstLine(e.text,140),esc(e.proj||""),href(A.log,{find:firstLine(e.text,40)}));
+  }
+  for(const x of D.tasks){
+    if(!P(x.proj)) continue;
+    const l=href(A.tasks,{find:x.title.slice(0,40),pick:x.done?"done":"all"});
+    add(x.added,A.tasks,"Task added: "+x.title,esc(x.proj||""),l);
+    if(x.done&&x.doneAt) add(x.doneAt,A.tasks,"Task done: "+x.title,esc(x.proj||""),l);
+  }
+  for(const s of D.saved){
+    if(m&&!T(s.title,s.topic)) continue;
+    add(s.saved,A.radar,"Saved to read: "+s.title,[firstAuthor(s.authors),s.venue,(s.date||"").slice(0,4)].filter(Boolean).map(esc).join(" · "),s.doi?"https://doi.org/"+encodeURI(s.doi):href(A.radar,{pick:"saved"}));
+  }
+  for(const i of D.ideas){
+    if(m&&!T(i.title,i.notes,arr(i.tags).join(" "))) continue;
+    add(i.created,A.ideas,"New idea: "+i.title,"",href(A.ideas,{find:i.title.slice(0,40),pick:i.stage}));
+    if(i.updated&&i.updated-(i.created||0)>6e4&&i.stage!=="spark") add(i.updated,A.ideas,`Idea in ${(IDEA_STAGES.find(s=>s.id===i.stage)||{}).name||i.stage}: ${i.title}`,"",href(A.ideas,{find:i.title.slice(0,40),pick:i.stage}));
+  }
+  for(const p of D.plans){ if(m&&!T(p.name,p.purpose,p.desc)) continue; add(p.updated,A.plans,`Script plan ${PLAN_STATUS[p.status]?PLAN_STATUS[p.status].toLowerCase():""}: ${p.name}`,esc(p.purpose||""),href(A.plans,{find:p.name.slice(0,40)})) }
+  for(const i of D.deadlines){ if(m&&!T(i.title,i.notes)) continue; if(i.done) add(i.updated,A.deadlines,"Deadline done: "+i.title,esc(dlKind(i.kind).name)); add(i.added,A.deadlines,"Deadline added: "+i.title,esc(longDate(i.date))) }
+  return out.sort((a,b)=>b.t-a.t);
+}
+function actRowsHTML(list){return list.map(x=>`<div class="row" style="--cc:${cc(x.app)}"><span class="bar"></span><div class="main"><div class="t">${x.link?`<a href="${esc(x.link)}">${esc(clip(x.title,160))}</a>`:esc(clip(x.title,160))}</div><div class="m"><span class="app">${esc(x.app.name)}</span><span>${esc(ago(x.t))}</span>${x.meta?`<span>${x.meta}</span>`:""}</div></div></div>`).join("")}
+
+/* ---------------- TODAY ---------------- */
+function renderToday(){
+  const M=D, now=Date.now(), t=todayStr(), st=settings(), mine=st.mine;
+  const wantAct=x=>!mine||isMe(x.a.owner);
+  /* needs attention */
+  const att=[];
+  for(const i of M.deadlines) if(!i.done&&dlWhen(i)<now) att.push({t:dlWhen(i),h:dlRow(i,now)});
+  for(const x of M.actions) if(!x.a.done&&actDue(x.a)==="overdue"&&wantAct(x)) att.push({t:dayMs(x.a.due),h:actRow(x)});
+  for(const x of M.tasks) if(taskOverdue(x)) att.push({t:dayMs(x.due),h:taskRow(x)});
+  att.sort((a,b)=>a.t-b.t);
+  /* next 14 days */
+  const end=now+14*DAY, endD=localDate(end), ag=[];
+  for(const i of M.deadlines){const w=dlWhen(i); if(!i.done&&w>=now&&w<end) ag.push({d:i.date,t:w,h:dlRow(i,now)})}
+  for(const x of M.actions) if(!x.a.done&&x.a.due&&x.a.due>=t&&x.a.due<=endD&&wantAct(x)) ag.push({d:x.a.due,t:dayMs(x.a.due)-1,h:actRow(x)});
+  for(const x of M.tasks) if(!x.done&&x.due&&x.due>=t&&x.due<=endD) ag.push({d:x.due,t:dayMs(x.due)-2,h:taskRow(x)});
+  ag.sort((a,b)=>a.t-b.t);
+  const days=[...new Set(ag.map(x=>x.d))];
+  const tomorrow=localDate(now+DAY);
+  const agHTML=days.map(d=>`<div class="day"><div class="dayh ${d===t?"today":""}"><span>${d===t?"Today":d===tomorrow?"Tomorrow":esc(longDate(d))}</span></div><div class="rows">${ag.filter(x=>x.d===d).map(x=>x.h).join("")}</div></div>`).join("");
+  /* tasks */
+  const open=M.tasks.filter(x=>!x.done);
+  const todayTasks=open.filter(x=>taskToday(x)&&!taskOverdue(x)).sort(byUrgency);
+  const overdueN=open.filter(taskOverdue).length;
+  const doneToday=M.tasks.filter(x=>doneOn(x)===t);
+  const urgentN=open.filter(x=>taskUrgency(x).s>=35).length;
+  const suggested=open.filter(x=>!taskToday(x)&&taskUrgency(x).s>=35).sort(byUrgency).slice(0,3);
+  const totalToday=todayTasks.length+overdueN+doneToday.length;
+  /* literature */
+  const unseen=[...M.unseen].sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.found||0)-(a.found||0));
+  const toRead=M.saved.filter(s=>!s.read);
+  const A_=M.author, lastSnap=M.snaps.length>1?M.snaps[M.snaps.length-2]:null, dC=A_&&lastSnap?(A_.cites||0)-(lastSnap.cites||0):0;
+  const gained=M.cworks.filter(w=>w.prev!=null&&w.cites>w.prev).sort((a,b)=>(b.cites-b.prev)-(a.cites-a.prev)).slice(0,3);
+  /* in progress */
+  const doing=M.ideas.filter(i=>i.stage==="doing").sort((a,b)=>(b.updated||0)-(a.updated||0));
+  const exploring=M.ideas.filter(i=>i.stage==="explore").length;
+  const building=M.plans.filter(p=>p.status==="building"), planning=M.plans.filter(p=>p.status==="planning");
+  const pinned=M.entries.filter(e=>e.pin).sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,4);
+  /* tiles */
+  const end7=localDate(now+7*DAY);
+  const next7=M.deadlines.filter(i=>!i.done&&dlWhen(i)>=now&&dlWhen(i)<now+7*DAY).length
+    +M.actions.filter(x=>!x.a.done&&x.a.due&&x.a.due>=t&&x.a.due<=end7&&wantAct(x)).length
+    +open.filter(x=>x.due&&x.due>=t&&x.due<=end7).length;
+  const tile=(n,label,op,col,txt)=>`<button class="tile ${!n&&!txt?"zero":""}" data-op="${op}" style="${col&&n?`--tc:${col}`:""}"><b>${txt||n}</b><span>${label}</span></button>`;
+  const ss=SYNC()?SYNC().status():null;
+  let syncTile;
+  if(SRV.ok){
+    const bs=backupSummary(), pendingBk=bs.changed.length+bs.never.length;
+    syncTile=tile(pendingBk,pendingBk?"not backed up":bs.ok.length?"all backed up":"nothing to back up","goto-backup",bs.err.length?"var(--red)":"var(--gold)",!bs.ok.length&&!pendingBk?"-":pendingBk?String(pendingBk):"✓");
+  }else if(ss&&ss.configured){
+    syncTile=ss.state==="error"?tile(1,"sync failed","goto-backup","var(--red)","!")
+      :ss.state==="offline"?tile(1,"offline, will sync later","goto-backup","var(--gold)","…")
+      :ss.pending?tile(ss.pending,ss.busy?"syncing":"waiting to sync","goto-backup","var(--gold)")
+      :tile(0,ss.last?"synced "+ago(ss.last):"not synced yet","goto-backup","",ss.last?"✓":"-");
+  }else syncTile=tile(0,"set up sync","goto-backup","","-");
+  const tiles=`<div class="tiles">
+    ${tile(att.length,"need attention","goto-attn","var(--red)")}
+    ${tile(next7,"due in 7 days","goto-agenda","var(--gold)")}
+    ${tile(todayTasks.length+overdueN,"tasks for today","goto-tasks","var(--green)")}
+    ${tile(urgentN,"urgent tasks","goto-tasks","var(--accent)")}
+    ${tile(unseen.length,"new in radar","goto-lit","var(--teal)")}
+    ${syncTile}
+  </div>`;
+  const mineToggle=`<button class="lk" data-op="toggle-mine" style="background:none">${mine?"My actions":"Everyone's actions"}</button>`;
+  const taskBody=[
+    totalToday?`<div class="prog" style="margin:0 0 6px"><div class="track"><div class="fill" style="width:${(doneToday.length/totalToday*100).toFixed(1)}%"></div></div><div class="plab"><span>${doneToday.length} of ${totalToday} done today</span>${overdueN?`<span class="over">${overdueN} overdue, under Needs attention</span>`:""}</div></div>`:"",
+    todayTasks.length?`<div class="rows">${todayTasks.map(x=>taskRow(x)).join("")}</div>`:"",
+    suggested.length?`<h3>Suggested for today</h3><div class="rows">${suggested.map(x=>taskRow(x,{plan:true})).join("")}</div>`:"",
+    doneToday.length?`<p class="muted" style="font-size:.82rem;margin:8px 0 0">Done today: ${doneToday.slice(0,6).map(x=>esc(x.title)).join(", ")}${doneToday.length>6?` and ${doneToday.length-6} more`:""}.</p>`:""
+  ].join("")||empty(M.tasks.length?`Nothing planned for today. Plan a task in <a href="${esc(href(A.tasks,{pick:"upcoming"}))}">Tasks</a> or add one with +.`:`Add your tasks with + or in <a href="${esc(href(A.tasks))}">Tasks</a>. Give them a priority and a due date and the most urgent rise to the top.`);
+  const litBody=[
+    M.topics.length?`<h3>Radar${unseen.length?`, ${unseen.length} new`:""}</h3>
+      <div class="m muted" style="font-size:.8rem;margin-bottom:4px">${M.radarRun?`Checked ${esc(ago(M.radarRun))}`:"Not checked yet"}${M.radarRun&&Date.now()-M.radarRun>7*DAY?` · <a href="${esc(href(A.radar))}" style="color:var(--accent)">check again</a>`:""}</div>
+      <div class="rows">${unseen.slice(0,5).map(workRow).join("")||empty("Nothing new with your current filters.")}</div>${unseen.length>5?`<a class="more" href="${esc(href(A.radar))}">${unseen.length-5} more in the radar</a>`:""}`:"",
+    M.saved.length?`<h3>Reading list</h3><div class="kv"><span><b>${toRead.length}</b> to read</span><span><b>${M.saved.length}</b> saved</span></div>
+      ${toRead.length?`<div class="rows" style="margin-top:6px">${toRead.slice(0,3).map(savedRow).join("")}</div>`:""}${toRead.length>3?`<a class="more" href="${esc(href(A.radar,{pick:"saved"}))}">${toRead.length-3} more to read</a>`:""}`:"",
+    A_?`<h3>Citations</h3><div class="kv"><span><b>${(A_.cites||0).toLocaleString("en-GB")}</b> citations${dC>0?` <span class="ok">+${dC}</span>`:""}</span><span>h-index <b>${A_.h||0}</b></span><span><b>${A_.works||0}</b> works</span><span>${M.citeRun?"updated "+esc(ago(M.citeRun)):""}</span></div>
+      ${gained.length?`<div class="rows" style="margin-top:6px">${gained.map(w=>evRow(A.citations,w.title,`<span class="ok">+${w.cites-w.prev}</span><span>${w.cites} total</span>${w.year?`<span>${w.year}</span>`:""}`,w.doi?"https://doi.org/"+encodeURI(w.doi):href(A.citations))).join("")}</div>`:""}`:""
+  ].join("")||empty(`Set up topics in the <a href="${esc(href(A.radar))}">literature radar</a> to see new papers here.`);
+  const progBody=[
+    doing.length?`<h3>Ideas you're doing${exploring?`, ${exploring} being explored`:""}</h3><div class="rows">${doing.slice(0,6).map(i=>`<div class="row" style="--cc:var(--violet)"><span class="bar"></span><div class="main"><div class="t"><a href="${esc(href(A.ideas,{find:i.title.slice(0,40),pick:"doing"}))}">${esc(i.title)}</a></div><div class="m"><span class="app">${esc((IDEA_CATS.find(c=>c.id===i.cat)||{}).name||"")}</span>${arr(i.tags).length?`<span>${esc(i.tags.map(x=>"#"+x).join(" "))}</span>`:""}</div></div><div class="side"><button class="txtbtn" data-op="idea-move" data-id="${esc(i.id)}" data-to="done" ${disabled(A.ideas)}>Done</button></div></div>`).join("")}</div>`:"",
+    building.length||planning.length?`<h3>Script plans</h3><div class="rows">${[...building,...planning].slice(0,6).map(p=>{const op=arr(p.checks).filter(c=>!c.done).length;return evRow(A.plans,p.name,`<span class="app">${esc(PLAN_STATUS[p.status]||p.status)}</span>${p.purpose?`<span>${esc(clip(p.purpose,70))}</span>`:""}${op?`<span class="soon">${plural(op,"open check")}</span>`:""}`,href(A.plans,{find:p.name.slice(0,40)}))}).join("")}</div>`:"",
+    pinned.length?`<h3>Pinned in the log</h3><div class="rows">${pinned.map(logRow).join("")}</div>`:""
+  ].join("")||empty("Ideas you move to Doing and script plans you're building show up here.");
+  const recent=activity(now-7*DAY);
+  const actBody=recent.length?`<div class="rows">${actRowsHTML(recent.slice(0,10))}</div>${recent.length>10?`<button class="more" data-op="digest">${recent.length-10} more, see the digest</button>`:""}`:empty("Nothing recorded in the last 7 days.");
+
+  const empties=!M.entries.length&&!M.tasks.length&&!M.deadlines.length&&!M.ideas.length&&!M.topics.length&&!M.saved.length;
+  const welcome=empties&&SRC.mode==="auto"&&SRV.http?`<div class="infobox"><b>Welcome to QTask.</b> Add a task with +, or open the <a href="${esc(href(A.tasks))}">Tasks</a>, <a href="${esc(href(A.log))}">Lab notebook</a> and <a href="${esc(href(A.radar))}">Literature radar</a>. ${ss&&ss.configured?"Sync is on: data from your other devices appears here after the first sync.":`Already using QTask on another device? <button class="linkbtn" data-op="sync-setup" style="color:var(--accent)">Turn on sync</button> to bring your data here.`}</div>`:"";
+  $("#v-today").innerHTML=tiles+welcome+
+  `<div class="masonry">
+    ${card("Needs attention",att.length?`<div class="rows">${att.map(x=>x.h).join("")}</div>`:empty("Nothing overdue."),{id:"s-attn",right:mineToggle})}
+    ${card("Today's tasks",taskBody,{id:"s-tasks",right:`<a class="lk" href="${esc(href(A.tasks))}">Tasks</a>`})}
+    ${card("Next 14 days",agHTML||empty("Nothing due in the next two weeks."),{id:"s-agenda"})}
+    ${card("Literature",litBody,{id:"s-lit",right:`<a class="lk" href="${esc(href(A.radar))}">Radar</a>`})}
+    ${card("In progress",progBody)}
+    ${card("Last 7 days",actBody,{right:`<button class="lk" data-op="digest" style="background:none">Digest</button>`})}
+  </div>`;
+}
+
+/* ---------------- PROJECTS ---------------- */
+function projectList(){
+  const map=new Map(), extra=obj(settings().projects);
+  const add=(p,t)=>{p=String(p||"").trim();if(!p)return;const k=p.toLowerCase();let o=map.get(k);if(!o){o={name:p,key:k,n:0,last:0};map.set(k,o)}o.n++;if((t||0)>o.last)o.last=t||0};
+  D.entries.forEach(e=>add(e.proj,e.updated||e.added||0));
+  D.tasks.forEach(x=>add(x.proj,x.updated||x.added||0));
+  for(const [k,v] of Object.entries(extra)) if(!map.has(k)) map.set(k,{name:obj(v).name||k,key:k,n:0,last:0,manual:true});
+  return [...map.values()].sort((a,b)=>b.last-a.last||a.name.localeCompare(b.name));
+}
+function matcher(name){
+  const k=String(name).trim().toLowerCase(), kw=arr(obj(obj(settings().projects)[k]).kw).map(x=>String(x).toLowerCase()).filter(Boolean);
+  const names=[k,...kw], terms=names.filter(x=>x.length>=3);
+  return {name,kw,
+    proj:p=>{p=String(p||"").trim().toLowerCase();return !!p&&names.includes(p)},
+    text:(...s)=>{const h=s.filter(Boolean).join(" ").toLowerCase();return terms.some(x=>h.includes(x))}};
+}
+function projectData(name){
+  const m=matcher(name);
+  const entries=D.entries.filter(e=>m.proj(e.proj)).sort((a,b)=>(b.date||"").localeCompare(a.date||"")||(b.added||0)-(a.added||0));
+  const tasks=D.tasks.filter(x=>m.proj(x.proj));
+  const P={m,entries,
+    logs:entries.filter(e=>e.kind!=="meeting"),
+    meetings:entries.filter(e=>e.kind==="meeting"),
+    actions:D.actions.filter(x=>m.proj(x.m.proj)&&!x.a.done).sort((a,b)=>(a.a.due||"9").localeCompare(b.a.due||"9")),
+    tasks:tasks.filter(x=>!x.done).sort(byUrgency),
+    tasksDone:tasks.filter(x=>x.done).sort((a,b)=>(b.doneAt||0)-(a.doneAt||0)),
+    deadlines:D.deadlines.filter(i=>!i.done&&m.text(i.title,i.notes)).sort((a,b)=>dlWhen(a)-dlWhen(b)),
+    ideas:D.ideas.filter(i=>i.stage!=="done"&&m.text(i.title,i.notes,arr(i.tags).join(" "))),
+    plans:D.plans.filter(p=>m.text(p.name,p.purpose,p.desc)),
+    saved:D.saved.filter(s=>m.text(s.title,s.topic)).sort((a,b)=>(b.saved||0)-(a.saved||0)),
+    topics:D.topics.filter(tp=>m.text(tp.q)),
+    schemes:D.schemes.filter(s=>m.text(s.name))
+  };
+  P.last=Math.max(0,...entries.map(e=>e.updated||e.added||0),...tasks.map(x=>x.updated||x.added||0));
+  return P;
+}
+function renderProjects(){
+  const list=projectList();
+  let cur=UI.get("proj","");
+  if(!list.some(p=>p.key===cur)) cur=list[0]?list[0].key:"";
+  const chips=`<div class="chips">${list.map(p=>`<button class="chip" data-op="proj" data-key="${esc(p.key)}" aria-pressed="${p.key===cur}">${esc(p.name)}${p.n?`<span class="c">${p.n}</span>`:""}</button>`).join("")}<button class="chip" data-op="proj-new" style="color:var(--accent)">+ Project</button></div>`;
+  if(!list.length){
+    $("#v-projects").innerHTML=chips+`<div class="infobox">Projects come from the <b>Project</b> field of tasks and of research log entries. Give a task or an entry a project, or add one here with a few keywords, and everything related across your apps collects on one page: open tasks and actions, deadlines, log entries, ideas, script plans, radar topics, papers to read and schemes.</div>`;
+    return;
+  }
+  const p=list.find(x=>x.key===cur), P=projectData(p.name), now=Date.now();
+  const head=`<div class="projhead"><div style="min-width:0"><h2>${esc(p.name)}</h2>
+    <div class="kv" style="margin-top:4px"><span>${plural(P.tasks.length,"open task")}</span><span>${plural(P.tasksDone.length,"task")} done</span><span>${plural(P.logs.length,"log entry","log entries")}</span><span>${plural(P.meetings.length,"meeting")}</span><span>${plural(P.actions.length,"open action")}</span><span>last activity ${esc(ago(P.last))}</span></div>
+    ${P.m.kw.length?`<div class="kv" style="margin-top:4px"><span>Also matching: ${esc(P.m.kw.join(", "))}</span></div>`:""}</div>
+    <div class="btnrow"><button class="btn" data-op="cap" data-kind="task" data-proj="${esc(p.name)}" ${disabled(A.tasks)}>Task</button><button class="btn" data-op="cap" data-kind="log" data-proj="${esc(p.name)}" ${disabled(A.log)}>Log entry</button><button class="btn" data-op="digest" data-proj="${esc(p.name)}">Digest</button><button class="btn ghost" data-op="proj-kw" data-key="${esc(p.key)}">Keywords</button></div></div>`;
+  const lit=[
+    P.topics.length?`<h3>Radar topics</h3><div class="rows">${P.topics.map(tp=>{const n=D.unseen.filter(w=>w.topic===tp.id).length;return evRow(A.radar,tp.q,`<span class="app">Literature radar</span>${n?`<span class="soon">${n} new</span>`:"<span>nothing new</span>"}`,href(A.radar))}).join("")}</div>`:"",
+    P.saved.length?`<h3>Reading list</h3><div class="rows">${P.saved.slice(0,6).map(savedRow).join("")}</div>${P.saved.length>6?`<p class="muted" style="font-size:.82rem;margin:6px 0 0">${P.saved.length-6} more</p>`:""}`:""
+  ].join("")||empty("No radar topic or saved paper mentions this project.");
+  const other=[
+    P.ideas.length?`<h3>Ideas</h3><div class="rows">${P.ideas.map(i=>evRow(A.ideas,i.title,`<span class="app">${esc((IDEA_STAGES.find(s=>s.id===i.stage)||{}).name||"")}</span>`,href(A.ideas,{find:i.title.slice(0,40),pick:i.stage}))).join("")}</div>`:"",
+    P.plans.length?`<h3>Script plans</h3><div class="rows">${P.plans.map(pl=>evRow(A.plans,pl.name,`<span class="app">${esc(PLAN_STATUS[pl.status]||"")}</span>${pl.purpose?`<span>${esc(clip(pl.purpose,70))}</span>`:""}`,href(A.plans,{find:pl.name.slice(0,40)}))).join("")}</div>`:"",
+    P.schemes.length?`<h3>Schemes</h3><div class="rows">${P.schemes.map(s=>`<div class="row" style="--cc:var(--pink)"><span class="bar"></span><div class="main"><div class="t"><button class="txtbtn" style="padding:0;min-height:0;color:var(--ink)" data-op="scheme" data-id="${esc(s.id)}">${esc(s.name)}</button></div><div class="m"><span class="app">Mechanism scheme</span><span>${esc(ago(s.updated))}</span></div></div></div>`).join("")}</div>`:""
+  ].join("")||empty("No ideas, script plans or schemes mention this project. Add keywords to widen the match.");
+  $("#v-projects").innerHTML=chips+head+`<div class="grid two">
+    ${card("Open tasks",P.tasks.length?`<div class="rows">${P.tasks.map(x=>taskRow(x,{noProj:true})).join("")}</div>`:empty("No open tasks in this project."),{right:`<a class="lk" href="${esc(href(A.tasks,{find:p.name}))}">Tasks</a>`})}
+    ${card("Open actions",P.actions.length?`<div class="rows">${P.actions.map(x=>actRow(x)).join("")}</div>`:empty("No open actions from this project's meetings."))}
+    ${card("Deadlines",P.deadlines.length?`<div class="rows">${P.deadlines.map(i=>dlRow(i,now)).join("")}</div>`:empty("No upcoming deadline mentions this project."))}
+    ${card("Research log",P.entries.length?`<div class="rows">${P.entries.slice(0,8).map(logRow).join("")}</div>${P.entries.length>8?`<a class="more" href="${esc(href(A.log,{find:p.name}))}">${P.entries.length-8} more in the log</a>`:""}`:empty("No log entries or meetings with this project yet."))}
+    ${card("Literature",lit)}
+    ${card("Ideas, plans and schemes",other)}
+  </div>`;
+}
+
+/* ---------------- SEARCH ---------------- */
+let IDX=null, IDXGEN=-1, QF="";
+function buildIndex(){
+  const out=[], add=(app,title,sub,text,link,extra)=>out.push({app,title:String(title||""),sub:sub||"",hay:(title+" "+text).toLowerCase(),link:link||"",extra:extra||null});
+  for(const e of D.entries){
+    if(e.kind==="meeting") add(A.log,e.title,`Meeting · ${shortDate(e.date)}${arr(e.people).length?" · "+arr(e.people).join(", "):""}${e.proj?" · "+e.proj:""}`,[e.text,e.decisions,arr(e.people).join(" "),e.proj,MTYPES[e.mtype]].join(" "),href(A.log,{find:e.title.slice(0,40),pick:"meetings"}));
+    else add(A.log,firstLine(e.text,120),`${logKind(e.kind).name} · ${shortDate(e.date)}${e.proj?" · "+e.proj:""}`,[e.text,e.proj].join(" "),href(A.log,{find:firstLine(e.text,40)}));
+  }
+  for(const x of D.actions) add(A.log,x.a.text,`Action${x.a.done?" (done)":""} · ${x.a.owner||"Me"}${x.a.due?" · due "+shortDate(x.a.due):""} · ${x.m.title}`,[x.a.owner,x.m.title].join(" "),href(A.log,{find:x.a.text.slice(0,40),pick:"actions"}));
+  for(const i of D.ideas) add(A.ideas,i.title,`Idea · ${(IDEA_STAGES.find(s=>s.id===i.stage)||{}).name||""} · ${(IDEA_CATS.find(c=>c.id===i.cat)||{}).name||""}`,[i.notes,arr(i.tags).join(" ")].join(" "),href(A.ideas,{find:i.title.slice(0,40),pick:i.stage}));
+  for(const p of D.plans) add(A.plans,p.name,`Script plan · ${PLAN_STATUS[p.status]||""}${p.purpose?" · "+clip(p.purpose,80):""}`,[p.purpose,p.desc,p.deps,arr(p.fns).map(f=>f.name).join(" ")].join(" "),href(A.plans,{find:p.name.slice(0,40)}));
+  for(const x of D.tasks) add(A.tasks,x.title,`Task${x.done?" (done)":""} · ${(TPRIO[x.prio]||TPRIO.medium).n} priority${x.due?" · due "+shortDate(x.due):""}${x.proj?" · "+x.proj:""}`,[x.notes,x.proj,arr(x.subs).map(s=>s&&s.text).join(" ")].join(" "),href(A.tasks,{find:x.title.slice(0,40),pick:x.done?"done":"all"}));
+  for(const i of D.deadlines) add(A.deadlines,i.title,`${dlKind(i.kind).name} · ${longDate(i.date)}${i.done?" · done":""}`,[i.notes,i.url].join(" "),href(A.deadlines,{find:i.title.slice(0,40),pick:i.done?"done":""}));
+  for(const s of D.saved) add(A.radar,s.title,`Reading list${s.read?"":" (to read)"}${s.venue?" · "+s.venue:""}${s.date?" · "+s.date.slice(0,4):""}`,[s.authors,s.venue,s.doi,s.topic].join(" "),s.doi?"https://doi.org/"+encodeURI(s.doi):href(A.radar,{pick:"saved"}),{doi:s.doi});
+  for(const w of D.works){const tp=(D.topics.find(t=>t.id===w.topic)||{}).q||""; add(A.radar,w.title,`Radar${w.seen?"":" (new)"} · ${tp}${w.date?" · "+w.date:""}`,[w.authors,w.venue,w.doi,tp,w.abs].join(" "),w.doi?"https://doi.org/"+encodeURI(w.doi):href(A.radar),{work:w})}
+  for(const w of D.cworks) add(A.citations,w.title,`Your work · ${w.cites||0} citations${w.year?" · "+w.year:""}`,[w.venue,w.doi].join(" "),w.doi?"https://doi.org/"+encodeURI(w.doi):href(A.citations),{doi:w.doi});
+  for(const s of D.schemes) add(A.schemes,s.name,`Mechanism scheme · edited ${ago(s.updated)}`,"","",{scheme:s});
+  return out;
+}
+function renderSearch(){
+  if(IDXGEN!==GEN){IDX=buildIndex();IDXGEN=GEN}
+  const q=$("#q").value.trim().toLowerCase(), toks=q.split(/\s+/).filter(Boolean);
+  const hits=toks.length?IDX.filter(r=>toks.every(t=>r.hay.includes(t))):[];
+  const byApp=new Map(); hits.forEach(r=>byApp.set(r.app,(byApp.get(r.app)||0)+1));
+  if(QF&&!byApp.has(APPS.find(a=>a.suite.id+"/"+a.id===QF))) QF="";
+  $("#qChips").innerHTML=toks.length&&hits.length?[`<button class="chip" data-op="qf" data-f="" aria-pressed="${!QF}">All<span class="c">${hits.length}</span></button>`]
+    .concat([...byApp.entries()].map(([a,n])=>`<button class="chip" data-op="qf" data-f="${esc(a.suite.id+"/"+a.id)}" aria-pressed="${QF===a.suite.id+"/"+a.id}" style="--cc:${cc(a)}"><span class="dot"></span>${esc(a.name)}<span class="c">${n}</span></button>`)).join(""):"";
+  if(!toks.length){
+    $("#qOut").innerHTML=`<div class="infobox">Searches your tasks, the research log (entries, meetings and actions), ideas, script plans, deadlines, radar results, the reading list, your cited works and schemes. Tap a result to open that app filtered to it.</div>`;
+    return;
+  }
+  const scored=hits.filter(r=>!QF||r.app.suite.id+"/"+r.app.id===QF)
+    .map(r=>({r,s:(r.title.toLowerCase().includes(q)?3:0)+toks.filter(t=>r.title.toLowerCase().includes(t)).length}))
+    .sort((a,b)=>b.s-a.s).slice(0,80).map(x=>x.r);
+  $("#qOut").innerHTML=scored.length?`<div class="card"><div class="rows">${scored.map(searchRow).join("")}</div>${hits.length>80?`<p class="muted" style="font-size:.82rem">Showing the best 80 of ${hits.length}.</p>`:""}</div>`:empty("Nothing matches.");
+}
+function searchRow(r){
+  const x=r.extra||{}, side=[];
+  if(x.doi) side.push(`<button class="ibtn" data-op="copy" data-text="${esc(x.doi)}" aria-label="Copy DOI" title="Copy DOI">⧉</button>`);
+  if(x.work&&!x.work.seen) side.push(`<button class="txtbtn" data-op="radar-save" data-id="${esc(x.work.id)}" data-topic="${esc(x.work.topic)}" ${canWrite(A.radar)?"":"disabled"}>Save</button>`);
+  const ext=/^https?:/.test(r.link);
+  const title=x.scheme?`<button class="txtbtn" style="padding:0;min-height:0;color:var(--ink);text-align:left" data-op="scheme" data-id="${esc(x.scheme.id)}">${esc(r.title)}</button>`
+    :r.link?`<a href="${esc(r.link)}" ${ext?'target="_blank" rel="noopener"':""}>${esc(r.title)}</a>`:esc(r.title);
+  return `<div class="row" style="--cc:${cc(r.app)}"><span class="bar"></span><div class="main"><div class="t">${title}</div><div class="m"><span class="app">${esc(r.app.name)}</span><span>${esc(r.sub)}</span></div></div>${side.length?`<div class="side">${side.join("")}</div>`:""}</div>`;
+}
+
+/* ---------------- APPS ---------------- */
+function appStat(a){
+  const now=Date.now(), M=D;
+  switch(a.suite.id+"/"+a.id){
+    case "lab-notebook/log":{const o=M.actions.filter(x=>!x.a.done).length;return `${plural(M.entries.length-M.meetings.length,"entry","entries")}, ${plural(M.meetings.length,"meeting")}${o?`, ${o} open actions`:""}`}
+    case "lab-notebook/tasks":{const o=M.tasks.filter(x=>!x.done);return `${o.length} open, ${o.filter(taskToday).length} for today`}
+    case "lab-notebook/ideas":return `${plural(M.ideas.length,"idea")}, ${M.ideas.filter(i=>i.stage==="doing").length} doing`;
+    case "lab-notebook/plans":return `${plural(M.plans.length,"plan")}, ${M.plans.filter(p=>p.status==="building").length} building`;
+    case "lab-notebook/deadlines":{const o=M.deadlines.filter(i=>!i.done&&dlWhen(i)>=now).sort((x,y)=>dlWhen(x)-dlWhen(y));return o.length?`${o.length} upcoming, next in ${dlCountdown(o[0],now).t}`:"Nothing upcoming"}
+    case "literature-hub/radar":return M.topics.length?`${M.unseen.length} new, ${plural(M.topics.length,"topic")}, ${M.saved.filter(s=>!s.read).length} to read`:"No topics yet";
+    case "literature-hub/citations":return M.author?`${(M.author.cites||0).toLocaleString("en-GB")} citations, h ${M.author.h||0}`:"Not set up";
+    case "structure-studio/viewer":return `<span id="recentCount">Recent structures on this device</span>`;
+    case "paper-kit/schemes":return `${plural(M.schemes.length,"scheme")}`;
+    default:return esc(a.blurb||"");
+  }
+}
+/* suites listed here but not in this folder (for example chem-calculators.html) are hidden */
+const PRESENT={};
+async function probeSuites(){
+  if(!SRV.http) return;
+  await Promise.all(SUITES.filter(s=>!s.hidden).map(async s=>{
+    try{const r=await fetch(s.id+".html",{method:"HEAD",cache:"no-store"});PRESENT[s.id]=r.ok}catch(_){/* offline: keep it */}
+  }));
+}
+function renderApps(){
+  const html=SUITES.filter(s=>!s.hidden&&PRESENT[s.id]!==false).map(s=>{
+    const dataApps=s.apps.filter(a=>a.file), ssc=SYNC()&&SYNC().configured();
+    const note=dataApps.length?(ssc?"Synced between your devices":"Kept on this device"):"Nothing stored";
+    return `<section class="card suite"><a class="suitehead" href="${esc(s.id)}.html"><img src="icons/${esc(s.id)}-192.png" alt="" width="48" height="48" loading="lazy" onerror="this.style.visibility='hidden'"><div><b>${esc(s.title)}</b><span>${esc(note)}</span></div></a>
+      <div class="applist">${s.apps.map(a=>`<a class="appbtn" href="${esc(href(a))}" style="--cc:${cc(a)}"><b>${esc(a.name)}</b><span>${appStat(a)}${a.file&&srcOf(a)==="backup"?" (from backup)":""}</span></a>`).join("")}</div>
+      ${s.id==="structure-studio"?`<div id="recentStructs"></div>`:""}</section>`;
+  }).join("");
+  $("#v-apps").innerHTML=`<div class="grid two three">${html}</div>`;
+  if(SRC.mode==="auto"&&STORAGE_OK) IDB.meta().then(list=>{
+    const c=$("#recentCount"); if(c) c.textContent=list.length?`${plural(list.length,"recent structure")} on this device`:"No recent structures";
+    const box=$("#recentStructs"); if(!box||!list.length) return;
+    box.innerHTML=`<h3 style="margin:4px 0 0">Recent structures</h3><div class="rows">${list.map(x=>evRow(A.viewer,x.name,`<span>${esc(String(x.fmt||"").toUpperCase())}</span><span>${size(x.size||0)}</span><span>${esc(ago(x.at))}</span>`,href(A.viewer))).join("")}</div>`;
+  });
+}
+
+/* ---------------- BACKUP ---------------- */
+const COUNT={
+  "research-log":j=>arr(obj(j["researchlog.v1"]).entries).length,
+  "task-list":j=>arr(obj(j["tasks.v1"]).items).length,
+  "idea-board":j=>arr(j["ideaboard.v1"]).length,
+  "script-planner":j=>arr(obj(j["scriptplans.v1"]).plans).length,
+  "deadline-tracker":j=>arr(obj(j["deadlines.v1"]).items).length,
+  "literature-radar":j=>arr(obj(j["litradar.v1"]).topics).length+arr(obj(j["litradar.v1"]).saved).length,
+  "citation-tracker":j=>arr(obj(j["citedash.v1"]).works).length,
+  "structure-viewer":j=>j["structviewer.prefs"]?1:0,
+  "mechanism-scheme-editor":j=>Object.keys(obj(j["mech.index"])).length,
+  "settings":j=>j["controlcenter.v1"]?1:0
+};
+const UNIT={"research-log":["entry","entries"],"task-list":["task"],"idea-board":["idea"],"script-planner":["plan"],"deadline-tracker":["deadline"],
+  "literature-radar":["topic or saved paper","topics and saved papers"],"citation-tracker":["work"],"structure-viewer":["preference set"],"mechanism-scheme-editor":["scheme"],"settings":["settings file"]};
+const unitOf=(a,n)=>{const u=UNIT[a.file]||["item"];return plural(n,u[0],u[1])};
+const HEALTH={}; let healthBusy=false;
+async function loadHealth(){
+  if(healthBusy||!SRV.ok) return; healthBusy=true;
+  try{
+    await Promise.all(DATA_APPS.map(async a=>{
+      const f=SRV.latest(a); if(!f){HEALTH[a.file]=null;return}
+      try{const p=await SRV.read(f.file);HEALTH[a.file]={file:f.file,date:f.date,mtime:f.mtime,bytes:f.bytes,count:COUNT[a.file](obj(p&&p.json))}}catch(_){HEALTH[a.file]={file:f.file,date:f.date,mtime:f.mtime,bytes:f.bytes,count:null}}
+    }));
+  }finally{healthBusy=false}
+  if(VIEW==="backup") renderBackup();
+}
+function syncCard(){
+  const S=SYNC();
+  if(!S) return card("Sync between your devices",empty("suite-sync.js is missing next to this page, so sync is not available."),{cls:"span2"});
+  const ss=S.status();
+  if(!ss.configured) return card("Sync between your devices",`<p style="margin:0 0 8px">Off. QTask keeps your data in this browser only. Turn on sync to have the same tasks, notes, papers and schemes on your Mac and your iPhone: each device keeps a copy and they meet in a <b>private</b> GitHub repository that only you can read.</p>
+    <div class="btnrow"><button class="btn primary" data-op="sync-setup">Set up sync</button></div>
+    <p class="muted" style="font-size:.82rem;margin:10px 0 0">You need a private repository for the data (it can be empty) and a GitHub token that can change only that repository. The set-up explains both.</p>`,{cls:"span2",id:"s-sync"});
+  const dot=ss.state==="error"?`<span class="over">●</span>`:ss.state==="offline"||ss.pending?`<span class="soon">●</span>`:`<span class="ok">●</span>`;
+  const line=ss.busy?"Syncing...":ss.state==="error"?`Last sync failed: ${esc(ss.error)}`:ss.state==="offline"?esc(ss.error||"Offline"):
+    ss.pending?`${plural(ss.pending,"change")} waiting to sync`:ss.last?`In sync. Last sync ${esc(ago(ss.last))}${ss.pulled||ss.pushed?` (${ss.pushed} sent, ${ss.pulled} received)`:""}.`:"Not synced yet.";
+  const conf=S.conflicts();
+  const nameOf=k=>{const a=DATA_APPS.find(x=>owned(x,k));return a?a.name:k==="suite.me"?"Your names":k};
+  const confHTML=conf.length?`<h3>Versions replaced by a sync</h3><p class="muted" style="font-size:.82rem;margin:0 0 6px">When the same app changed on two devices before they synced, the newer edit was kept. The other version is here in case you need it.</p>
+    <div class="rows">${conf.map(c=>`<div class="row" style="--cc:var(--gold)"><span class="bar"></span><div class="main"><div class="t">${esc(nameOf(c.key))}</div><div class="m"><span>version from ${esc(c.from)}</span>${c.t?`<span>edited ${esc(fmtWhen(c.t))}</span>`:""}<span>replaced ${esc(ago(c.at))}</span><span>${size(c.size*2)}</span></div></div>
+      <div class="side"><button class="txtbtn" data-op="sync-restore" data-i="${c.i}">Restore</button><button class="txtbtn" data-op="sync-drop" data-i="${c.i}">Dismiss</button></div></div>`).join("")}</div>`:"";
+  return card("Sync between your devices",`<p style="margin:0 0 4px">${dot} ${line}</p>
+    <div class="kv" style="margin:6px 0 12px"><span>Repository <b>${esc(ss.repo)}</b></span><span>This device <b>${esc(ss.device)}</b></span>${ss.auto?"<span>Automatic</span>":"<span class=\"soon\">Automatic sync off</span>"}</div>
+    <div class="btnrow"><button class="btn primary" data-op="sync-now" ${ss.busy?"disabled":""}>Sync now</button><button class="btn" data-op="sync-settings">Settings</button><a class="btn ghost" href="https://github.com/${esc(ss.repo)}/commits" target="_blank" rel="noopener">History on GitHub</a></div>
+    <p class="muted" style="font-size:.82rem;margin:10px 0 0">Changes sync a few seconds after you make them, when you open QTask and every few minutes while it is open. Every sync is a commit in the repository, so its history is also a complete backup.</p>${confHTML}`,{cls:"span2",id:"s-sync"});
+}
+function renderBackup(){
+  const bs=backupSummary(), lastB=+LS.get("controlcenter.lastBundle")||0, last=+LS.get("controlcenter.lastAll")||0;
+  const st=settings();
+  const suitesWithData=SUITES.filter(s=>!s.hidden&&s.apps.some(a=>a.file));
+  const onCount=suitesWithData.filter(s=>suiteState(s.id).on).length;
+  const fileCard=card("Back up to a file",`<div class="kv" style="margin:0 0 12px"><span>Last download ${esc(ago(lastB))}</span>${SRV.ok?`<span>Last full backup to the server ${esc(ago(last))}</span>`:""}</div>
+    <div class="btnrow"><button class="btn primary" data-op="bundle" ${STORAGE_OK&&SRV.http?"":"disabled"}>Download everything as one file</button>${SRV.ok?`<button class="btn" data-op="backup-all" ${STORAGE_OK&&SRC.mode==="auto"?"":"disabled"}>Back up all apps to the server</button>`:""}<button class="btn" data-op="restore-open">Restore…</button></div>
+    <p class="muted" style="font-size:.82rem;margin:10px 0 0">One JSON file with every app. On an iPhone, choose <b>Save to Files</b> and pick iCloud Drive; on a Mac it goes to Downloads (move it to iCloud Drive if you like). Restore it here, on this or any other device. Your GitHub token and OpenAlex key are never written into it.</p>`,{cls:"span2"});
+  const auto=SRV.ok?card("Automatic backups to the server",`<div class="bkgrid">
+      <label class="sw"><span>Back up changes while the control center is open<small>Every 2 minutes and when you leave the page, only apps that changed.</small></span><input type="checkbox" role="switch" data-op="auto" ${st.auto?"checked":""}></label>
+      <label class="sw"><span>Automatic backups inside every suite<small>${onCount} of ${suitesWithData.length} suites have it on.</small></span><input type="checkbox" role="switch" data-op="auto-suites" ${onCount===suitesWithData.length?"checked":""}></label>
+    </div>`):"";
+  const total=LS.keys().reduce((n,k)=>n+bytesOfKey(k),0), quota=5*1048576;
+  const loose=LS.keys().filter(k=>!ownedByAny(k)&&!isPrivate(k));
+  const big=DATA_APPS.map(a=>({a,b:bytesOf(a)})).filter(x=>x.b).sort((x,y)=>y.b-x.b).slice(0,4);
+  const storage=card("Storage on this device",`<div class="meter"><div style="width:${Math.min(100,total/quota*100).toFixed(1)}%"></div></div>
+    <div class="kv"><span><b>${size(total)}</b> of about 5 MB that browsers usually allow per site</span></div>
+    ${big.length?`<div class="kv" style="margin-top:6px">${big.map(x=>`<span>${esc(x.a.name)} <b>${size(x.b)}</b></span>`).join("")}</div>`:""}
+    <p class="note" id="persistLine" style="font-size:.8rem;margin:8px 0 0;color:var(--muted)">${plural(loose.length,"other key")} (reminders, suite settings, open tabs) go into the single-file download. Recent structures in the viewer are kept in a separate database, only on this device.</p>`);
+  const S=SYNC(), ss=S?S.status():null, pend=new Set(ss&&ss.configured?S.pendingKeys():[]);
+  const groups=SUITES.filter(s=>s.apps.some(a=>a.file)).map(s=>{
+    const rows=s.apps.filter(a=>a.file).map(a=>{
+      const ks=keysOf(a), live=ks.length?COUNT[a.file](snapshot(a).json):0;
+      let pill;
+      if(!ks.length) pill=["none","Empty"];
+      else if(SRV.ok){const k=bkState(a);pill={ok:["ok","Saved"],changed:["chg","Changed"],never:["chg","Not backed up"],err:["err","Failed"],none:["none","Empty"]}[k.k]}
+      else if(ss&&ss.configured) pill=ks.some(k=>pend.has(k))?["chg","Waiting to sync"]:["ok","Synced"];
+      else pill=["none","This device only"];
+      const bits=ks.length?[`${unitOf(a,live)}, ${size(bytesOf(a))}`]:[];
+      return `<div class="bkapp" style="--cc:${cc(a)}"><div class="main"><b>${esc(a.name)}</b> <span class="state ${pill[0]}">${pill[1]}</span><div class="m">${bits.join(" · ")||"Nothing stored on this device"}</div></div>
+        ${SRC.mode==="file"||(SRV.ok&&SRV.filesOf(a).length)?`<button class="txtbtn" data-op="restore-open" data-files="${esc(a.file)}">Restore</button>`:""}</div>`;
+    }).join("");
+    return `<h3>${esc(s.title)}</h3><div class="bkgrid">${rows}</div>`;
+  }).join("");
+  const appsCard=card("Apps on this device",groups,{cls:"span2"});
+  $("#v-backup").innerHTML=`<div class="grid two">${syncCard()}${fileCard}${auto}${storage}${appsCard}</div>`;
+}
+
+/* ---------------- sync: set up and settings ---------------- */
+function openSyncSetup(){
+  const S=SYNC(); if(!S){toast("Sync is not available here");return}
+  let choice=null, info=null;
+  openSheet(`<h2 id="dlgTitle">Sync between your devices</h2>
+    <p class="note">Each device keeps its own copy of your data and they meet in a private GitHub repository. Do this once on every device (Mac, iPhone, iPad), with the same repository and token.</p>
+    <ol class="note" style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px">
+      <li>A <b>private</b> repository on GitHub for the data. It can be empty; QTask creates a <code>data</code> folder in it.</li>
+      <li>A token: on GitHub, Settings › Developer settings › Fine-grained tokens › <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" style="color:var(--accent2)">Generate new token</a>. Repository access: <b>only</b> the data repository. Permissions: <b>Contents, read and write</b>. Pick an expiry you are happy with (you can make a new one later).</li>
+    </ol>
+    <label>Data repository<input id="syRepo" value="ppaivaa/QTask-data" placeholder="owner/name" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    <label>Token<input id="syTok" type="password" placeholder="github_pat_..." autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    <label>Name of this device<input id="syDev" value="${esc(S.defaultDevice())}" maxlength="40" autocomplete="off"></label>
+    <div id="syChoice"></div>
+    <p class="note">The token is kept only on this device and is never synced or written into backup files. Anyone who can use this browser could read it, so use a token limited to the data repository.</p>
+    <p class="hint" id="sheetHint"></p>
+    <div class="sbar"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn primary" id="syGo">Check and connect</button></div>`,async()=>{
+    const go=$("#syGo"), repo=val("syRepo"), tok=$("#syTok").value.trim(), dev=val("syDev");
+    hint(""); go.disabled=true; go.innerHTML=`<span class="spin"></span>${info?"Connecting":"Checking"}`;
+    try{
+      if(!info||info.repo.toLowerCase()!==(S.cleanRepo(repo)||"").toLowerCase()){
+        info=await S.inspect(repo,tok);
+        if(!info.private){hint("That repository is public, so anyone could read your notes. Make it private on GitHub (Settings › General › Danger zone › Change visibility) and try again.");info=null;return}
+        if(info.remoteKeys&&info.localKeys){
+          $("#syChoice").innerHTML=`<h4>Both sides already have data</h4><div class="picklist" style="max-height:none">
+            <label class="pick"><input type="radio" name="syPref" value="remote" checked><div><b>Use the data in GitHub on this device</b><div class="m">Right for a second device. Where both have the same app, this device takes the GitHub copy; this device's version is kept under Versions replaced by a sync.</div></div></label>
+            <label class="pick"><input type="radio" name="syPref" value="local"><div><b>Keep this device's data</b><div class="m">This device's apps replace the GitHub copy where both have them; the GitHub version stays in the repository history and under Versions replaced.</div></div></label></div>`;
+          go.textContent="Connect"; return;
+        }
+      }
+      choice=(sheet.querySelector('input[name="syPref"]:checked')||{}).value||(info.remoteKeys?"remote":"local");
+      const st=await S.connect({repo:info.repo,token:tok,device:dev,prefer:choice});
+      dlg.close();
+      await refresh(false);
+      toast(st.state==="ok"?`Sync is on: ${st.pushed} sent, ${st.pulled} received`:st.error||"Sync is on, but the first sync failed");
+    }catch(e){hint(e&&e.message?e.message:String(e))}
+    finally{if(go.isConnected){go.disabled=false;if(!/Connect$/.test(go.textContent))go.textContent=info&&$("#syChoice").innerHTML?"Connect":"Check and connect"}}
+  });
+  const r=$("#syRepo"); if(r&&!r.value) r.focus(); else { const tk=$("#syTok"); if(tk) tk.focus(); }
+}
+function openSyncSettings(){
+  const S=SYNC(); if(!S) return; const c=S.config(); if(!c){openSyncSetup();return}
+  openSheet(`<h2 id="dlgTitle">Sync settings</h2>
+    <div class="kv"><span>Repository <b>${esc(c.repo)}</b></span><span>Folder <b>${esc(c.dir)}</b></span>${c.since?`<span>Connected ${esc(fmtWhen(c.since))}</span>`:""}</div>
+    <label>Name of this device<input id="syDev" value="${esc(c.device)}" maxlength="40" autocomplete="off"></label>
+    <label class="sw"><span>Sync automatically<small>When off, sync only runs when you tap Sync now.</small></span><input type="checkbox" role="switch" id="syAuto" ${c.auto?"checked":""}></label>
+    <p class="note">To use a new token (they expire), turn sync off here and set it up again with the same repository; nothing is lost.</p>
+    <div class="sbar"><button type="button" class="btn danger" id="syOff">Turn sync off</button><button type="submit" class="btn primary">Save</button></div>`,()=>{
+    S.update({device:val("syDev")||c.device,auto:$("#syAuto").checked}); dlg.close(); render(); toast("Saved");
+  });
+  $("#syOff").addEventListener("click",()=>{
+    if(!confirm("Turn sync off on this device? Your data stays here and in the repository; the token is removed from this device.")) return;
+    S.disconnect(); dlg.close(); render(); toast("Sync is off on this device");
+  });
+}
+
+/* =====================================================================
+   Sheets: add to an app, commands for a job, digest, restore, sources
+   ===================================================================== */
+const dlg=$("#dlg"), sheet=$("#dlgBody");
+let onSheetSubmit=null;
+function openSheet(html,submit){
+  sheet.innerHTML=html; onSheetSubmit=submit||null;
+  if(!dlg.open) dlg.showModal();
+}
+sheet.addEventListener("submit",e=>{e.preventDefault();if(onSheetSubmit)onSheetSubmit(e)});
+sheet.addEventListener("click",e=>{if(e.target.closest("[data-close]"))dlg.close()});
+dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close()});
+dlg.addEventListener("close",()=>{onSheetSubmit=null;if(D)setTimeout(render,0)});
+const hint=t=>{const h=$("#sheetHint");if(h)h.textContent=t||""};
+const val=id=>{const el=document.getElementById(id);return el?el.value.trim():""};
+const nval=id=>num(val(id));
+const projOptions=()=>`<datalist id="dlProjects">${projectList().map(p=>`<option>${esc(p.name)}</option>`).join("")}</datalist>`;
+
+/* ---------------- add to an app ---------------- */
+const CAP_TYPES=[["task","Task","tasks"],["log","Log entry","log"],["idea","Idea","ideas"],["deadline","Deadline","deadlines"],["paper","Paper","radar"]];
+let CAP={kind:"log",pre:{},logKind:"note",dlKind:"grant",hits:[]};
+function openCapture(kind,pre){
+  if(SRC.mode!=="auto"||!STORAGE_OK){toast("Switch to live data to add things");return}
+  const first=CAP_TYPES.find(t=>canWrite(A[t[2]]));
+  if(!first){toast("Every app is showing a backup; restore first");return}
+  kind=kind||UI.get("capKind","task");
+  if(!canWrite(A[(CAP_TYPES.find(t=>t[0]===kind)||first)[2]])) kind=first[0];
+  openSheet(`<h2 id="dlgTitle">Add to an app</h2>
+    <div class="seg" role="group" aria-label="What to add">${CAP_TYPES.map(([k,n,a])=>`<button type="button" data-cap="${k}" aria-pressed="${k===kind}" ${canWrite(A[a])?"":"disabled"}>${n}</button>`).join("")}</div>
+    <div id="capBody" style="display:flex;flex-direction:column;gap:12px"></div>
+    <p class="hint" id="sheetHint"></p>
+    <div class="sbar"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn primary" id="capGo">Add</button></div>${projOptions()}`,submitCapture);
+  sheet.querySelector(".seg").addEventListener("click",e=>{const b=e.target.closest("[data-cap]");if(!b||b.disabled)return;renderCap(b.dataset.cap,{})});
+  renderCap(kind,pre||{});
+}
+function renderCap(kind,pre){
+  CAP.kind=kind; CAP.pre=pre; UI.set("capKind",kind); hint("");
+  $$(".seg [data-cap]",sheet).forEach(b=>b.setAttribute("aria-pressed",b.dataset.cap===kind));
+  const box=$("#capBody"), go=$("#capGo");
+  go.textContent={task:"Add task",log:"Add to log",idea:"Add idea",deadline:"Add deadline",paper:"Save to reading list"}[kind];
+  if(kind==="task"){
+    box.innerHTML=`<label>Task<input id="tTitle" maxlength="200" value="${esc(pre.title||"")}" placeholder="What needs doing"></label>
+      <div class="f2"><label>Project<input id="tProj" list="dlProjects" value="${esc(pre.proj||"")}" autocomplete="off"></label><label>Priority<select id="tPrio"><option value="low">Low</option><option value="medium" selected>Medium</option><option value="high">High</option></select></label></div>
+      <div class="f2"><label>Do on<input id="tPlan" type="date" value="${esc(pre.plan??todayStr())}"></label><label>Due (optional)<input id="tDue" type="date" value="${esc(pre.due||"")}"></label></div>
+      <label>Notes<textarea id="tNotes" placeholder="Optional. Subtasks can be added in Tasks.">${esc(pre.notes||"")}</textarea></label>`;
+    $("#tTitle").focus();
+  }else if(kind==="log"){
+    CAP.logKind=pre.kind||"note";
+    box.innerHTML=`<div class="kinds" id="capKinds">${LOG_KINDS.map(k=>`<button type="button" data-k="${k.id}" style="--cc:var(${k.c})" aria-pressed="${k.id===CAP.logKind}">${k.name}</button>`).join("")}</div>
+      <label>Entry<textarea id="cText" placeholder="What happened, what you found, what you decided. #tags and \`code\` work as in the log.">${esc(pre.text||"")}</textarea></label>
+      <div class="f2"><label>Project<input id="cProj" list="dlProjects" value="${esc(pre.proj??D.lastProj)}" autocomplete="off"></label><label>Date<input id="cDate" type="date" value="${esc(pre.date||todayStr())}"></label></div>
+      <label class="check"><input type="checkbox" id="cPin"> Pin this entry</label>
+`;
+    $("#capKinds").addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b)return;CAP.logKind=b.dataset.k;$$("#capKinds [data-k]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.k===CAP.logKind))});
+    const t=$("#cText"); t.focus(); t.setSelectionRange(t.value.length,t.value.length);
+  }else if(kind==="idea"){
+    box.innerHTML=`<label>Idea<input id="iTitle" maxlength="200" value="${esc(pre.title||"")}" placeholder="One line"></label>
+      <div class="f2"><label>Category<select id="iCat">${IDEA_CATS.map(c=>`<option value="${c.id}" ${c.id===(pre.cat||"research")?"selected":""}>${c.name}</option>`).join("")}</select></label><label>Tags<input id="iTags" value="${esc(pre.tags||"")}" placeholder="comma separated"></label></div>
+      <label>Notes<textarea id="iNotes">${esc(pre.notes||"")}</textarea></label>`;
+    $("#iTitle").focus();
+  }else if(kind==="deadline"){
+    CAP.dlKind=pre.kind||"grant";
+    box.innerHTML=`<label>What is due<input id="dTitle" value="${esc(pre.title||"")}" placeholder="ERC Starting Grant, abstract for ..."></label>
+      <div class="kinds" id="dlKinds">${DL_KINDS.map(k=>`<button type="button" data-k="${k.id}" style="--cc:var(${k.c})" aria-pressed="${k.id===CAP.dlKind}">${k.name}</button>`).join("")}</div>
+      <div class="f2"><label>Date<input id="dDate" type="date" value="${esc(pre.date||"")}"></label><label>Time (optional)<input id="dTime" type="time" value="${esc(pre.time||"")}"></label></div>
+      <label class="check"><input type="checkbox" id="dYearly"> Repeats every year</label>
+      <label>Link<input id="dUrl" type="url" inputmode="url" value="${esc(pre.url||"")}" placeholder="https://"></label>
+      <label>Notes<textarea id="dNotes">${esc(pre.notes||"")}</textarea></label>`;
+    $("#dlKinds").addEventListener("click",e=>{const b=e.target.closest("[data-k]");if(!b)return;CAP.dlKind=b.dataset.k;$$("#dlKinds [data-k]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.k===CAP.dlKind))});
+    $("#dTitle").focus();
+  }else if(kind==="paper"){
+    CAP.hits=[];
+    box.innerHTML=`<div class="f2" style="grid-template-columns:1fr auto;align-items:end"><label>DOI or words from the title<input id="pQ" placeholder="10.1021/acscatal..., or PETase mechanism QM/MM" autocapitalize="off" value="${esc(pre.q||"")}"></label><button type="button" class="btn" id="pLook">Look up</button></div>
+      <div id="pHits" style="display:flex;flex-direction:column;gap:6px"></div>
+      <label>Title<input id="pTitle"></label>
+      <label>Authors<input id="pAuthors" placeholder="Family, G.; Family, G."></label>
+      <div class="f3"><label>Journal<input id="pVenue"></label><label>Year<input id="pYear" inputmode="numeric"></label><label>DOI<input id="pDoi" class="mono" autocapitalize="off"></label></div>
+      <p class="note">Goes to the reading list in the literature radar.</p>`;
+    const TYPES={"posted-content":"Preprint","proceedings-article":"Conference paper","book-chapter":"Book chapter","book":"Book","monograph":"Book","dissertation":"Thesis","report":"Report","dataset":"Dataset"};
+    const st={q:"",total:0,busy:false};
+    const shortAu=a=>{const l=String(a||"").split(";").map(x=>x.trim()).filter(Boolean);return l.length>3?l.slice(0,3).join("; ")+" et al.":l.join("; ")};
+    const have=doi=>!!doi&&D.saved.some(p=>(p.doi||"").toLowerCase()===doi);
+    const card=(h,i)=>{
+      const meta=[h.venue,h.year,TYPES[h.type]&&TYPES[h.type]!==h.venue?TYPES[h.type]:""].filter(Boolean).join(", ");
+      const foot=[h.doi?`<span class="mono">${esc(h.doi)}</span>`:"",h.cites!=null?`cited ${h.cites.toLocaleString("en-GB")} times`:"",have(h.doi)?`<span class="have">already in your reading list</span>`:""].filter(Boolean).join(" · ");
+      return `<button type="button" class="res hit" data-hit="${i}"><b>${esc(h.title)}</b>${h.authors?`<small>${esc(shortAu(h.authors))}</small>`:""}${meta?`<small>${esc(meta)}</small>`:""}${foot?`<small>${foot}</small>`:""}</button>`;
+    };
+    const showHits=note=>{
+      const n=CAP.hits.length, all=Math.max(st.total,n);
+      $("#pHits").innerHTML=`<small class="hithead">${all>n?`${n} of ${all.toLocaleString("en-GB")} matches`:`${n} match${n===1?"":"es"}`} in Crossref. Tap the right one to fill in the details.</small>`
+        +CAP.hits.map(card).join("")+(note||"")
+        +(all>n&&n<CR_MAX?`<button type="button" class="btn" id="pMore">Show ${Math.min(CR_ROWS,all-n)} more</button>`:"");
+    };
+    const look=async more=>{
+      if(st.busy) return;
+      const q=more?st.q:val("pQ"); if(!q){hint("Type a DOI or words from the title");return}
+      st.busy=true; hint("");
+      if(more){const b=$("#pMore");if(b){b.disabled=true;b.textContent="Loading more..."}}
+      else{CAP.hits=[];st.q=q;st.total=0;$("#pHits").innerHTML=`<div class="res"><span class="spin"></span>Searching Crossref...</div>`}
+      try{
+        const doi=normDoi(q);
+        if(!more&&validDoi(doi)){
+          let h=null;
+          try{h=await crossrefDoi(doi)}catch(e){if(!/HTTP 404/.test(e.message))throw e}
+          if(h&&h.title){fillPaper(h);$("#pHits").innerHTML=`<div class="res">Found <span class="mono">${esc(h.doi||doi)}</span>. Check the fields below.</div>`;return}
+        }
+        const r=await crossrefSearch(q,CAP.hits.length);
+        const seen=new Set(CAP.hits.map(h=>h.doi||h.title));
+        CAP.hits=CAP.hits.concat(r.hits.filter(h=>!seen.has(h.doi||h.title))); st.total=r.total;
+        if(!CAP.hits.length){$("#pHits").innerHTML=`<div class="res">Nothing in Crossref matches "${esc(q)}". Try fewer or different words, or fill in the fields by hand.</div>`;return}
+        showHits();
+      }catch(e){
+        const msg=`<div class="res over">${esc(e.message)}</div>`;
+        if(more&&CAP.hits.length) showHits(msg); else $("#pHits").innerHTML=msg;
+      }finally{st.busy=false}
+    };
+    $("#pLook").addEventListener("click",()=>look(false));
+    $("#pQ").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();look(false)}});
+    $("#pHits").addEventListener("click",async e=>{
+      if(e.target.closest("#pMore")){look(true);return}
+      if(e.target.closest("#pBack")){showHits();return}
+      const b=e.target.closest("[data-hit]");if(!b)return;
+      const h=CAP.hits[+b.dataset.hit]; if(!h) return;
+      fillPaper(h);
+      $("#pHits").innerHTML=`<div class="res">Loaded. Check the fields below. <button type="button" class="linkbtn" id="pBack">Back to the matches</button></div>`;
+      /* the full record names the preprint server, which a search result leaves out */
+      if(h.doi&&h.type==="posted-content"){try{const f=await crossrefDoi(h.doi);if(f.venue&&val("pVenue")===h.venue)$("#pVenue").value=f.venue}catch(_){}}
+    });
+    $("#pQ").focus();
+    if(pre.q) look(false);
+  }
+}
+function fillPaper(h){
+  $("#pTitle").value=h.title||""; $("#pAuthors").value=h.authors||""; $("#pVenue").value=h.venue||""; $("#pYear").value=h.year||""; $("#pDoi").value=h.doi||"";
+  const dup=h.doi&&D.saved.find(p=>(p.doi||"").toLowerCase()===h.doi.toLowerCase());
+  hint(dup?`Already saved as "${dup.title}".`:"");
+}
+async function submitCapture(){
+  const k=CAP.kind; let ok=false;
+  if(k==="task"){
+    const title=val("tTitle"); if(!title){hint("What is the task?");return}
+    ok=await OPS.addTask({title,proj:val("tProj"),prio:val("tPrio"),plan:val("tPlan"),due:val("tDue"),notes:val("tNotes")});
+  }else if(k==="log"){
+    const text=$("#cText").value.trim(); if(!text){hint("Write something first.");return}
+    ok=await OPS.addLog({text,kind:CAP.logKind,proj:val("cProj"),date:val("cDate")||todayStr(),pin:$("#cPin").checked});
+  }else if(k==="idea"){
+    const title=val("iTitle"); if(!title){hint("Give the idea a title.");return}
+    ok=await OPS.addIdea({title,cat:val("iCat"),notes:val("iNotes"),tags:val("iTags").split(",").map(t=>t.trim().replace(/^#/,"")).filter(Boolean)});
+  }else if(k==="deadline"){
+    const title=val("dTitle"); if(!title){hint("What is the deadline for?");return}
+    if(!val("dDate")){hint("Pick a date.");return}
+    const url=val("dUrl"); if(url&&!safeUrl(url)){hint("Links should start with http:// or https://");return}
+    ok=await OPS.addDeadline({title,kind:CAP.dlKind,date:val("dDate"),time:val("dTime"),yearly:$("#dYearly").checked,url,notes:val("dNotes")});
+  }else if(k==="paper"){
+    const title=val("pTitle").replace(/\s+/g," "), doi=normDoi(val("pDoi"));
+    if(!title){hint("Add a title, or look one up.");return}
+    if(doi&&!validDoi(doi)){hint("That doesn't look like a DOI.");return}
+    ok=await OPS.addPaper({title,doi,authors:val("pAuthors"),venue:val("pVenue"),year:val("pYear")});
+  }
+  if(ok&&dlg.open) dlg.close();
+}
+
+/* ---------------- digest ---------------- */
+function digestMD(days,proj){
+  const now=Date.now(), since=now-days*DAY, sinceD=localDate(since), m=proj?matcher(proj):null, P=m?m.proj:()=>true, T=m?m.text:()=>true;
+  const L=[`# ${proj?proj+": ":""}research digest`,"",`${longDate(sinceD)} to ${longDate(todayStr())}`,""];
+  const oneLine=s=>String(s||"").replace(/\s*\n+\s*/g," ").trim();
+  const logs=D.entries.filter(e=>e.kind!=="meeting"&&e.date>=sinceD&&P(e.proj)).sort((a,b)=>a.date.localeCompare(b.date)||(a.added||0)-(b.added||0));
+  if(logs.length){L.push("## Research log","");logs.forEach(e=>L.push(`- ${e.date}, **${logKind(e.kind).name}**${!proj&&e.proj?` (${e.proj})`:""}: ${oneLine(e.text)}`));L.push("")}
+  const mts=D.meetings.filter(e=>e.date>=sinceD&&P(e.proj)).sort((a,b)=>a.date.localeCompare(b.date));
+  if(mts.length){L.push("## Meetings","");mts.forEach(x=>{
+    L.push(`### ${x.title}, ${x.date}`); if(arr(x.people).length) L.push(`*${x.mtype==="seminar"?"Speaker":"People"}: ${x.people.join(", ")}*`);
+    if(x.decisions) L.push("",`Decisions: ${oneLine(x.decisions)}`);
+    if(arr(x.actions).length){L.push("");x.actions.forEach(a=>L.push(`- [${a.done?"x":" "}] ${a.text}${a.owner?` (${a.owner})`:""}${a.due?`, due ${a.due}`:""}`))}
+    L.push("");
+  })}
+  const tdone=D.tasks.filter(x=>x.done&&(x.doneAt||0)>=since&&P(x.proj)).sort((a,b)=>(a.doneAt||0)-(b.doneAt||0));
+  if(tdone.length){L.push("## Tasks done","");tdone.forEach(x=>L.push(`- [x] ${x.title}${!proj&&x.proj?` (${x.proj})`:""}, ${localDate(x.doneAt)}`));L.push("")}
+  const topen=D.tasks.filter(x=>!x.done&&P(x.proj)).sort(byUrgency);
+  if(topen.length){L.push("## Open tasks","");topen.forEach(x=>L.push(`- [ ] ${x.title}${!proj&&x.proj?` (${x.proj})`:""}${x.due?`, due ${x.due}`:""}${x.prio==="high"?", high priority":""}`));L.push("")}
+  const acts=D.actions.filter(x=>!x.a.done&&P(x.m.proj)).sort((a,b)=>(a.a.due||"9").localeCompare(b.a.due||"9"));
+  if(acts.length){L.push("## Open actions","");acts.forEach(x=>L.push(`- [ ] ${x.a.text}${x.a.owner?` (${x.a.owner})`:""}${x.a.due?`, due ${x.a.due}`:""}. From ${x.m.title}, ${x.m.date}`));L.push("")}
+  const dls=D.deadlines.filter(i=>!i.done&&dlWhen(i)>=now&&dlWhen(i)<now+30*DAY&&T(i.title,i.notes)).sort((a,b)=>dlWhen(a)-dlWhen(b));
+  if(dls.length){L.push("## Deadlines in the next 30 days","");dls.forEach(i=>L.push(`- ${i.date}${i.time?" "+i.time:""}: ${i.title} (${dlKind(i.kind).name.toLowerCase()})`));L.push("")}
+  const pps=D.saved.filter(p=>(p.saved||0)>=since&&(!m||T(p.title,p.topic)));
+  if(pps.length){L.push("## Papers added to the reading list","");pps.forEach(p=>L.push(`- ${p.authors||"Unknown"} (${(p.date||"").slice(0,4)||"n.d."}). ${p.title}.${p.venue?" "+p.venue+".":""}${p.doi?" https://doi.org/"+p.doi:""}`));L.push("")}
+  const ids=D.ideas.filter(i=>(i.updated||i.created||0)>=since&&T(i.title,i.notes,arr(i.tags).join(" ")));
+  if(ids.length){L.push("## Ideas","");ids.forEach(i=>L.push(`- ${i.title} (${((IDEA_STAGES.find(s=>s.id===i.stage)||{}).name||"").toLowerCase()})`));L.push("")}
+  const pls=D.plans.filter(p=>(p.updated||0)>=since&&T(p.name,p.purpose,p.desc));
+  if(pls.length){L.push("## Script plans","");pls.forEach(p=>L.push(`- ${p.name} (${(PLAN_STATUS[p.status]||"").toLowerCase()})${p.purpose?": "+p.purpose:""}`));L.push("")}
+  if(L.length<=4) L.push("Nothing recorded in this period.","");
+  return L.join("\n").replace(/\n{3,}/g,"\n\n");
+}
+function openDigest(proj){
+  const days=settings().digestDays||7, projs=projectList();
+  openSheet(`<h2 id="dlgTitle">Digest</h2>
+    <p class="note">A Markdown summary across your apps, ready for a supervision meeting, a progress report or your own weekly review.</p>
+    <div class="f2"><label>Period<select id="dgDays">${[7,14,30,90].map(d=>`<option value="${d}" ${d===days?"selected":""}>Last ${d} days</option>`).join("")}</select></label>
+    <label>Project<select id="dgProj"><option value="">All projects</option>${projs.map(p=>`<option ${p.name===proj?"selected":""}>${esc(p.name)}</option>`).join("")}</select></label></div>
+    <pre class="pre" id="dgOut"></pre>
+    <div class="sbar"><button type="button" class="btn ghost" data-close>Close</button><div class="btnrow"><button type="button" class="btn" id="dgCopy">Copy</button><button type="button" class="btn primary" id="dgSave">Download .md</button></div></div>`);
+  const paint=()=>{$("#dgOut").textContent=digestMD(+val("dgDays"),val("dgProj"))};
+  paint();
+  $("#dgDays").addEventListener("change",()=>{if(canWrite(A.settings))saveSettings({digestDays:+val("dgDays")});paint()});
+  $("#dgProj").addEventListener("change",paint);
+  $("#dgCopy").addEventListener("click",()=>copyText($("#dgOut").textContent,"Digest copied"));
+  $("#dgSave").addEventListener("click",()=>{
+    const p=val("dgProj"), n=`digest-${p?p.toLowerCase().replace(/[^\w]+/g,"-").replace(/^-|-$/g,"")+"-":""}${todayStr()}.md`;
+    if(saveFile(n,$("#dgOut").textContent,"text/markdown")) toast("Saved to Downloads");
+  });
+}
+
+/* ---------------- projects: keywords ---------------- */
+function openProjectSheet(key){
+  const ex=obj(settings().projects), cur=key?obj(ex[key]):{}, isNew=!key;
+  const p=key?projectList().find(x=>x.key===key):null;
+  const name=p?p.name:"", manualOnly=p&&p.manual;
+  if(!canWrite(A.settings)){toast("Settings are showing a backup; restore them first");return}
+  openSheet(`<h2 id="dlgTitle">${isNew?"New project":"Keywords for "+esc(name)}</h2>
+    ${isNew?`<label>Project name<input id="prName" placeholder="Polyurethane paper"></label>`:""}
+    <label>Also match these words<input id="prKw" value="${esc(arr(cur.kw).join(", "))}" placeholder="PU, polyurethane, urethanase"></label>
+    <p class="note">Tasks and the research log link by their Project field (these words count as the same project there). Deadlines, ideas, script plans, saved papers, radar topics and schemes link when their text mentions the name or any of these words (3 letters or more).</p>
+    <p class="hint" id="sheetHint"></p>
+    <div class="sbar">${manualOnly?`<button type="button" class="btn danger" id="prDel">Remove</button>`:`<button type="button" class="btn ghost" data-close>Cancel</button>`}<button type="submit" class="btn primary">Save</button></div>`,()=>{
+    const nm=isNew?val("prName"):name; if(!nm){hint("Name the project.");return}
+    const k=nm.toLowerCase(), all={...obj(settings().projects)};
+    all[k]={name:nm,kw:val("prKw").split(",").map(s=>s.trim()).filter(Boolean).slice(0,20)};
+    saveSettings({projects:all}); UI.set("proj",k); dlg.close(); refresh(false); toast("Saved");
+  });
+  const del=$("#prDel"); if(del) del.addEventListener("click",()=>{const all={...obj(settings().projects)};delete all[key];saveSettings({projects:all});dlg.close();refresh(false)});
+  const f=$("#prName")||$("#prKw"); if(f) f.focus();
+}
+
+/* ---------------- data source ---------------- */
+function openSource(){
+  const rows=DATA_APPS.filter(a=>!a.suite.hidden).map(a=>{const s=SNAP[a.file];
+    return `<div class="kv" style="justify-content:space-between;border-top:1px solid var(--faint);padding:6px 0"><span>${esc(a.name)}</span><span>${!s?"nothing":s.src==="live"?"this device":`${s.src==="file"?"file":"backup"} ${esc(String(s.saved||"").slice(0,10))}`}</span></div>`}).join("");
+  openSheet(`<h2 id="dlgTitle">Where the data comes from</h2>
+    <div class="picklist" style="max-height:none">
+      <label class="pick"><input type="radio" name="src" value="auto" ${SRC.mode==="auto"?"checked":""}><div><b>This device</b><div class="m">Live data from the suites, and the only view where you can change things. Apps with nothing stored here show their latest backup.</div></div></label>
+      <label class="pick"><input type="radio" name="src" value="backup" ${SRC.mode==="backup"?"checked":""} ${SRV.ok?"":"disabled"}><div><b>Latest backups on the server</b><div class="m">${SRV.ok?"Read only. See exactly what a restore would bring back.":"Needs serve_apps.py running."}</div></div></label>
+      <label class="pick"><input type="radio" name="src" value="file" ${SRC.mode==="file"?"checked":""}><div><b>Backup files</b><div class="m">Pick a single download or dated app backups. Read only.</div></div></label>
+    </div>
+    <h4>Now showing</h4><div>${rows}</div>
+    <div class="sbar"><button type="button" class="btn ghost" data-close>Close</button><button type="submit" class="btn primary">Show</button></div>`,()=>{
+    const m=(sheet.querySelector('input[name="src"]:checked')||{}).value||"auto";
+    dlg.close();
+    if(m==="file") pickFiles(files=>viewFiles(files)); else setMode(m);
+  });
+}
+async function setMode(m){SRC.mode=m;if(m!=="file"){SRC.files={};SRC.names=[]}await loadData();render()}
+
+/* ---------------- settings: colour scheme, your name, storage ----------------
+   The colour scheme lives in suite-theme.js (shared by every suite) and is stored as suite.theme;
+   changing it here restyles every open suite and app at once. */
+async function storagePersisted(){try{if(navigator.storage&&navigator.storage.persisted)return await navigator.storage.persisted()?"yes":"no"}catch(_){}return "unknown"}
+function openSettings(){
+  const T=window.SuiteTheme;
+  const themeHTML=T?`<h4>Colour scheme</h4>
+    <div class="seg" role="radiogroup" aria-label="Light or dark" id="thMode">${[["system","Match device"],["dark","Dark"],["light","Light"]].map(([k,n])=>`<button type="button" role="radio" data-mode="${k}">${n}</button>`).join("")}</div>
+    <div class="pals" role="radiogroup" aria-label="Palette" id="thPal"></div>
+    <p class="note">Applies to the control center and every suite and app in this browser, including tabs that are already open.</p>`
+    :`<h4>Colour scheme</h4><p class="note">Colour schemes need <code>suite-theme.js</code> next to the suites. It is missing here, so every page keeps its built-in dark colours.</p>`;
+  openSheet(`<h2 id="dlgTitle">Settings</h2>
+    ${themeHTML}
+    <h4>You</h4>
+    <label>Your names in meeting actions<input id="meName" value="${esc(LS.get("suite.me")||"")}" placeholder="for example Alex, A. Pinto" autocomplete="off"></label>
+    <p class="note">An action counts as yours under <b>My actions</b> when its owner is empty, "me", or one of these names (separate them with commas). The research log uses the same list.</p>
+    <h4>Online services</h4>
+    <label>OpenAlex API key<input id="netKey" class="mono" value="${esc(LS.get("net.openalexKey")||"")}" placeholder="paste the key from openalex.org/settings/api" autocomplete="off" spellcheck="false" autocapitalize="off"></label>
+    <p class="note">The literature radar and the citation tracker search OpenAlex, which has asked for a free API key since February 2026. Sign in at <a href="https://openalex.org/settings/api" target="_blank" rel="noopener">openalex.org/settings/api</a>, copy your key and paste it here.</p>
+    <label>Contact email for Crossref and OpenAlex (optional)<input id="netMail" type="email" value="${esc(LS.get("net.mailto")||"")}" placeholder="you@university.edu" autocomplete="off" autocapitalize="off"></label>
+    <p class="note">Both stay on this device and are used by every app here. Paper searches (Crossref) need neither.</p>
+    <h4>Storage</h4>
+    <p class="note" id="persistNote">Checking whether this browser keeps your data...</p>
+    <div class="btnrow"><button type="button" class="btn" id="persistBtn" style="border:1.5px solid var(--edge)">Ask the browser to keep the data</button></div>
+    <div class="sbar"><span></span><button type="button" class="btn primary" data-close>Done</button></div>`);
+  if(T){
+    const paint=()=>{
+      const cur=T.read(), mode=T.resolve(cur);
+      $$("#thMode [data-mode]").forEach(b=>{b.setAttribute("aria-checked",b.dataset.mode===cur.mode)});
+      $("#thPal").innerHTML=Object.entries(T.PALETTES).map(([k,p])=>{const c=p[mode], n=T.NEUTRAL[mode];
+        return `<button type="button" class="pal" role="radio" data-pal="${esc(k)}" aria-checked="${k===cur.palette}">
+          <span class="bar3" style="background:linear-gradient(90deg,${c.grad1},${c.grad2},${c.grad3})"></span>
+          <span class="bg2"><i style="background:${c.head}"></i><i style="background:${n.surface}"></i><i style="background:${c.accent}"></i></span>${esc(p.name)}</button>`}).join("");
+    };
+    paint();
+    $("#thMode").addEventListener("click",e=>{const b=e.target.closest("[data-mode]");if(!b)return;T.set({...T.read(),mode:b.dataset.mode});paint()});
+    $("#thPal").addEventListener("click",e=>{const b=e.target.closest("[data-pal]");if(!b)return;T.set({...T.read(),palette:b.dataset.pal});paint()});
+  }
+  const saveName=()=>{const v=val("meName");try{v?LS.set("suite.me",v):LS.del("suite.me")}catch(_){toast("Couldn't save the name")}if(SYNC())SYNC().changed();if(D)render()};
+  $("#meName").addEventListener("change",saveName);
+  dlg.addEventListener("close",saveName,{once:true});
+  const saveNet=()=>{
+    const k=val("netKey"), m=val("netMail");
+    try{k?LS.set("net.openalexKey",k):LS.del("net.openalexKey");m?LS.set("net.mailto",m):LS.del("net.mailto")}catch(_){toast("Couldn't save the online settings")}
+    if(SYNC()) SYNC().changed();
+    if(D) D.mailto=m;
+  };
+  $("#netKey").addEventListener("change",saveNet); $("#netMail").addEventListener("change",saveNet);
+  dlg.addEventListener("close",saveNet,{once:true});
+  const note=$("#persistNote"), btn=$("#persistBtn");
+  const showPersist=s=>{
+    note.textContent=s==="yes"?"This browser has agreed to keep the suites' data, so it is not cleared when space runs low. Downloading a backup now and then is still wise."
+      :s==="no"?"This browser may clear the suites' data when space runs low or, in Safari, after about a week without a visit. Ask it to keep the data, install the suites to the home screen, or download backups regularly."
+      :"This browser does not say whether it keeps the suites' data. Download backups regularly.";
+    btn.hidden=s!=="no";
+  };
+  if(window.SuitesAndroid){
+    note.textContent="Your data stays inside this app until you uninstall it. With automatic backups on, every suite also keeps dated copies in Download/CompChemKit/backups on this phone, which survive an uninstall and restore with Restore, From a file.";
+    btn.hidden=true;
+  }else storagePersisted().then(showPersist);
+  btn.addEventListener("click",async()=>{
+    let ok=false;try{ok=await navigator.storage.persist()}catch(_){}
+    toast(ok?"The browser will keep the data":"The browser said no; it often agrees once the suites are installed or used regularly");
+    showPersist(ok?"yes":"no");
+  });
+}
+let _pickCb=null;
+function pickFiles(cb){_pickCb=cb;const f=$("#fileIn");f.value="";f.click()}
+$("#fileIn").addEventListener("change",async e=>{const files=[...e.target.files];if(files.length&&_pickCb)await _pickCb(files);_pickCb=null});
+async function readBackupFiles(files){
+  const out={payloads:{},rest:null,idb:null,names:[],bad:[]};
+  const addP=(p,name)=>{
+    const a=DATA_APPS.find(x=>x.suite.id===p.suite&&x.file===p.app); if(!a) return;
+    const k=a.suite.id+"/"+a.file, prev=out.payloads[k];
+    if(!prev||String(p.saved||"")>String(prev.saved||"")) out.payloads[k]={...p,__name:name};
+  };
+  for(const f of files){
+    let j=null; try{j=JSON.parse(await f.text())}catch(_){}
+    if(j&&j.format==="suite-bundle"){arr(j.apps).forEach(p=>p&&p.format==="suite-backup"&&addP(p,f.name));if(j.rest)out.rest=obj(j.rest);if(j.idb&&arr(j.idb.structviewer).length)out.idb=j.idb.structviewer;out.names.push(f.name)}
+    else if(j&&j.format==="suite-backup"){addP(j,f.name);out.names.push(f.name)}
+    else out.bad.push(f.name);
+  }
+  return out;
+}
+async function viewFiles(files){
+  const r=await readBackupFiles(files);
+  if(!Object.keys(r.payloads).length){toast(r.bad.length?"Those are not suite backups":"No backups found in those files");return}
+  SRC.mode="file"; SRC.files=r.payloads; SRC.names=r.names; SRC.restFromFile=r;
+  await loadData(); render(); toast(`Showing ${plural(Object.keys(r.payloads).length,"app")} from ${plural(r.names.length,"file")}`);
+}
+
+/* ---------------- restore ---------------- */
+let RST={src:"server",date:"",pre:new Set(),file:null};
+function openRestore(preFiles){
+  if(!STORAGE_OK){toast("Browser storage is blocked here");return}
+  RST={src:SRV.ok&&SRC.mode!=="file"?"server":"file",date:SRV.dates()[0]||"",pre:new Set(preFiles||[]),file:SRC.mode==="file"?SRC.restFromFile||null:null};
+  openSheet(`<h2 id="dlgTitle">Restore</h2>
+    <div class="seg" role="group" aria-label="Restore from"><button type="button" data-rs="server" ${SRV.ok?"":"disabled"}>From the server</button><button type="button" data-rs="file">From a file</button></div>
+    <div id="rsBody" style="display:flex;flex-direction:column;gap:10px"></div>
+    <p class="hint" id="sheetHint"></p>
+    <div class="sbar"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn primary" id="rsGo">Restore selected</button></div>`,doRestore);
+  sheet.querySelector(".seg").addEventListener("click",e=>{const b=e.target.closest("[data-rs]");if(!b||b.disabled)return;RST.src=b.dataset.rs;paintRestore()});
+  paintRestore();
+}
+function paintRestore(){
+  $$(".seg [data-rs]",sheet).forEach(b=>b.setAttribute("aria-pressed",b.dataset.rs===RST.src));
+  const box=$("#rsBody"), wanted=a=>RST.pre.size?RST.pre.has(a.file):true;
+  if(RST.src==="server"){
+    const dates=SRV.dates();
+    if(!dates.length){box.innerHTML=`<p class="note">There are no backups on the server yet.</p>`;$("#rsGo").disabled=true;return}
+    if(!dates.includes(RST.date)) RST.date=dates[0];
+    const rows=DATA_APPS.map(a=>{const f=SRV.latest(a,RST.date);if(!f)return "";
+      return `<label class="pick"><input type="checkbox" data-rf="${esc(a.file)}" data-name="${esc(f.file)}" ${wanted(a)?"checked":""}><div><b>${esc(a.name)}</b><div class="m">${esc(f.file)}, ${size(f.bytes)}, saved ${esc(fmtWhen(f.mtime))}${keysOf(a).length?"":" · nothing on this device now"}</div></div></label>`}).join("");
+    box.innerHTML=`<label>State as of<select id="rsDate">${dates.map(d=>`<option ${d===RST.date?"selected":""}>${esc(d)}</option>`).join("")}</select></label>
+      <p class="note">For each app, the newest backup on or before that day. The current data of every app you restore is first saved on the server as a separate "pre-restore" file.</p>
+      <div class="picklist">${rows}</div>`;
+    $("#rsDate").addEventListener("change",()=>{RST.date=val("rsDate");paintRestore()});
+    $("#rsGo").disabled=false;
+  }else{
+    const r=RST.file;
+    if(!r){
+      box.innerHTML=`<p class="note">Choose a single download from the control center (QTask-backup-DATE.json), a suite's backup file (suite-backup-DATE.json), or one or more dated app backups.</p><button type="button" class="btn" id="rsPick">Choose backup files</button>`;
+      $("#rsPick").addEventListener("click",()=>pickFiles(async files=>{RST.file=await readBackupFiles(files);if(!Object.keys(RST.file.payloads).length&&!RST.file.rest){toast("No suite backups in those files");RST.file=null}paintRestore()}));
+      $("#rsGo").disabled=true; return;
+    }
+    const liveEmpty=!DATA_APPS.some(a=>keysOf(a).length);
+    const rows=DATA_APPS.map(a=>{const p=r.payloads[a.suite.id+"/"+a.file];if(!p)return "";
+      return `<label class="pick"><input type="checkbox" data-rf="${esc(a.file)}" data-key="${esc(a.suite.id+"/"+a.file)}" ${wanted(a)?"checked":""}><div><b>${esc(a.name)}</b><div class="m">${unitOf(a,COUNT[a.file](obj(p.json)))}, saved ${esc(String(p.saved||"").slice(0,16).replace("T"," "))}, from ${esc(p.__name)}</div></div></label>`}).join("");
+    const restN=r.rest?Object.keys(r.rest).filter(k=>!ownedByAny(k)).length:0;
+    box.innerHTML=`<p class="note">From ${esc(r.names.join(", "))}. <button type="button" class="txtbtn" id="rsPick" style="min-height:0;padding:0 4px">Choose other files</button></p>
+      <div class="picklist">${rows}
+      ${restN?`<label class="pick"><input type="checkbox" id="rsRest" ${liveEmpty?"checked":""}><div><b>Reminders and suite settings</b><div class="m">${plural(restN,"key")}: backup reminders, automatic backup switches, last open tabs</div></div></label>`:""}
+      ${r.idb?`<label class="pick"><input type="checkbox" id="rsIdb" checked><div><b>Recent structures</b><div class="m">${plural(r.idb.length,"file")} for the structure viewer</div></div></label>`:""}</div>`;
+    $("#rsPick").addEventListener("click",()=>{RST.file=null;paintRestore();$("#rsPick").click()});
+    $("#rsGo").disabled=false;
+  }
+}
+async function doRestore(){
+  const picks=$$("[data-rf]:checked",sheet).map(i=>({a:DATA_APPS.find(x=>x.file===i.dataset.rf),name:i.dataset.name,key:i.dataset.key})).filter(x=>x.a);
+  const restOn=!!($("#rsRest")&&$("#rsRest").checked), idbOn=!!($("#rsIdb")&&$("#rsIdb").checked);
+  if(!picks.length&&!restOn&&!idbOn){hint("Tick at least one app.");return}
+  const go=$("#rsGo"); go.disabled=true; go.innerHTML=`<span class="spin"></span>Restoring`;
+  try{
+    const docs=[];
+    for(const p of picks){
+      let doc=null;
+      if(RST.src==="server"){try{SRV.cache.delete(p.name);doc=await SRV.read(p.name)}catch(_){}}
+      else doc=RST.file.payloads[p.key];
+      if(!doc||doc.format!=="suite-backup"||doc.app!==p.a.file){hint(`Could not read the backup of ${p.a.name}.`);return}
+      docs.push({a:p.a,doc});
+    }
+    const names=docs.map(d=>d.a.name);
+    if(!confirm(`Replace the current data${names.length?` of ${names.length<=3?names.join(", "):names.length+" apps"}`:""} with the backup?${SRV.ok?"\n\nThe current data is saved on the server first, as pre-restore files.":"\n\nThe server is not running, so the current data can't be saved first. Download everything first if you might need it."}`)) return;
+    if(SRV.ok){
+      const failed=[];
+      for(const {a} of docs){const p=payloadOf(a);if(!p)continue;try{await SRV.save(a,p,"pre-restore")}catch(_){failed.push(a.name)}}
+      if(failed.length&&!confirm(`The current data of ${failed.join(", ")} could not be saved first. Restore anyway?`)) return;
+    }
+    try{
+      for(const {a,doc} of docs){
+        for(const k of keysOf(a)) LS.del(k);
+        for(const [k,v] of Object.entries(obj(doc.json))) if(owned(a,k)) LS.set(k,JSON.stringify(v));
+        for(const [k,v] of Object.entries(obj(doc.text))) if(owned(a,k)) LS.set(k,String(v));
+      }
+      if(restOn&&RST.file&&RST.file.rest) for(const [k,v] of Object.entries(RST.file.rest)) if(!ownedByAny(k)&&!isPrivate(k)&&typeof v==="string") LS.set(k,v);
+    }catch(_){toast("Restore stopped: storage is full or blocked");return}
+    if(idbOn&&RST.file&&RST.file.idb){try{await IDB.put(RST.file.idb)}catch(_){toast("Recent structures could not be restored")}}
+    dlg.close();
+    SRC.mode="auto"; SRC.files={}; SRC.names=[];
+    await refresh(true);
+    toast(`Restored ${plural(docs.length,"app")}${restOn?" and settings":""}${idbOn?" and structures":""}`);
+  }finally{go.disabled=false;go.textContent="Restore selected"}
+}
+
+/* ---------------- one-file download ---------------- */
+async function openBundle(){
+  const meta=await IDB.meta(), total=meta.reduce((n,x)=>n+(x.size||0),0);
+  const apps=DATA_APPS.filter(a=>keysOf(a).length), loose=LS.keys().filter(k=>!ownedByAny(k)&&!isPrivate(k));
+  openSheet(`<h2 id="dlgTitle">Download everything</h2>
+    <p class="note">One JSON file with ${plural(apps.length,"app")} and ${plural(loose.length,"other key")} (backup reminders, suite settings). On an iPhone choose <b>Save to Files</b> (iCloud Drive). Restore it here, on this or another device, with Restore, From a file. Your GitHub token and OpenAlex key are not included.</p>
+    ${meta.length?`<label class="check"><input type="checkbox" id="bnIdb"> Include ${plural(meta.length,"recent structure")} from the viewer (${size(total)})</label>`:""}
+    <div class="sbar"><button type="button" class="btn ghost" data-close>Cancel</button><button type="submit" class="btn primary">Download</button></div>`,async()=>{
+    const withIdb=!!($("#bnIdb")&&$("#bnIdb").checked);
+    const b={format:"suite-bundle",version:1,saved:new Date().toISOString(),origin:location.origin,apps:apps.map(payloadOf).filter(Boolean),rest:{}};
+    for(const k of loose) b.rest[k]=LS.get(k);
+    if(withIdb) b.idb={structviewer:await IDB.all()};
+    if(saveFile(`QTask-backup-${todayStr()}.json`,JSON.stringify(b))){
+      const now=String(Date.now());
+      for(const a of apps) if(a.reminder){try{LS.set(a.reminder+".lastBackup",now);LS.set(a.reminder+".backupSnooze","0")}catch(_){}}
+      try{LS.set("controlcenter.lastBundle",now)}catch(_){}
+      dlg.close(); toast("Saved to Downloads"); render();
+    }
+  });
+}
+
+/* ---------------- backing up to the server ---------------- */
+const AUTO={busy:false,again:false,timer:null};
+function autoSoon(ms){if(settings().auto&&SRV.ok){clearTimeout(AUTO.timer);AUTO.timer=setTimeout(()=>sweep(false,true),ms||4000)}}
+async function sweep(force,quiet){
+  if(SRC.mode!=="auto"||!STORAGE_OK) return;
+  if(AUTO.busy){AUTO.again=true;return}
+  AUTO.busy=true; let n=0,bad=0;
+  const btn=$('[data-op="backup-all"]'); if(btn&&force){btn.disabled=true;btn.innerHTML=`<span class="spin"></span>Backing up`}
+  try{
+    if(SRV.ok!==true) await SRV.ping();
+    if(!SRV.ok){if(force&&!quiet)toast("Backup server not found");return}
+    for(const a of DATA_APPS){
+      const fp=fingerprint(a), rec=obj(suiteState(a.suite.id).apps[a.file]);
+      if(!force&&rec.fp===fp) continue;
+      try{
+        const p=payloadOf(a), file=p?await SRV.save(a,p,""):null;
+        setSuiteState(a.suite.id,s=>{s.apps[a.file]={fp,at:file?Date.now():rec.at,file:file||rec.file,err:""}});
+        if(file){n++;if(a.reminder){try{LS.set(a.reminder+".lastBackup",String(Date.now()));LS.set(a.reminder+".backupSnooze","0")}catch(_){}}}
+      }catch(e){bad++;setSuiteState(a.suite.id,s=>{s.apps[a.file]={...rec,err:String(e&&e.message||e)}})}
+    }
+    if(force&&!bad){try{LS.set("controlcenter.lastAll",String(Date.now()))}catch(_){}}
+    if(n) await SRV.listAll();
+    if(force&&!quiet) toast(bad?`${plural(bad,"backup")} failed`:n?`Saved ${plural(n,"file")}`:"Nothing to back up yet");
+  }finally{
+    AUTO.busy=false;
+    if(D){renderChrome();if(VIEW==="backup"){renderBackup();if(n)loadHealth()}}
+    if(AUTO.again){AUTO.again=false;autoSoon(1500)}
+  }
+}
+
+/* =====================================================================
+   Wiring
+   ===================================================================== */
+async function refresh(full){
+  if(full){
+    SRV.cache.clear();
+    await SRV.ping();
+    if(SRV.ok) await SRV.listAll();
+  }
+  await loadData();
+  render();
+  if(full&&VIEW==="backup") loadHealth();
+}
+$("#nav").addEventListener("click",e=>{const b=e.target.closest("[data-v]");if(b)show(b.dataset.v)});
+$("#nav").addEventListener("keydown",e=>{
+  const bs=$$("#nav [data-v]"), i=bs.indexOf(document.activeElement); if(i<0) return;
+  const step={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[e.key]; if(!step) return;
+  e.preventDefault(); const n=bs[(i+step+bs.length)%bs.length]; n.focus(); show(n.dataset.v);
+});
+window.addEventListener("hashchange",()=>{const v=location.hash.slice(1);if(VIEWS[v]&&v!==VIEW)show(v)});
+$("#fab").addEventListener("click",()=>openCapture(VIEW==="projects"?"task":undefined,VIEW==="projects"?{proj:(projectList().find(p=>p.key===UI.get("proj",""))||{}).name}:undefined));
+$("#srcBtn").addEventListener("click",openSource);
+$("#setBtn").addEventListener("click",openSettings);
+$("#refreshBtn").addEventListener("click",async()=>{const b=$("#refreshBtn");b.disabled=true;try{await refresh(true);toast("Up to date")}finally{b.disabled=false}});
+let _qt=null;
+$("#q").addEventListener("input",()=>{clearTimeout(_qt);_qt=setTimeout(renderSearch,120)});
+$("#q").addEventListener("keydown",e=>{if(e.key==="Enter"){const a=$("#qOut a[href]");if(a){e.preventDefault();a.click()}}});
+
+const scrollToId=id=>{const el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"})};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-op]"); if(!b||b.disabled) return;
+  if(b.matches('input[type="checkbox"]')) return;           // handled on change
+  const op=b.dataset.op, id=b.dataset.id;
+  switch(op){
+    case "goto-attn": scrollToId("s-attn"); break;
+    case "goto-agenda": scrollToId("s-agenda"); break;
+    case "goto-tasks": scrollToId("s-tasks"); break;
+    case "goto-lit": scrollToId("s-lit"); break;
+    case "goto-backup": show("backup"); break;
+    case "toggle-mine": if(canWrite(A.settings)){saveSettings({mine:!settings().mine});render()}else toast("Settings are showing a backup"); break;
+    case "dl-done": OPS.tickDeadline(id); break;
+    case "task-plan": OPS.planTask(id,b.dataset.day||todayStr()); break;
+    case "idea-move": OPS.moveIdea(id,b.dataset.to); break;
+    case "radar-save": OPS.radarSave(id,b.dataset.topic); break;
+    case "radar-seen": OPS.radarSeen(id,b.dataset.topic); break;
+    case "sync-setup": openSyncSetup(); break;
+    case "sync-settings": openSyncSettings(); break;
+    case "sync-now": if(SYNC()){b.disabled=true;b.innerHTML=`<span class="spin"></span>Syncing`;SYNC().syncNow().then(st=>{toast(st.state==="ok"?(st.pulled||st.pushed?`Synced: ${st.pushed} sent, ${st.pulled} received`:"Already in sync"):st.error||"Sync failed");render()})} break;
+    case "sync-restore": if(SYNC()&&confirm("Bring back this version? It replaces the current data of that app on every device after the next sync.")){if(SYNC().restoreConflict(+b.dataset.i)){toast("Restored");refresh(false)}} break;
+    case "sync-drop": if(SYNC()){SYNC().dropConflict(+b.dataset.i);render()} break;
+    case "digest": openDigest(b.dataset.proj||""); break;
+    case "cap": openCapture(b.dataset.kind,{proj:b.dataset.proj||""}); break;
+    case "proj": UI.set("proj",b.dataset.key); renderProjects(); break;
+    case "proj-new": openProjectSheet(null); break;
+    case "proj-kw": openProjectSheet(b.dataset.key); break;
+    case "qf": QF=b.dataset.f||""; renderSearch(); break;
+    case "copy": copyText(b.dataset.text); break;
+    case "scheme": OPS.openScheme(id); break;
+    case "backup-all": sweep(true); break;
+    case "bundle": openBundle(); break;
+    case "restore-open": openRestore((b.dataset.files||"").split(",").filter(Boolean)); break;
+    case "mode": setMode(b.dataset.mode); break;
+    case "pick-files": pickFiles(files=>viewFiles(files)); break;
+  }
+});
+document.addEventListener("change",e=>{
+  const t=e.target.closest("[data-op]"); if(!t) return;
+  const op=t.dataset.op;
+  if(op==="act-done") OPS.toggleAction(t.dataset.mid,t.dataset.aid,t.checked);
+  else if(op==="task-done") OPS.toggleTask(t.dataset.id,t.checked);
+  else if(op==="auto"){
+    if(!canWrite(A.settings)){t.checked=!t.checked;toast("Settings are showing a backup");return}
+    saveSettings({auto:t.checked}); toast(t.checked?"Backing up changes while this page is open":"Automatic backups here are off");
+    if(t.checked) sweep(false,true);
+  }else if(op==="auto-suites"){
+    for(const s of SUITES) if(!s.hidden&&s.apps.some(a=>a.file)) setSuiteState(s.id,st=>{st.on=t.checked});
+    toast(t.checked?"Automatic backups on in every suite":"Automatic backups off in every suite");
+    renderBackup();
+  }
+});
+
+/* stay current when a suite changes data in another tab or window */
+let _st=null;
+window.addEventListener("storage",e=>{
+  if(SRC.mode!=="auto") return;
+  if(e.key&&(e.key.startsWith("controlcenter.ui"))) return;
+  clearTimeout(_st); _st=setTimeout(()=>{if(!dlg.open)refresh(false);else loadData()},400);
+  if(e.key==null||ownedByAny(e.key)) autoSoon(4000);
+});
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){if(settings().auto&&SRV.ok){clearTimeout(AUTO.timer);sweep(false,true)}}
+  else if(!dlg.open) refresh(false);
+});
+window.addEventListener("pageshow",e=>{if(e.persisted)refresh(false)});
+/* data that came in from another device, and sync state changes */
+window.addEventListener("suite-sync-applied",()=>{if(!dlg.open)refresh(false);else loadData()});
+let _sy=null;
+if(window.SuiteSync) window.SuiteSync.onStatus(()=>{clearTimeout(_sy);_sy=setTimeout(()=>{if(D&&!dlg.open&&(VIEW==="today"||VIEW==="backup"||VIEW==="apps"))render();else if(D)renderChrome()},150)});
+setInterval(()=>{if(!document.hidden&&!dlg.open&&D)render()},60000);
+setInterval(()=>{if(settings().auto&&SRV.ok)sweep(false,true)},120000);
+
+(async function boot(){
+  const start=location.hash.slice(1);
+  VIEW=VIEWS[start]?start:(UI.get("view","today")in VIEWS?UI.get("view","today"):"today");
+  for(const k in VIEWS) $("#v-"+k).hidden=k!==VIEW;
+  $$("#nav button").forEach(b=>b.dataset.v===VIEW?b.setAttribute("aria-current","page"):b.removeAttribute("aria-current"));
+  $("#v-"+VIEW).insertAdjacentHTML("afterbegin",`<div class="empty" id="loading"><span class="spin"></span>Reading your apps…</div>`);
+  await Promise.all([SRV.ping(),probeSuites()]);
+  if(SRV.ok) await SRV.listAll();
+  await loadData();
+  const l=$("#loading"); if(l) l.remove();
+  show(VIEW,true);
+  if(settings().auto&&SRV.ok) setTimeout(()=>sweep(false,true),1500);
+  if("serviceWorker" in navigator&&window.isSecureContext&&location.protocol.startsWith("http")){
+    navigator.serviceWorker.register("suite-sw.js").catch(()=>{});
+  }
+})();
+
+</script>
+</body>
+</html>

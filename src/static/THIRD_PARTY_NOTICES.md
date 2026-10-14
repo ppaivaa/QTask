@@ -1,7 +1,8 @@
 # Third-party notices
 
-CompChemKit is released under the MIT licence (see `LICENSE`). They include one
-third-party library, unmodified, inside `structure-studio.html` (the Viewer and QM/MM apps):
+QTask is released under the MIT licence (see `LICENSE.txt`). It is based on CompChemKit by
+Alexandre R. V. Pinto (MIT). It includes one third-party library, unmodified, inside
+`structure-studio.html` (the structure viewer):
 
 | Component | Version | Licence | Where |
 |---|---|---|---|
