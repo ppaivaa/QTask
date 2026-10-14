@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="suite-theme.js" data-suite-theme></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#5A4360">
+<meta name="color-scheme" content="dark">
+<title>Script planner</title>
+<style>
+:root{
+  color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);
+  --bg:var(--t-bg,#14161B);--surface:var(--t-surface,#1C1F26);--raised:var(--t-raised,#242832);--ink:var(--t-ink,#E7E9EE);--muted:var(--t-muted,#8B919E);--faint:var(--t-faint,#2C303A);
+  --accent:var(--t-accent,#9DB2FF);--danger:var(--t-red,#F28B82);--gold:var(--t-gold,#E6C170);--green:var(--t-green,#7DCB9C);--violet:var(--t-violet,#C3A6F0);--pink:var(--t-pink,#EE93AF);--teal:var(--t-teal,#8CC3CC);
+  --font:"Manrope",system-ui,Roboto,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px calc(110px + env(safe-area-inset-bottom,0px))}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 16px}
+h1{font-size:1.5rem;font-weight:700;margin:0;letter-spacing:-.01em}
+h1 .n{font-weight:400;color:var(--muted);font-size:1rem;margin-left:6px}
+.hbtns{display:flex;gap:4px;position:relative}
+.ibtn{min-width:44px;min-height:44px;border-radius:12px;color:var(--muted);display:grid;place-items:center;font-size:1.1rem}
+.ibtn:active{background:var(--surface)}
+.menu{position:absolute;right:0;top:48px;background:var(--raised);border-radius:12px;padding:6px;min-width:200px;display:none;z-index:5;box-shadow:0 8px 24px var(--t-shadow,rgba(0,0,0,.4))}
+.menu.open{display:block}
+.menu button{display:block;width:100%;text-align:left;padding:12px;border-radius:8px}
+.menu button:active{background:var(--faint)}
+.search{width:100%;background:var(--surface);border:0;border-radius:12px;padding:12px 14px;min-height:48px}
+.search::placeholder{color:var(--muted)}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:10px -16px 0;padding:0 16px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border-radius:999px;padding:8px 14px;min-height:38px;color:var(--muted);background:var(--surface);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip .c{opacity:.7}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--cc)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 8px;color:var(--muted);font-size:.85rem;gap:8px}
+.bar select{background:transparent;border:0;color:var(--muted);padding:6px 0;min-height:40px;max-width:60%}
+.list{display:flex;flex-direction:column;gap:8px}
+.card{background:var(--surface);border-radius:14px;padding:14px 10px 8px 16px}
+.card h3{font-size:1rem;font-weight:500;margin:0;overflow-wrap:anywhere}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.tags{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px;font-size:.82rem;color:var(--muted)}
+.pill{flex:0 0 auto;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:999px;color:var(--cc);background:color-mix(in srgb,var(--cc) 16%,transparent)}
+.note{font-size:.88rem;color:var(--muted);margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+.acts{display:flex;justify-content:flex-end;margin-top:2px;flex-wrap:wrap}
+.acts .ibtn{min-width:40px;min-height:40px;font-size:.95rem}
+.acts .txt{font-size:.85rem;padding:0 10px;color:var(--accent)}
+.star-on{color:var(--gold)}
+.empty{color:var(--muted);text-align:center;padding:48px 16px}
+.fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:18px;background:var(--accent);color:var(--t-on-accent,#14161B);font-size:1.8rem;box-shadow:0 6px 18px var(--t-shadow,rgba(0,0,0,.45));z-index:4}
+dialog{border:0;padding:0;background:var(--raised);color:var(--ink);width:100%;max-width:560px;margin:auto auto 0;border-radius:20px 20px 0 0;max-height:92vh}
+@media (min-width:600px){dialog{margin:auto;border-radius:20px}}
+dialog::backdrop{background:var(--t-backdrop,rgba(0,0,0,.6))}
+.sheet{padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.sheet h2{margin:0;font-size:1.15rem;font-weight:700}
+.sheet h4{margin:6px 0 -4px;font-size:.8rem;font-weight:500;color:var(--accent)}
+.sheet label{display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--muted);min-width:0}
+.sheet input,.sheet select,.sheet textarea{background:var(--surface);border:0;border-radius:12px;padding:12px;color:var(--ink);min-height:48px;width:100%;min-width:0}
+.sheet textarea{min-height:90px;resize:vertical}
+.mono{font-family:var(--mono)!important;font-size:.88rem!important}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.check{flex-direction:row!important;align-items:center;gap:10px!important;color:var(--ink)!important;font-size:1rem!important}
+.check input{min-height:auto!important;width:20px!important;height:20px;accent-color:var(--accent)}
+.hint{font-size:.8rem;color:var(--danger);min-height:1em;margin:0}
+.sbar{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.btn{border-radius:12px;padding:12px 16px;min-height:48px}
+.btn.primary{background:var(--accent);color:var(--t-on-accent,#14161B);font-weight:700}
+.btn.ghost{color:var(--muted)}
+.btn.danger{color:var(--danger)}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--raised);padding:10px 16px;border-radius:12px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:6}
+.toast.show{opacity:1}
+.sync{font-size:.8rem;color:var(--muted);text-align:center;margin-top:24px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.hidden{display:none!important}
+.plans .card{cursor:pointer}
+.lang{font-size:.72rem;font-weight:700;padding:3px 10px;border-radius:999px}
+.lang.py{color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.lang.sh{color:var(--green);background:color-mix(in srgb,var(--green) 16%,transparent)}
+.back{display:flex;align-items:center;gap:4px}
+.ptitle{flex:1;min-width:0}
+.ptitle b{display:block;font-size:1.2rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptitle span{display:block;font-size:.8rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.secs{position:sticky;top:0;z-index:3;background:var(--bg);padding:8px 16px 10px;margin:0 -16px}
+.secs .chips{margin:0 -16px;padding:0 16px}
+.field{display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--muted);margin-bottom:12px}
+.field input,.field select,.field textarea{background:var(--surface);border:0;border-radius:12px;padding:12px;color:var(--ink);min-height:48px;width:100%}
+.field textarea{min-height:110px;resize:vertical}
+.item{background:var(--surface);border-radius:14px;padding:12px 8px 6px 14px}
+.item .t{font-weight:500;overflow-wrap:anywhere}
+.item .t code,.code-inline{font-family:var(--mono);font-size:.88em}
+.item .d{font-size:.85rem;color:var(--muted);margin-top:3px;white-space:pre-wrap;overflow-wrap:anywhere}
+.item .m{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.78rem;color:var(--muted);margin-top:4px}
+.item .acts .ibtn{min-width:38px;min-height:38px}
+.num{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--faint);font-size:.78rem;margin-right:8px;flex:0 0 auto}
+.stepline{display:flex;align-items:flex-start}
+.chk{display:flex;align-items:flex-start;gap:10px}
+.chk input{width:22px;height:22px;margin-top:1px;accent-color:var(--accent);flex:0 0 auto}
+.chk.done .t{text-decoration:line-through;color:var(--muted)}
+.addrow{margin-top:10px}
+.addrow .btn{width:100%;background:var(--surface);color:var(--accent)}
+.sectionhelp{font-size:.85rem;color:var(--muted);margin:0 2px 10px}
+pre.code{font-family:var(--mono);font-size:.78rem;line-height:1.5;background:var(--surface);border-radius:14px;padding:14px;overflow-x:auto;white-space:pre;margin:10px 0 0;color:var(--ink)}
+.warns{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.warns div{background:color-mix(in srgb,var(--gold) 12%,var(--surface));color:var(--gold);border-radius:10px;padding:8px 12px;font-size:.85rem}
+.warns .ok{background:color-mix(in srgb,var(--green) 12%,var(--surface));color:var(--green)}
+.codebar{display:flex;gap:8px;flex-wrap:wrap}
+.codebar .btn{flex:1;background:var(--surface)}
+.codebar .btn.primary{background:var(--accent)}
+/* ---- Theme: dark with pink-to-blue accents ---- */
+:root{
+  --bg:var(--t-bg,#000000);--surface:var(--t-surface,#131316);--raised:var(--t-raised,#1D1D22);--ink:var(--t-ink,#F2F2F4);--muted:var(--t-muted,#9D9DA5);--faint:var(--t-faint,#28282E);
+  --accent:var(--t-accent,#EBA8E4);--accent2:var(--t-accent2,#A7CBF4);
+  --grad:linear-gradient(90deg,var(--t-grad1,#F0A8DC) 0%,var(--t-grad2,#C9B6EF) 50%,var(--t-grad3,#A6CCF5) 100%);
+  --danger:var(--t-danger,#EF5A50);--star:var(--t-accent,#EBA8E4);--pinbg:var(--t-pinbg,#2A2413);
+  --font:Roboto,"Google Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Roboto Mono","Droid Sans Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+body{background-color:var(--t-bg,#000);background-image:linear-gradient(172deg,var(--t-head,#5A4360) 0%,var(--t-head2,#352C3F) 90px,var(--t-head3,#15121A) 210px,var(--t-bg,#000) 320px);background-repeat:no-repeat;background-size:100% 340px}
+h1{font-weight:500;font-size:1.85rem;letter-spacing:0}
+h1 .n{font-size:1rem}
+.search{background:var(--t-field,#0E0E11);border:1.5px solid var(--t-line,#2E2E35);border-radius:999px}
+.search:focus{border-color:var(--t-focus,#9C8BC0);outline:none}
+.chip{background:var(--t-bg,#000);border:1.5px solid var(--t-edge,#3B3B43);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--grad);border-color:transparent;color:var(--t-on-grad,#17161C);font-weight:500}
+.chip.add{color:var(--accent)}
+.tab[aria-selected="true"]::after{background:var(--grad)}
+.btn.primary,.add{background:var(--grad)!important;color:var(--t-on-grad,#17161C)!important}
+.fab{background:var(--t-fab,#17171C);border:1px solid var(--t-edge,#3A3A42);color:var(--t-fab-ink,#D9B9EE);box-shadow:0 8px 22px var(--t-shadow,rgba(0,0,0,.7))}
+.star-on{color:var(--star)!important}
+.card:has(.star-on),.paper:has(.star-on),.entry:has(.star-on){background:var(--pinbg)}
+.menu{background:var(--raised);border:1px solid var(--t-line,#2E2E35)}
+dialog{background:var(--raised)}
+.sheet input,.sheet select,.sheet textarea,.dlg input,.dlg textarea,.dlg select{background:var(--t-field,#0F0F12)}
+.toast{background:var(--t-raised2,#26262C);color:var(--ink)}
+.doi{color:var(--accent2)}
+.sync{color:var(--t-dim,#6F6F77)}
+.seg button[aria-pressed="true"]{background:var(--grad);color:var(--t-on-grad,#17161C)}
+.topbar{background:linear-gradient(172deg,var(--t-head,#5A4360) 0%,var(--t-headbar,#2A2432) 100%)}
+.toolbar{background:var(--t-bg,#000)}
+.bk.hidden{display:none!important}
+.bk{display:flex;align-items:center;gap:8px;background:var(--pinbg,var(--t-pinbg,#2A2413));border-radius:14px;padding:10px 8px 10px 14px;margin:0 0 14px}
+.bk .bkt{flex:1;min-width:0;font-size:.9rem;line-height:1.3}
+.bk .bkt b{display:block;font-weight:500}
+.bk .bkt span{color:var(--muted);font-size:.8rem}
+.bk .bkgo{background:var(--grad);color:var(--t-on-grad,#17161C);border-radius:999px;padding:10px 14px;min-height:44px;font-weight:500;white-space:nowrap}
+.bk .bkno{color:var(--muted);padding:10px 8px;min-height:44px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <!-- HOME -->
+  <section id="home">
+    <header>
+      <h1>Script plans<span class="n" id="total"></span></h1>
+      <div class="hbtns">
+        <button class="ibtn" id="moreBtn" aria-label="More options" aria-expanded="false">⋮</button>
+        <div class="menu" id="menu" role="menu">
+          <button role="menuitem" id="exportBtn">Export backup</button>
+          <button role="menuitem" id="importBtn">Import backup</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </div>
+    </header>
+    <label class="sr" for="search">Search plans</label>
+    <input class="search" id="search" type="search" placeholder="Search plans">
+    <div class="chips" id="chips"></div>
+    <div class="bar"><span id="count"></span><span></span></div>
+    <main class="list plans" id="plans"></main>
+    <p class="sync" id="sync"></p>
+  </section>
+
+  <!-- PLAN -->
+  <section id="plan" class="hidden">
+    <header>
+      <button class="ibtn back" id="backBtn" aria-label="Back to plans">‹</button>
+      <div class="ptitle"><b id="pName"></b><span id="pSub"></span></div>
+      <button class="ibtn" id="dupPlan" aria-label="Duplicate plan">⎘</button>
+      <button class="ibtn" id="delPlan" aria-label="Delete plan" style="color:var(--danger)">✕</button>
+    </header>
+    <div class="secs"><div class="chips" id="secs"></div></div>
+    <div id="secBody"></div>
+  </section>
+</div>
+<button class="fab" id="fab" aria-label="New plan">+</button>
+
+<dialog id="dlg">
+  <form class="sheet" id="form" autocomplete="off" novalidate>
+    <h2 id="dTitle"></h2>
+    <div id="dFields" style="display:flex;flex-direction:column;gap:12px"></div>
+    <p class="hint" id="hint"></p>
+    <div class="sbar">
+      <button type="button" class="btn danger" id="delItem">Delete</button>
+      <span style="display:flex;gap:6px;margin-left:auto">
+        <button type="button" class="btn ghost" data-close>Cancel</button>
+        <button type="submit" class="btn primary">Save</button>
+      </span>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const $=s=>document.querySelector(s);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const num=v=>{const n=parseFloat(v);return isFinite(n)?n:null};
+const stamp=()=>new Date().toISOString().slice(0,10);
+let _tt=null;
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("show");clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove("show"),2400)}
+async function copyText(t,msg){
+  try{await navigator.clipboard.writeText(t);toast(msg||"Copied")}
+  catch(_){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();
+    try{document.execCommand("copy");toast(msg||"Copied")}catch(__){toast("Copy not available")}a.remove()}
+}
+function storageWorks(){try{const k="__probe"+Math.random();localStorage.setItem(k,"1");localStorage.removeItem(k);return true}catch(_){return false}}
+function saveFile(filename,data){
+  try{
+    const ext=(filename.split(".").pop()||"").toLowerCase();
+    const type={json:"application/json",csv:"text/csv",md:"text/markdown",py:"text/x-python",sh:"text/x-shellscript",png:"image/png"}[ext]||"text/plain";
+    const blob=data instanceof Blob?data:new Blob([data],{type:type+";charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=filename;a.style.display="none";
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    toast("Saved to Downloads");if(/\.json$/i.test(filename)&&window.__markBackup)window.__markBackup();
+  }catch(_){toast("Couldn't save the file")}
+}
+function setupMenu(){
+  const menu=$("#menu"),btn=$("#moreBtn");
+  const close=()=>{menu.classList.remove("open");btn.setAttribute("aria-expanded","false")};
+  btn.addEventListener("click",e=>{e.stopPropagation();btn.setAttribute("aria-expanded",menu.classList.toggle("open"))});
+  document.addEventListener("click",e=>{if(!e.target.closest("#menu"))close()});
+  menu.addEventListener("click",close);
+  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>b.closest("dialog").close()));
+  document.querySelectorAll("dialog").forEach(d=>d.addEventListener("click",e=>{if(e.target===d)d.close()}));
+}
+// Store: kept in this browser's local storage only.
+function makeStore(lsKey,docName,listKeys,onChange){
+  const S={data:null};
+  try{const r=localStorage.getItem(lsKey);S.data=r?JSON.parse(r):null}catch(_){}
+  if(!S.data||typeof S.data!=="object") S.data={};
+  listKeys.forEach(k=>{if(!Array.isArray(S.data[k]))S.data[k]=[]});
+  S.saveLocal=()=>{try{localStorage.setItem(lsKey,JSON.stringify(S.data))}catch(_){toast("Couldn't save. Storage is full or blocked; export a backup.")}};
+  S.persist=()=>S.saveLocal();
+  S.connect=()=>{
+    $("#sync").textContent=storageWorks()?"Saved in this browser. Export a backup now and then.":"Storage is blocked here, so changes will be lost when you close this page.";
+  };
+  return S;
+}
+
+(function(){
+  const STATUS=[{id:"planning",name:"Planning"},{id:"building",name:"Building"},{id:"done",name:"Done"}];
+  const SECS=[
+    {id:"overview",name:"Overview"},{id:"io",name:"Inputs & outputs"},{id:"opts",name:"Options"},
+    {id:"fns",name:"Functions"},{id:"flow",name:"Flow"},{id:"checks",name:"Checks & to-dos"},{id:"code",name:"Skeleton"}
+  ];
+  const OPT_TYPES=[["str","Text"],["int","Integer"],["float","Number"],["path","File path"],["flag","On/off flag"],["choice","One of a list"],["list","Several values"]];
+  // item schemas
+  const SCHEMA={
+    io:{title:"input or output",fields:[
+      {k:"dir",label:"Direction",type:"select",opts:[["in","Input"],["out","Output"]]},
+      {k:"name",label:"Name",ph:"Trajectory",req:true},
+      {k:"format",label:"Format",ph:"xtc, csv, pdb..."},
+      {k:"desc",label:"Description",type:"textarea",ph:"What it contains, where it comes from or goes"}]},
+    opts:{title:"option",fields:[
+      {k:"long",label:"Long name",ph:"input",req:true,mono:true},
+      {k:"short",label:"Short letter",ph:"i",mono:true,max:1},
+      {k:"type",label:"Type",type:"select",opts:OPT_TYPES},
+      {k:"choices",label:"Allowed values (comma separated, for 'One of a list')",ph:"fast, accurate",mono:true},
+      {k:"def",label:"Default",ph:"10",mono:true},
+      {k:"req",label:"Required",type:"check"},
+      {k:"help",label:"Help text",ph:"Input trajectory file",req:true}]},
+    fns:{title:"function",fields:[
+      {k:"name",label:"Name",ph:"load_trajectory",req:true,mono:true},
+      {k:"params",label:"Parameters",ph:"path, stride=1",mono:true},
+      {k:"returns",label:"Returns",ph:"numpy array of frames"},
+      {k:"desc",label:"What it does",type:"textarea"}]},
+    flow:{title:"step",fields:[
+      {k:"text",label:"Step",ph:"Read the trajectory and skip frames",req:true,type:"textarea"},
+      {k:"fn",label:"Uses function",type:"fnselect"}]},
+    checks:{title:"check or to-do",fields:[
+      {k:"kind",label:"Kind",type:"select",opts:[["check","Edge case / validation"],["todo","To-do"]]},
+      {k:"text",label:"Description",ph:"Input file exists and is not empty",req:true,type:"textarea"}]}
+  };
+
+  let view="home",planId=null,sec="overview",query="",statusF="",editing=null,editingKind=null;
+  const store=makeStore("scriptplans.v1","plans",["plans"],()=>render());
+  const D=()=>store.data;
+  const P=()=>D().plans.find(p=>p.id===planId);
+  const touch=p=>{p.updated=Date.now();store.persist()};
+  const newPlan=()=>({id:uid(),name:"Untitled script",lang:"py",status:"planning",purpose:"",desc:"",deps:"",io:[],opts:[],fns:[],flow:[],checks:[],added:Date.now(),updated:Date.now()});
+
+  // ---------- HOME ----------
+  function renderHome(){
+    const L=D().plans;
+    $("#total").textContent=L.length||"";
+    $("#chips").innerHTML=[`<button class="chip" data-f="" aria-pressed="${!statusF}">All<span class="c">${L.length}</span></button>`]
+      .concat(STATUS.map(s=>`<button class="chip" data-f="${s.id}" aria-pressed="${statusF===s.id}">${s.name}<span class="c">${L.filter(p=>p.status===s.id).length}</span></button>`)).join("");
+    const vis=L.filter(p=>(!statusF||p.status===statusF)&&(!query||[p.name,p.purpose,p.desc,p.deps].join(" ").toLowerCase().includes(query))).sort((a,b)=>b.updated-a.updated);
+    $("#count").textContent=`${vis.length} plan${vis.length===1?"":"s"}`;
+    $("#plans").innerHTML=vis.length?vis.map(p=>{
+      const done=p.checks.filter(c=>c.done).length;
+      return `<article class="card" data-id="${p.id}">
+        <div class="top"><h3>${esc(p.name)}</h3><span class="lang ${p.lang}">${p.lang==="py"?"Python":"Bash"}</span></div>
+        ${p.purpose?`<div class="note" style="margin-top:4px">${esc(p.purpose)}</div>`:""}
+        <div class="tags" style="margin:8px 0 6px"><span>${STATUS.find(s=>s.id===p.status).name}</span><span>${p.opts.length} options</span><span>${p.fns.length} functions</span><span>${p.flow.length} steps</span>${p.checks.length?`<span>${done}/${p.checks.length} checked</span>`:""}</div>
+      </article>`}).join("")
+      :`<div class="empty">${L.length?"No plans match.":"Tap + to plan your first script. Sketch the options, functions and flow, then generate a skeleton."}</div>`;
+  }
+  $("#plans").addEventListener("click",e=>{const c=e.target.closest(".card");if(c)openPlan(c.dataset.id)});
+  $("#chips").addEventListener("click",e=>{const b=e.target.closest("[data-f]");if(!b)return;statusF=b.dataset.f;renderHome()});
+  $("#search").addEventListener("input",e=>{query=e.target.value.trim().toLowerCase();renderHome()});
+  $("#fab").addEventListener("click",()=>{
+    if(view==="home"){const p=newPlan();D().plans.push(p);store.persist();openPlan(p.id);setTimeout(()=>{const n=$("#oName");if(n){n.focus();n.select()}},50);return}
+    const s=SCHEMA[sec]; if(s) openItem(sec,null);
+  });
+
+  // ---------- PLAN ----------
+  function openPlan(id){planId=id;view="plan";sec="overview";render();window.scrollTo(0,0)}
+  $("#backBtn").addEventListener("click",()=>{view="home";planId=null;render();window.scrollTo(0,0)});
+  $("#delPlan").addEventListener("click",()=>{
+    const p=P(); if(!p||!confirm(`Delete the plan "${p.name}"?`)) return;
+    D().plans=D().plans.filter(x=>x.id!==p.id); store.persist(); view="home"; render(); toast("Plan deleted");
+  });
+  $("#dupPlan").addEventListener("click",()=>{
+    const p=P(); if(!p) return;
+    const c=JSON.parse(JSON.stringify(p)); c.id=uid(); c.name=p.name+" (copy)"; c.added=c.updated=Date.now(); c.status="planning";
+    ["io","opts","fns","flow","checks"].forEach(k=>c[k].forEach(i=>{const old=i.id;i.id=uid();if(k==="fns")c.flow.forEach(s=>{if(s.fn===old)s._nf=i.id})}));
+    c.flow.forEach(s=>{if(s._nf){s.fn=s._nf;delete s._nf}});
+    c.checks.forEach(x=>x.done=false);
+    D().plans.push(c); store.persist(); openPlan(c.id); toast("Plan duplicated");
+  });
+  $("#secs").addEventListener("click",e=>{const b=e.target.closest("[data-s]");if(!b)return;sec=b.dataset.s;renderPlan();b.scrollIntoView({inline:"center",block:"nearest",behavior:"smooth"})});
+
+  function renderPlan(){
+    const p=P(); if(!p){view="home";render();return}
+    $("#pName").textContent=p.name;
+    $("#pSub").textContent=`${p.lang==="py"?"Python":"Bash"}, ${STATUS.find(s=>s.id===p.status).name.toLowerCase()}`;
+    const cnt={io:p.io.length,opts:p.opts.length,fns:p.fns.length,flow:p.flow.length,checks:p.checks.length};
+    $("#secs").innerHTML=SECS.map(s=>`<button class="chip" data-s="${s.id}" aria-pressed="${sec===s.id}">${s.name}${cnt[s.id]?`<span class="c">${cnt[s.id]}</span>`:""}</button>`).join("");
+    $("#fab").classList.toggle("hidden",!SCHEMA[sec]);
+    $("#fab").setAttribute("aria-label",SCHEMA[sec]?"Add "+SCHEMA[sec].title:"");
+    const B=$("#secBody");
+    if(sec==="overview") B.innerHTML=overviewHTML(p);
+    else if(sec==="code") B.innerHTML=codeHTML(p);
+    else B.innerHTML=listHTML(p,sec);
+  }
+
+  function overviewHTML(p){
+    return `<label class="field">Script name<input id="oName" value="${esc(p.name)}" maxlength="80" class="mono" autocapitalize="off" spellcheck="false"></label>
+      <div class="row">
+        <label class="field">Language<select id="oLang"><option value="py" ${p.lang==="py"?"selected":""}>Python</option><option value="sh" ${p.lang==="sh"?"selected":""}>Bash</option></select></label>
+        <label class="field">Status<select id="oStatus">${STATUS.map(s=>`<option value="${s.id}" ${p.status===s.id?"selected":""}>${s.name}</option>`).join("")}</select></label>
+      </div>
+      <label class="field">Purpose, in one line<input id="oPurpose" value="${esc(p.purpose)}" maxlength="200" placeholder="Compute per-residue contacts between enzyme and surface"></label>
+      <label class="field">Details<textarea id="oDesc" maxlength="4000" placeholder="Context, assumptions, where it fits in the pipeline">${esc(p.desc)}</textarea></label>
+      <label class="field">${p.lang==="py"?"Imports (comma separated)":"Required commands (comma separated)"}<input id="oDeps" value="${esc(p.deps)}" class="mono" autocapitalize="off" spellcheck="false" placeholder="${p.lang==="py"?"numpy as np, MDAnalysis as mda, from pathlib import Path":"gmx, awk, python3"}"></label>`;
+  }
+  $("#secBody").addEventListener("change",e=>{
+    const p=P(); if(!p) return;
+    const map={oName:"name",oLang:"lang",oStatus:"status",oPurpose:"purpose",oDesc:"desc",oDeps:"deps"};
+    const k=map[e.target.id]; if(!k) return;
+    let v=e.target.value; if(k==="name") v=v.trim()||"Untitled script"; else if(k!=="desc") v=v.trim();
+    p[k]=v; touch(p);
+    $("#pName").textContent=p.name; $("#pSub").textContent=`${p.lang==="py"?"Python":"Bash"}, ${STATUS.find(s=>s.id===p.status).name.toLowerCase()}`;
+    if(k==="lang") renderPlan();
+  });
+
+  const HELP={
+    io:"Files and data the script reads and writes.",
+    opts:"Command line options. Each becomes an argparse argument or a case in the Bash parser.",
+    fns:"The building blocks. Keep each one doing a single job.",
+    flow:"What main() does, in order. Link steps to functions to see what's still unplanned.",
+    checks:"Validations and edge cases to handle, plus anything left to do."
+  };
+  function itemView(kind,it,i,n,p){
+    const mv=`<button class="ibtn" data-act="up" aria-label="Move up" ${i===0?"disabled style='opacity:.25'":""}>↑</button><button class="ibtn" data-act="down" aria-label="Move down" ${i===n-1?"disabled style='opacity:.25'":""}>↓</button>`;
+    let body="";
+    if(kind==="io") body=`<div class="top"><div class="t">${esc(it.name)}${it.format?` <span class="code-inline" style="color:var(--muted)">.${esc(it.format.replace(/^\./,""))}</span>`:""}</div><span class="pill" style="--cc:${it.dir==="out"?"var(--green)":"var(--accent)"}">${it.dir==="out"?"Output":"Input"}</span></div>${it.desc?`<div class="d">${esc(it.desc)}</div>`:""}`;
+    if(kind==="opts") body=`<div class="t"><code>${it.short?"-"+esc(it.short)+", ":""}--${esc(it.long)}</code></div><div class="d">${esc(it.help)}</div>
+      <div class="m"><span>${OPT_TYPES.find(t=>t[0]===it.type)?.[1]||"Text"}</span>${it.type==="choice"&&it.choices?`<span>${esc(it.choices)}</span>`:""}${it.req?`<span style="color:var(--gold)">required</span>`:""}${it.def!==""&&it.def!=null&&!it.req?`<span>default ${esc(it.def)}</span>`:""}</div>`;
+    if(kind==="fns"){const used=p.flow.some(s=>s.fn===it.id);body=`<div class="t"><code>${esc(it.name)}(${esc(it.params||"")})</code></div>${it.desc?`<div class="d">${esc(it.desc)}</div>`:""}<div class="m">${it.returns?`<span>returns ${esc(it.returns)}</span>`:""}<span style="color:${used?"var(--green)":"var(--gold)"}">${used?"used in flow":"not in flow yet"}</span></div>`}
+    if(kind==="flow"){const f=p.fns.find(x=>x.id===it.fn);body=`<div class="stepline"><span class="num">${i+1}</span><div style="flex:1;min-width:0"><div class="t">${esc(it.text)}</div>${f?`<div class="m"><code>${esc(f.name)}()</code></div>`:""}</div></div>`}
+    if(kind==="checks") body=`<label class="chk ${it.done?"done":""}"><input type="checkbox" data-act="done" ${it.done?"checked":""} aria-label="Mark done"><div style="flex:1;min-width:0"><div class="t">${esc(it.text)}</div><div class="m"><span>${it.kind==="todo"?"To-do":"Check"}</span></div></div></label>`;
+    return `<article class="item" data-id="${it.id}">${body}<div class="acts">${mv}<button class="ibtn" data-act="edit" aria-label="Edit">✎</button></div></article>`;
+  }
+  function listHTML(p,kind){
+    const L=p[kind];
+    return `<p class="sectionhelp">${HELP[kind]}</p><div class="list">${L.length?L.map((it,i)=>itemView(kind,it,i,L.length,p)).join(""):`<div class="empty" style="padding:28px 8px">Nothing yet.</div>`}</div>
+      <div class="addrow"><button class="btn" data-act="add">+ Add ${SCHEMA[kind].title}</button></div>`;
+  }
+  $("#secBody").addEventListener("click",e=>{
+    const p=P(); if(!p) return;
+    const b=e.target.closest("[data-act]"); if(!b) return;
+    const a=b.dataset.act;
+    if(a==="add"){openItem(sec,null);return}
+    if(a==="copy"){copyText(genCode(p),"Skeleton copied");return}
+    if(a==="dlcode"){saveFile(fileName(p),genCode(p));return}
+    if(a==="dlmd"){saveFile(p.name.replace(/\.[a-z]+$/i,"").replace(/[^\w.-]+/g,"_")+"_README.md",genMd(p));return}
+    const card=b.closest(".item"); if(!card) return;
+    const L=p[sec], i=L.findIndex(x=>x.id===card.dataset.id); if(i<0) return;
+    if(a==="edit") openItem(sec,L[i].id);
+    else if(a==="up"&&i>0){[L[i-1],L[i]]=[L[i],L[i-1]];touch(p);renderPlan()}
+    else if(a==="down"&&i<L.length-1){[L[i+1],L[i]]=[L[i],L[i+1]];touch(p);renderPlan()}
+    else if(a==="done"){L[i].done=b.checked;touch(p);renderPlan()}
+  });
+
+  // ---------- item sheet ----------
+  const dlg=$("#dlg");
+  function openItem(kind,id){
+    const p=P(), s=SCHEMA[kind]; editingKind=kind; editing=id;
+    const it=id?p[kind].find(x=>x.id===id):{};
+    $("#dTitle").textContent=(id?"Edit ":"New ")+s.title;
+    $("#hint").textContent="";
+    $("#dFields").innerHTML=s.fields.map(f=>{
+      const v=it[f.k]??(f.type==="select"?f.opts[0][0]:"");
+      const cls=f.mono?' class="mono" autocapitalize="off" spellcheck="false"':"";
+      if(f.type==="select") return `<label>${f.label}<select data-k="${f.k}">${f.opts.map(o=>`<option value="${o[0]}" ${v===o[0]?"selected":""}>${o[1]}</option>`).join("")}</select></label>`;
+      if(f.type==="fnselect") return `<label>${f.label}<select data-k="${f.k}"><option value="">None</option>${p.fns.map(fn=>`<option value="${fn.id}" ${v===fn.id?"selected":""}>${esc(fn.name)}()</option>`).join("")}</select></label>`;
+      if(f.type==="check") return `<label class="check"><input type="checkbox" data-k="${f.k}" ${v?"checked":""}> ${f.label}</label>`;
+      if(f.type==="textarea") return `<label>${f.label}<textarea data-k="${f.k}" placeholder="${esc(f.ph||"")}"${cls}>${esc(v)}</textarea></label>`;
+      return `<label>${f.label}<input data-k="${f.k}" value="${esc(v)}" placeholder="${esc(f.ph||"")}" ${f.max?`maxlength="${f.max}"`:""}${cls}></label>`;
+    }).join("");
+    $("#delItem").style.display=id?"":"none";
+    dlg.showModal();
+    if(!id){const first=$("#dFields [data-k]:not(select)");if(first)first.focus()}
+  }
+  $("#form").addEventListener("submit",e=>{
+    e.preventDefault();
+    const p=P(), s=SCHEMA[editingKind], d={};
+    for(const f of s.fields){
+      const el=$(`#dFields [data-k="${f.k}"]`);
+      d[f.k]=f.type==="check"?el.checked:(f.type==="textarea"?el.value.trim():el.value.trim());
+      if(f.req&&!d[f.k]){$("#hint").textContent=f.label+" is needed.";el.focus();return}
+    }
+    if(editingKind==="opts"){
+      d.long=d.long.replace(/^-+/,"").replace(/\s+/g,"-"); d.short=d.short.replace(/^-+/,"");
+      if(!/^[A-Za-z][\w-]*$/.test(d.long)){$("#hint").textContent="Long name should start with a letter and use letters, digits, - or _.";return}
+      if(d.short&&!/^[A-Za-z0-9]$/.test(d.short)){$("#hint").textContent="Short name must be a single letter or digit.";return}
+      if(d.short==="h"||d.long==="help"){$("#hint").textContent="-h and --help are added automatically.";return}
+      const clash=p.opts.find(o=>o.id!==editing&&(o.long===d.long||(d.short&&o.short===d.short)));
+      if(clash){$("#hint").textContent=`Clashes with --${clash.long}.`;return}
+      if(d.type==="choice"&&!d.choices){$("#hint").textContent="List the allowed values.";return}
+    }
+    if(editingKind==="fns"){
+      d.name=d.name.replace(/\(.*$/,"").trim();
+      if(!/^[A-Za-z_]\w*$/.test(d.name)){$("#hint").textContent="Use a valid function name: letters, digits and underscores.";return}
+    }
+    const L=p[editingKind];
+    if(editing) Object.assign(L.find(x=>x.id===editing),d); else L.push({id:uid(),done:false,...d});
+    touch(p); dlg.close(); renderPlan();
+  });
+  $("#delItem").addEventListener("click",()=>{
+    const p=P(); if(!confirm("Delete this "+SCHEMA[editingKind].title+"?")) return;
+    p[editingKind]=p[editingKind].filter(x=>x.id!==editing);
+    if(editingKind==="fns") p.flow.forEach(s=>{if(s.fn===editing)s.fn=""});
+    touch(p); dlg.close(); renderPlan();
+  });
+
+  // ---------- code generation ----------
+  const pyIdent=s=>s.replace(/-/g,"_");
+  const shVar=s=>s.replace(/-/g,"_").toUpperCase();
+  const pyStr=s=>JSON.stringify(String(s));
+  const isNum=v=>/^-?\d+(\.\d+)?([eE]-?\d+)?$/.test(v);
+  function fileName(p){
+    let n=p.name.trim().replace(/\s+/g,"_").replace(/[^\w.-]/g,"");
+    if(!n) n="script";
+    const ext=p.lang==="py"?".py":".sh";
+    return n.toLowerCase().endsWith(ext)?n:n.replace(/\.(py|sh)$/i,"")+ext;
+  }
+  function wrap(text,width,prefix){
+    const out=[];
+    for(const para of String(text).split(/\n/)){
+      let line="";
+      for(const w of para.split(/\s+/).filter(Boolean)){
+        if((line+" "+w).trim().length>width){out.push(prefix+line.trim());line=w}else line+=" "+w;
+      }
+      out.push(prefix+line.trim());
+    }
+    return out.map(l=>l.replace(/\s+$/,""));
+  }
+  function lint(p){
+    const w=[];
+    if(!p.purpose) w.push("Add a one-line purpose in Overview.");
+    if(!p.flow.length) w.push("The flow is empty, so main() will have nothing to do.");
+    p.fns.filter(f=>!p.flow.some(s=>s.fn===f.id)).forEach(f=>w.push(`${f.name}() isn't used in any flow step.`));
+    p.flow.forEach((s,i)=>{if(!s.fn)w.push(`Step ${i+1} has no function yet.`)});
+    const ins=p.io.filter(x=>x.dir==="in"), outs=p.io.filter(x=>x.dir==="out");
+    if(ins.length&&!p.opts.some(o=>o.type==="path"||/in|file|traj|top/i.test(o.long))) w.push("You have inputs but no option to pass a file path.");
+    if(outs.length&&!p.opts.some(o=>/out|prefix|dir/i.test(o.long))) w.push("You have outputs but no option for where to write them.");
+    p.opts.filter(o=>o.req&&o.def).forEach(o=>w.push(`--${o.long} is required, so its default will be ignored.`));
+    p.opts.filter(o=>o.type==="int"&&o.def&&!/^-?\d+$/.test(o.def)).forEach(o=>w.push(`--${o.long} default "${o.def}" isn't an integer.`));
+    p.opts.filter(o=>o.type==="float"&&o.def&&!isNum(o.def)).forEach(o=>w.push(`--${o.long} default "${o.def}" isn't a number.`));
+    p.opts.filter(o=>o.type==="choice"&&o.def&&!o.choices.split(",").map(s=>s.trim()).includes(o.def)).forEach(o=>w.push(`--${o.long} default isn't one of its allowed values.`));
+    const openChecks=p.checks.filter(c=>!c.done).length;
+    if(openChecks) w.push(`${openChecks} check${openChecks===1?"":"s"} or to-do${openChecks===1?"":"s"} still open.`);
+    return w;
+  }
+  function genPy(p){
+    const L=[];
+    const doc=[p.name];
+    if(p.purpose) doc.push("",...wrap(p.purpose,76,""));
+    if(p.desc) doc.push("",...wrap(p.desc,76,""));
+    const ins=p.io.filter(x=>x.dir==="in"), outs=p.io.filter(x=>x.dir==="out");
+    const ioLine=x=>`    ${x.name}${x.format?" ("+x.format.replace(/^\./,"")+")":""}${x.desc?": "+x.desc.replace(/\s+/g," "):""}`;
+    if(ins.length) doc.push("","Inputs",...ins.map(ioLine));
+    if(outs.length) doc.push("","Outputs",...outs.map(ioLine));
+    L.push("#!/usr/bin/env python3",'"""',...doc,'"""',"");
+    const imports=["import argparse","import sys"];
+    if(p.opts.some(o=>o.type==="path")&&!/pathlib/.test(p.deps)) imports.push("from pathlib import Path");
+    for(let d of p.deps.split(",").map(s=>s.trim()).filter(Boolean)){
+      const line=/^(from|import)\s/.test(d)?d:"import "+d;
+      if(!imports.includes(line)) imports.push(line);
+    }
+    L.push(...imports,"","");
+    // parser
+    L.push("def parse_args(argv=None):",'    """Parse command line options."""',
+      "    parser = argparse.ArgumentParser(",
+      `        description=${pyStr(p.purpose||p.name)},`,
+      "        formatter_class=argparse.ArgumentDefaultsHelpFormatter,","    )");
+    for(const o of p.opts){
+      const flags=(o.short?[`"-${o.short}"`]:[]).concat([`"--${o.long}"`]).join(", ");
+      const a=[];
+      const dv=o.def;
+      if(o.type==="flag"){a.push('action="store_true"')}
+      else{
+        if(o.type==="int") a.push("type=int");
+        else if(o.type==="float") a.push("type=float");
+        else if(o.type==="path") a.push("type=Path");
+        else if(o.type==="list") a.push('nargs="+"');
+        if(o.type==="choice") a.push("choices=["+o.choices.split(",").map(s=>pyStr(s.trim())).filter(s=>s!=='""').join(", ")+"]");
+        if(o.req) a.push("required=True");
+        else if(dv!==""&&dv!=null){
+          if(o.type==="int"||o.type==="float") a.push("default="+(isNum(dv)?dv:pyStr(dv)));
+          else if(o.type==="path") a.push(`default=Path(${pyStr(dv)})`);
+          else if(o.type==="list") a.push("default=["+dv.split(dv.includes(",")?/\s*,\s*/:/\s+/).filter(Boolean).map(v=>isNum(v)?v:pyStr(v)).join(", ")+"]");
+          else a.push("default="+pyStr(dv));
+        }
+      }
+      a.push("help="+pyStr((o.help||"").replace(/%/g,"%%")));
+      L.push(`    parser.add_argument(${flags}, ${a.join(", ")})`);
+    }
+    L.push("    return parser.parse_args(argv)","","");
+    // functions
+    for(const f of p.fns){
+      L.push(`def ${f.name}(${f.params||""}):`);
+      const ds=[];
+      if(f.desc) ds.push(...wrap(f.desc,72,"    "));
+      else ds.push("    TODO: describe what this function does.");
+      if(f.returns) ds.push("","    Returns","    -------",...wrap(f.returns,68,"    "));
+      L.push('    """'+ds[0].trim(),...ds.slice(1),'    """',`    raise NotImplementedError("${f.name}")`,"","");
+    }
+    // main
+    L.push("def main(argv=None):",'    """Run the workflow."""',"    args = parse_args(argv)","");
+    const checks=p.checks.filter(c=>c.kind!=="todo");
+    if(checks.length){L.push("    # Validation");checks.forEach(c=>L.push(...wrap(c.text,70,"    # TODO check: ")));L.push("")}
+    if(!p.flow.length) L.push("    # TODO: add steps");
+    p.flow.forEach((s,i)=>{
+      const f=p.fns.find(x=>x.id===s.fn);
+      L.push(...wrap(s.text,72,`    # ${i+1}. `).map((l,j)=>j?l.replace(/^    # \d+\. /,"    #    "):l));
+      L.push(f?`    # ${f.name}(${(f.params||"").replace(/\s*=\s*[^,]+/g,"")})`:"    # TODO: no function linked yet");
+      L.push("");
+    });
+    L.push("    return 0","","",'if __name__ == "__main__":',"    sys.exit(main())","");
+    return L.join("\n");
+  }
+  function genSh(p){
+    const L=["#!/usr/bin/env bash"];
+    L.push(...wrap(p.name,76,"# "));
+    if(p.purpose) L.push("#",...wrap(p.purpose,76,"# "));
+    if(p.desc) L.push("#",...wrap(p.desc,76,"# "));
+    const ins=p.io.filter(x=>x.dir==="in"), outs=p.io.filter(x=>x.dir==="out");
+    const ioLine=x=>`#   ${x.name}${x.format?" ("+x.format.replace(/^\./,"")+")":""}${x.desc?": "+x.desc.replace(/\s+/g," "):""}`;
+    if(ins.length) L.push("#","# Inputs",...ins.map(ioLine));
+    if(outs.length) L.push("#","# Outputs",...outs.map(ioLine));
+    L.push("","set -euo pipefail","");
+    // defaults
+    L.push("# Defaults");
+    for(const o of p.opts){
+      let v=o.type==="flag"?"0":(o.req?"":(o.def||""));
+      if(o.type==="list"&&v) v=v.replace(/,\s*/g," ");
+      L.push(`${shVar(o.long)}=${v===""?'""':(o.type==="flag"||isNum(v)?v:'"'+v.replace(/(["$`\\])/g,"\\$1")+'"')}`);
+    }
+    L.push("");
+    // usage
+    const metav={str:"TEXT",int:"INT",float:"NUM",path:"FILE",choice:"CHOICE",list:"\"A B ...\""};
+    const rows=p.opts.map(o=>{
+      const f=(o.short?`-${o.short}, `:"    ")+`--${o.long}`+(o.type==="flag"?"":" "+metav[o.type||"str"]);
+      let h=o.help||"";
+      if(o.type==="choice") h+=` (${o.choices.split(",").map(s=>s.trim()).join(", ")})`;
+      if(o.req) h+=" [required]"; else if(o.def&&o.type!=="flag") h+=` [default: ${o.def}]`;
+      return [f,h];
+    }).concat([["-h, --help","Show this help and exit"]]);
+    const w=Math.min(30,Math.max(...rows.map(r=>r[0].length))+2);
+    L.push("usage() {","  cat <<EOF",'Usage: $(basename "$0") [options]',"");
+    if(p.purpose) L.push(...wrap(p.purpose,76,""),"");
+    L.push("Options:",...rows.map(([f,h])=>"  "+f.padEnd(w)+h.replace(/\$/g,"\\$")),"EOF","}","");
+    // parser
+    L.push('while [[ $# -gt 0 ]]; do','  case "$1" in');
+    for(const o of p.opts){
+      const pat=(o.short?`-${o.short}|`:"")+`--${o.long}`;
+      if(o.type==="flag") L.push(`    ${pat}) ${shVar(o.long)}=1; shift ;;`);
+      else L.push(`    ${pat}) [[ $# -ge 2 ]] || { echo "Error: $1 needs a value" >&2; exit 1; }; ${shVar(o.long)}="$2"; shift 2 ;;`);
+    }
+    L.push("    -h|--help) usage; exit 0 ;;",'    *) echo "Unknown option: $1" >&2; usage >&2; exit 1 ;;',"  esac","done","");
+    // validation
+    const reqs=p.opts.filter(o=>o.req&&o.type!=="flag");
+    const chs=p.opts.filter(o=>o.type==="choice");
+    const nums=p.opts.filter(o=>o.type==="int"||o.type==="float");
+    const files=p.opts.filter(o=>o.type==="path"&&(o.req||/in/i.test(o.long)));
+    if(reqs.length||chs.length||nums.length||files.length){
+      L.push("# Validate options");
+      reqs.forEach(o=>L.push(`[[ -n "$${shVar(o.long)}" ]] || { echo "Error: --${o.long} is required" >&2; usage >&2; exit 1; }`));
+      chs.forEach(o=>{const c=o.choices.split(",").map(s=>s.trim()).filter(Boolean);L.push(`case "$${shVar(o.long)}" in ${c.join("|")}) ;; *) echo "Error: --${o.long} must be one of: ${c.join(", ")}" >&2; exit 1 ;; esac`)});
+      nums.forEach(o=>L.push(`[[ -z "$${shVar(o.long)}" || "$${shVar(o.long)}" =~ ${o.type==="int"?"^-?[0-9]+$":"^-?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?$"} ]] || { echo "Error: --${o.long} must be ${o.type==="int"?"an integer":"a number"}" >&2; exit 1; }`));
+      files.forEach(o=>L.push(`[[ -z "$${shVar(o.long)}" || -f "$${shVar(o.long)}" ]] || { echo "Error: file not found: $${shVar(o.long)}" >&2; exit 1; }`));
+      L.push("");
+    }
+    const deps=p.deps.split(",").map(s=>s.trim()).filter(Boolean);
+    if(deps.length) L.push("# Check required commands",`for cmd in ${deps.map(d=>d.replace(/^(from|import)\s+/,"").split(/\s+/)[0]).join(" ")}; do`,'  command -v "$cmd" >/dev/null 2>&1 || { echo "Error: $cmd not found in PATH" >&2; exit 1; }',"done","");
+    // functions
+    for(const f of p.fns){
+      L.push(...wrap(f.desc||"TODO: describe what this function does.",74,"# "));
+      if(f.params) L.push(`# Arguments: ${f.params}`);
+      if(f.returns) L.push(`# Output: ${f.returns}`);
+      L.push(`${f.name}() {`);
+      const ps=(f.params||"").split(",").map(s=>s.replace(/=.*/,"").trim()).filter(Boolean);
+      ps.forEach((v,i)=>L.push(`  local ${v.replace(/\W/g,"_")}="\${${i+1}:-}"`));
+      L.push(`  echo "TODO: ${f.name}" >&2`,"}","");
+    }
+    // main
+    L.push("main() {");
+    const checks=p.checks.filter(c=>c.kind!=="todo");
+    checks.forEach(c=>L.push(...wrap(c.text,70,"  # TODO check: ")));
+    if(checks.length) L.push("");
+    if(!p.flow.length) L.push("  : # TODO: add steps");
+    p.flow.forEach((s,i)=>{
+      const f=p.fns.find(x=>x.id===s.fn);
+      L.push(...wrap(s.text,72,`  # ${i+1}. `).map((l,j)=>j?l.replace(/^  # \d+\. /,"  #    "):l));
+      L.push(f?`  ${f.name}`:"  : # TODO: no function linked yet");
+    });
+    L.push("}","",'main "$@"',"");
+    return L.join("\n");
+  }
+  const genCode=p=>p.lang==="py"?genPy(p):genSh(p);
+  function genMd(p){
+    const L=[`# ${p.name}`,""];
+    if(p.purpose) L.push(p.purpose,"");
+    if(p.desc) L.push(p.desc,"");
+    const usage=p.lang==="py"?`python ${fileName(p)}`:`bash ${fileName(p)}`;
+    const req=p.opts.filter(o=>o.req).map(o=>`--${o.long} ${o.type==="flag"?"":"<"+o.long+">"}`.trim());
+    L.push("## Usage","","```bash",[usage,...req].join(" "),"```","");
+    if(p.opts.length){
+      L.push("## Options","","| Option | Type | Default | Description |","|---|---|---|---|");
+      p.opts.forEach(o=>L.push(`| ${o.short?"`-"+o.short+"`, ":""}\`--${o.long}\` | ${OPT_TYPES.find(t=>t[0]===o.type)?.[1]||"Text"}${o.type==="choice"?" ("+o.choices+")":""} | ${o.req?"required":(o.def||"")} | ${(o.help||"").replace(/\|/g,"\\|")} |`));
+      L.push("");
+    }
+    const io=(d,t)=>{const x=p.io.filter(i=>i.dir===d);if(x.length){L.push(`## ${t}`,"");x.forEach(i=>L.push(`- **${i.name}**${i.format?` (${i.format})`:""}${i.desc?": "+i.desc:""}`));L.push("")}};
+    io("in","Inputs"); io("out","Outputs");
+    if(p.deps) L.push(p.lang==="py"?"## Dependencies":"## Required commands","",...p.deps.split(",").map(s=>"- `"+s.trim()+"`"),"");
+    if(p.flow.length){L.push("## Workflow","");p.flow.forEach((s,i)=>{const f=p.fns.find(x=>x.id===s.fn);L.push(`${i+1}. ${s.text}${f?` (\`${f.name}\`)`:""}`)});L.push("")}
+    if(p.fns.length){L.push("## Functions","");p.fns.forEach(f=>L.push(`- \`${f.name}(${f.params||""})\`${f.desc?": "+f.desc.replace(/\n/g," "):""}${f.returns?" Returns "+f.returns+".":""}`));L.push("")}
+    const cs=p.checks.filter(c=>c.kind!=="todo"); if(cs.length){L.push("## Checks","");cs.forEach(c=>L.push(`- ${c.text}`));L.push("")}
+    return L.join("\n");
+  }
+  function codeHTML(p){
+    const w=lint(p);
+    return `<div class="warns">${w.length?w.map(x=>`<div>${esc(x)}</div>`).join(""):`<div class="ok">The plan looks complete.</div>`}</div>
+      <div class="codebar"><button class="btn primary" data-act="copy">Copy</button><button class="btn" data-act="dlcode">Save ${esc(fileName(p))}</button><button class="btn" data-act="dlmd">Save README</button></div>
+      <pre class="code">${esc(genCode(p))}</pre>`;
+  }
+
+  // ---------- backup ----------
+  $("#exportBtn").addEventListener("click",()=>saveFile(`script-plans-${stamp()}.json`,JSON.stringify({version:1,exported:new Date().toISOString(),plans:D().plans},null,2)));
+  $("#importBtn").addEventListener("click",()=>$("#importFile").click());
+  $("#importFile").addEventListener("change",async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{const o=JSON.parse(await f.text()); if(!Array.isArray(o.plans)) throw 0;
+      const ids=new Set(D().plans.map(p=>p.id)); let n=0;
+      for(const p of o.plans) if(p&&p.name&&!ids.has(p.id)){const b=newPlan();D().plans.push({...b,...p,id:p.id||uid(),updated:Date.now()});n++}
+      store.persist(); render(); toast(`Imported ${n} plan${n===1?"":"s"}`);
+    }catch(_){toast("Choose a .json backup exported from this app")}
+    e.target.value="";
+  });
+
+  function render(){
+    $("#home").classList.toggle("hidden",view!=="home");
+    $("#plan").classList.toggle("hidden",view!=="plan");
+    $("#fab").classList.remove("hidden"); $("#fab").setAttribute("aria-label","New plan");
+    if(view==="home") renderHome(); else renderPlan();
+  }
+  window.addEventListener("popstate",()=>{if(view==="plan"){view="home";render()}});
+  setupMenu(); render(); store.connect();
+})();
+</script>
+<script>window.__BACKUP={id:"script-planner",key:"scriptplans.v1"};</script>
+<script>
+(function(){
+  const C=window.__BACKUP, LK=C.id+".lastBackup", SK=C.id+".backupSnooze", WEEK=7*864e5;
+  const get=k=>{try{return +localStorage.getItem(k)||0}catch(_){return 0}};
+  const set=(k,v)=>{try{localStorage.setItem(k,String(v))}catch(_){}};
+  function hasData(){
+    try{const v=JSON.parse(localStorage.getItem(C.key)||"null");if(!v)return false;
+      if(Array.isArray(v))return v.length>0;
+      return Object.values(v).some(x=>Array.isArray(x)&&x.length>0)}catch(_){return false}
+  }
+  const bar=document.createElement("div");
+  bar.className="bk hidden"; bar.setAttribute("role","status");
+  bar.innerHTML='<div class="bkt"><b></b><span>A copy goes to your Downloads folder.</span></div><button class="bkno" type="button">Later</button><button class="bkgo" type="button">Back up now</button>';
+  const wrap=document.querySelector(".wrap"), head=wrap&&wrap.querySelector(":scope > header");
+  if(head) head.insertAdjacentElement("afterend",bar); else if(wrap) wrap.prepend(bar);
+  function check(){
+    const now=Date.now(), last=get(LK), data=hasData();
+    // never backed up: start the 7-day clock from when data first appears
+    if(!last&&data&&!get(C.id+".firstData")) set(C.id+".firstData",now);
+    const ref=last||get(C.id+".firstData")||now;
+    const due=data&&now-ref>WEEK&&now>get(SK);
+    bar.classList.toggle("hidden",!due);
+    if(due){
+      const days=last?Math.floor((now-last)/864e5):0;
+      bar.querySelector("b").textContent=last?`Last backup ${days} days ago`:"Not backed up yet";
+    }
+  }
+  window.__markBackup=()=>{set(LK,Date.now());set(SK,0);check()};
+  bar.querySelector(".bkgo").addEventListener("click",()=>{const b=document.getElementById("exportBtn");if(b)b.click()});
+  bar.querySelector(".bkno").addEventListener("click",()=>{set(SK,Date.now()+864e5);check()});
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)check()});
+  window.addEventListener("storage",check);
+  setInterval(check,36e5);
+  // first check after the app has loaded its data; recheck when data changes
+  setTimeout(check,300);
+  let t=null; document.addEventListener("click",()=>{clearTimeout(t);t=setTimeout(check,600)},true);
+})();
+</script>
+</body>
+</html>

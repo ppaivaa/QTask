@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="suite-theme.js" data-suite-theme></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#5A4360">
+<meta name="color-scheme" content="dark">
+<title>Structure viewer</title>
+<script>/*__SHARED_3DMOL__*/</script>
+<style>
+:root{
+  color-scheme:dark;box-sizing:border-box;
+  --bg:var(--t-bg,#14161B);--surface:var(--t-surface,#1C1F26);--raised:var(--t-raised,#242832);--ink:var(--t-ink,#E7E9EE);--muted:var(--t-muted,#8B919E);--faint:var(--t-faint,#2C303A);
+  --accent:var(--t-accent,#9DB2FF);--gold:var(--t-gold,#E6C170);--danger:var(--t-red,#F28B82);
+  --font:"Manrope",system-ui,Roboto,"Segoe UI",sans-serif;
+  --top:56px;--tool:64px;
+}
+html,body{height:100%;margin:0;overflow:hidden}
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.4}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+.topbar{position:fixed;left:0;right:0;top:0;padding-top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+.topin{height:var(--top);display:flex;align-items:center;gap:6px;padding:0 6px 0 16px}
+.title{flex:1;min-width:0}
+.title b{display:block;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.title span{display:block;font-size:.78rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ibtn{min-width:44px;min-height:44px;border-radius:12px;color:var(--muted);display:grid;place-items:center;font-size:1.1rem}
+.ibtn:active{background:var(--surface)}
+.ibtn[aria-pressed="true"]{color:var(--accent);background:var(--surface)}
+
+#viewer{position:fixed;left:0;right:0;top:calc(var(--top) + env(safe-area-inset-top,0px));bottom:calc(var(--tool) + env(safe-area-inset-bottom,0px));touch-action:none}
+.welcome{position:fixed;inset:calc(var(--top) + env(safe-area-inset-top,0px)) 0 calc(var(--tool) + env(safe-area-inset-bottom,0px));display:grid;place-items:center;padding:24px;text-align:center;z-index:2;pointer-events:none}
+.welcome div{pointer-events:auto;max-width:340px}
+.welcome h2{font-size:1.3rem;margin:0 0 8px}
+.welcome p{color:var(--muted);margin:0 0 18px}
+
+.toolbar{position:fixed;left:0;right:0;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);background:var(--bg);border-top:1px solid var(--faint);z-index:5}
+.toolin{height:var(--tool);display:grid;grid-template-columns:repeat(5,1fr);max-width:600px;margin:0 auto}
+.tbtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--muted);font-size:.72rem;min-height:48px}
+.tbtn i{font-style:normal;font-size:1.2rem;line-height:1}
+.tbtn[aria-pressed="true"]{color:var(--accent)}
+.tbtn:disabled{opacity:.35}
+
+.panel{position:fixed;left:0;right:0;bottom:calc(var(--tool) + env(safe-area-inset-bottom,0px));background:var(--raised);border-radius:18px 18px 0 0;z-index:4;max-height:58vh;overflow-y:auto;padding:14px 16px 16px;transform:translateY(105%);transition:transform .2s ease;box-shadow:0 -8px 24px var(--t-shadow,rgba(0,0,0,.35))}
+.panel.open{transform:none}
+@media (prefers-reduced-motion:reduce){.panel{transition:none}}
+@media (min-width:640px){.panel{left:50%;right:auto;width:560px;margin-left:-280px}}
+.phead{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.phead h2{font-size:1rem;margin:0}
+.grp{margin-top:12px}
+.grp > span{display:block;font-size:.8rem;color:var(--muted);margin-bottom:6px}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{padding:9px 13px;border-radius:999px;background:var(--surface);color:var(--muted);min-height:40px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.row{display:flex;gap:8px;align-items:center}
+.inp{flex:1;min-width:0;background:var(--surface);border:0;border-radius:12px;padding:12px;min-height:48px;color:var(--ink)}
+textarea.inp{min-height:120px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;resize:vertical}
+.btn{border-radius:12px;padding:12px 16px;min-height:48px;background:var(--surface)}
+.btn.primary{background:var(--accent);color:var(--t-on-accent,#14161B);font-weight:700}
+.help{font-size:.8rem;color:var(--muted);margin:6px 0 0}
+.range{display:flex;align-items:center;gap:10px}
+.range input{flex:1;accent-color:var(--accent)}
+.help{font-size:.8rem;color:var(--muted);margin:8px 0 0}
+.range output{min-width:52px;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
+.recent{display:flex;flex-direction:column;gap:6px}
+.recent button{display:flex;justify-content:space-between;gap:10px;text-align:left;padding:12px 14px;border-radius:12px;background:var(--surface);min-height:48px}
+.hits{display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.hg{display:flex;flex-direction:column;gap:6px}
+.hgh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:.85rem}
+.hgh span{color:var(--muted);font-size:.8rem}
+.hit{display:block;width:100%;text-align:left;padding:10px 12px;border-radius:12px;background:var(--surface);color:inherit;font:inherit;border:1.5px solid var(--faint);cursor:pointer}
+.hit:hover,.hit:focus-visible{border-color:var(--muted)}
+.hit b{display:block;font-weight:500;overflow-wrap:anywhere}
+.hit small{display:block;color:var(--muted);font-size:.78rem;margin-top:2px;overflow-wrap:break-word}
+.hid{float:right;margin-left:8px;font-family:var(--mono);font-size:.78rem;color:var(--accent2)}
+.hmore{width:100%;min-height:40px;padding:8px 12px}
+.sugg{background:none;border:0;padding:0;color:var(--accent2);font:inherit;text-decoration:underline;cursor:pointer}
+.recent small{color:var(--muted);white-space:nowrap}
+.recent b{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.info{background:var(--surface);border-radius:12px;padding:10px 12px;font-size:.88rem}
+.info div{display:flex;justify-content:space-between;gap:10px;padding:2px 0}
+.info span{color:var(--muted)}
+.meas{display:flex;flex-direction:column;gap:6px;font-size:.9rem}
+.meas div{display:flex;justify-content:space-between;background:var(--surface);border-radius:10px;padding:8px 12px}
+.frames{position:fixed;left:12px;right:12px;bottom:calc(var(--tool) + env(safe-area-inset-bottom,0px) + 10px);z-index:3;background:var(--t-glass,rgba(36,40,50,.92));border-radius:14px;padding:6px 10px;display:flex;align-items:center;gap:8px}
+.frames input{flex:1;accent-color:var(--accent)}
+.frames output{font-size:.8rem;color:var(--muted);min-width:64px;text-align:right;font-variant-numeric:tabular-nums}
+.hint{position:fixed;left:50%;top:calc(var(--top) + env(safe-area-inset-top,0px) + 10px);transform:translateX(-50%);background:var(--t-glass,rgba(36,40,50,.92));padding:8px 14px;border-radius:999px;font-size:.85rem;z-index:3;white-space:nowrap}
+.toast{position:fixed;left:50%;bottom:calc(var(--tool) + env(safe-area-inset-bottom,0px) + 16px);transform:translateX(-50%);background:var(--raised);padding:10px 16px;border-radius:12px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:6}
+.toast.show{opacity:1}
+.hidden{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* ---- Theme: dark with pink-to-blue accents ---- */
+:root{
+  --bg:var(--t-bg,#000000);--surface:var(--t-surface,#131316);--raised:var(--t-raised,#1D1D22);--ink:var(--t-ink,#F2F2F4);--muted:var(--t-muted,#9D9DA5);--faint:var(--t-faint,#28282E);
+  --accent:var(--t-accent,#EBA8E4);--accent2:var(--t-accent2,#A7CBF4);
+  --grad:linear-gradient(90deg,var(--t-grad1,#F0A8DC) 0%,var(--t-grad2,#C9B6EF) 50%,var(--t-grad3,#A6CCF5) 100%);
+  --danger:var(--t-danger,#EF5A50);--star:var(--t-accent,#EBA8E4);--pinbg:var(--t-pinbg,#2A2413);
+  --font:Roboto,"Google Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Roboto Mono","Droid Sans Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+body{background-color:var(--t-bg,#000);background-image:linear-gradient(172deg,var(--t-head,#5A4360) 0%,var(--t-head2,#352C3F) 90px,var(--t-head3,#15121A) 210px,var(--t-bg,#000) 320px);background-repeat:no-repeat;background-size:100% 340px}
+h1{font-weight:500;font-size:1.85rem;letter-spacing:0}
+h1 .n{font-size:1rem}
+.search{background:var(--t-field,#0E0E11);border:1.5px solid var(--t-line,#2E2E35);border-radius:999px}
+.search:focus{border-color:var(--t-focus,#9C8BC0);outline:none}
+.chip{background:var(--t-bg,#000);border:1.5px solid var(--t-edge,#3B3B43);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--grad);border-color:transparent;color:var(--t-on-grad,#17161C);font-weight:500}
+.chip.add{color:var(--accent)}
+.tab[aria-selected="true"]::after{background:var(--grad)}
+.btn.primary,.add{background:var(--grad)!important;color:var(--t-on-grad,#17161C)!important}
+.fab{background:var(--t-fab,#17171C);border:1px solid var(--t-edge,#3A3A42);color:var(--t-fab-ink,#D9B9EE);box-shadow:0 8px 22px var(--t-shadow,rgba(0,0,0,.7))}
+.star-on{color:var(--star)!important}
+.card:has(.star-on),.paper:has(.star-on),.entry:has(.star-on){background:var(--pinbg)}
+.menu{background:var(--raised);border:1px solid var(--t-line,#2E2E35)}
+dialog{background:var(--raised)}
+.sheet input,.sheet select,.sheet textarea,.dlg input,.dlg textarea,.dlg select{background:var(--t-field,#0F0F12)}
+.toast{background:var(--t-raised2,#26262C);color:var(--ink)}
+.doi{color:var(--accent2)}
+.sync{color:var(--t-dim,#6F6F77)}
+.seg button[aria-pressed="true"]{background:var(--grad);color:var(--t-on-grad,#17161C)}
+.topbar{background:linear-gradient(172deg,var(--t-head,#5A4360) 0%,var(--t-headbar,#2A2432) 100%)}
+.toolbar{background:var(--t-bg,#000)}
+</style>
+</head>
+<body>
+<div class="topbar"><div class="topin">
+  <div class="title"><b id="fname">Structure viewer</b><span id="fmeta">No structure loaded</span></div>
+  <button class="ibtn" id="spinBtn" aria-label="Spin" aria-pressed="false" disabled>⟳</button>
+  <button class="ibtn" id="resetBtn" aria-label="Reset view" disabled>⌖</button>
+  <button class="ibtn" id="shotBtn" aria-label="Save image" disabled>⤓</button>
+</div></div>
+
+<div id="viewer" aria-label="3D structure"></div>
+<div class="welcome" id="welcome"><div>
+  <h2>Open a structure</h2>
+  <p>PDB, GRO, CIF, XYZ, SDF, MOL2 or PQR from this device. Multi-model files play as frames.</p>
+  <button class="btn primary" id="welcomeOpen">Open file</button>
+  <p style="font-size:.78rem;opacity:.75;margin-top:14px">Drawn with <a href="https://3dmol.org" target="_blank" rel="noopener" style="color:inherit">3Dmol.js</a> (Rego &amp; Koes, <i>Bioinformatics</i> 2015, 31, 1322). Please cite it with figures made here.</p>
+</div></div>
+
+<div class="hint hidden" id="measHint">Tap two atoms for a distance, three for an angle</div>
+
+<div class="frames hidden" id="frames">
+  <button class="ibtn" id="playBtn" aria-label="Play frames">▶</button>
+  <label class="sr" for="frameSl">Frame</label>
+  <input type="range" id="frameSl" min="0" max="0" value="0">
+  <output id="frameOut">1/1</output>
+</div>
+
+<!-- Open panel -->
+<section class="panel" id="p-open" aria-label="Open">
+  <div class="phead"><h2>Open</h2><button class="ibtn" data-closep aria-label="Close">✕</button></div>
+  <div class="row"><button class="btn primary" id="pickBtn" style="flex:1">Choose file</button></div>
+  <input type="file" id="fileIn" hidden>
+  <div class="grp"><span>Or find online</span>
+    <div class="row">
+      <label class="sr" for="idIn">Identifier</label>
+      <input class="inp" id="idIn" type="search" placeholder="6EQE, P0DOX5, or words: PETase, aspirin" autocapitalize="off" spellcheck="false" style="flex:1">
+      <button class="btn primary" id="fetchBtn" style="flex:0 0 auto">Find</button>
+    </div>
+    <label class="sr" for="srcSel">Source</label>
+    <select class="inp" id="srcSel" style="margin-top:8px">
+      <option value="auto">Everywhere (an exact ID opens at once)</option>
+      <option value="pdb">PDB entries (RCSB)</option>
+      <option value="af">AlphaFold models (UniProt)</option>
+      <option value="pubchem">Small molecules (PubChem)</option>
+    </select>
+    <p class="help" id="fetchMsg">An exact ID opens at once. Words list the matching entries to pick from. Needs an internet connection.</p>
+    <div class="hits" id="hits" aria-live="polite"></div>
+  </div>
+  <div class="grp" id="recentGrp"><span>Recent</span><div class="recent" id="recent"></div></div>
+  <div class="grp"><span>Or paste coordinates</span>
+    <textarea class="inp" id="pasteTxt" spellcheck="false" autocapitalize="off" placeholder="ATOM      1  N   SER A   1 ..."></textarea>
+    <div class="row" style="margin-top:8px">
+      <label class="sr" for="pasteFmt">Format</label>
+      <select class="inp" id="pasteFmt" style="flex:0 0 110px"><option>pdb</option><option>gro</option><option>xyz</option><option>sdf</option><option>mol2</option><option>cif</option><option>pqr</option></select>
+      <button class="btn" id="pasteBtn" style="flex:1">Load pasted</button>
+    </div>
+  </div>
+</section>
+
+<!-- Style panel -->
+<section class="panel" id="p-style" aria-label="Style">
+  <div class="phead"><h2>Style</h2><button class="ibtn" data-closep aria-label="Close">✕</button></div>
+  <div class="grp"><span id="mainLabel">Protein</span><div class="seg" data-key="rep">
+    <button data-v="cartoon">Cartoon</button><button data-v="stick">Sticks</button><button data-v="line">Lines</button><button data-v="sphere">Spheres</button>
+  </div></div>
+  <div class="grp"><span>Colour</span><div class="seg" data-key="color">
+    <button data-v="ss">Secondary structure</button><button data-v="spectrum">N to C</button><button data-v="chain">Chain</button><button data-v="element">Element</button><button data-v="b">B-factor / pLDDT</button>
+  </div></div>
+  <div class="grp"><span>Show</span><div class="seg" data-toggles>
+    <button data-t="lig">Ligands</button><button data-t="ions">Ions</button><button data-t="water">Water</button><button data-t="hyd">Hydrogens</button><button data-t="surf">Surface</button>
+  </div></div>
+  <div class="grp"><span>Surface opacity</span><div class="range"><input type="range" id="surfOp" min="0.2" max="1" step="0.05" value="0.7"><output id="surfOpOut">70%</output></div></div>
+</section>
+
+<!-- Select panel -->
+<section class="panel" id="p-select" aria-label="Select residues">
+  <div class="phead"><h2>Residues</h2><button class="ibtn" data-closep aria-label="Close">✕</button></div>
+  <div class="grp" id="chainGrp" style="display:none"><span>Chains: tap to hide or show, ◎ for that one alone</span><div class="seg" id="chainList"></div></div>
+  <div class="grp" id="ligGrp" style="display:none"><span>Ligands and cofactors</span><div class="seg" id="ligList"></div></div>
+  <div class="row">
+    <label class="sr" for="selIn">Residues</label>
+    <input class="inp" id="selIn" placeholder="165, 206-208, HIS, A:237, lig" autocapitalize="characters" spellcheck="false">
+    <button class="btn primary" id="selBtn">Show</button>
+  </div>
+  <p class="help">Numbers (165), ranges (206-208), residue names (HIS), a chain (chain A, or A:237 for one residue in it), or the words lig, protein, water and ions. Separate with commas.</p>
+  <div class="grp"><span>Also show residues within</span><div class="range"><input type="range" id="nearR" min="0" max="10" step="0.5" value="0"><output id="nearOut">off</output></div></div>
+  <div class="grp"><div class="seg" data-toggles>
+    <button data-t="labels">Label residues</button><button data-t="focus">Zoom to selection</button><button data-t="isolate">Hide everything else</button>
+  </div></div>
+  <div class="row" style="margin-top:12px"><button class="btn" id="selClear" style="flex:1">Clear selection</button></div>
+</section>
+
+<!-- Info panel -->
+<section class="panel" id="p-info" aria-label="Structure info">
+  <div class="phead"><h2>Info</h2><button class="ibtn" data-closep aria-label="Close">✕</button></div>
+  <div class="info" id="infoBox"></div>
+  <div class="grp"><span>Last tapped atom</span><div class="info" id="atomBox"><div><span>Tap any atom in the viewer</span></div></div></div>
+  <div class="grp"><span>Measurements</span><div class="meas" id="measList"></div>
+    <div class="row" style="margin-top:8px"><button class="btn" id="measClear" style="flex:1">Clear measurements</button></div>
+  </div>
+</section>
+
+<nav class="toolbar"><div class="toolin">
+  <button class="tbtn" data-panel="open" aria-pressed="false"><i>⊕</i>Open</button>
+  <button class="tbtn" data-panel="style" aria-pressed="false" disabled><i>◐</i>Style</button>
+  <button class="tbtn" data-panel="select" aria-pressed="false" disabled><i>⌕</i>Residues</button>
+  <button class="tbtn" id="measBtn" aria-pressed="false" disabled><i>⟷</i>Measure</button>
+  <button class="tbtn" data-panel="info" aria-pressed="false" disabled><i>ⓘ</i>Info</button>
+</div></nav>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  function offlineSave(filename,data){
+    try{
+      const ext=(filename.split(".").pop()||"").toLowerCase();
+      const type={json:"application/json",csv:"text/csv",md:"text/markdown",png:"image/png"}[ext]||"text/plain";
+      const blob=data instanceof Blob?data:new Blob([data],{type:type+";charset=utf-8"});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");a.href=url;a.download=filename;a.style.display="none";
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),10000);
+      toast("Saved to Downloads");
+    }catch(_){toast("Couldn't save the file")}
+  }
+  function storageWorks(){try{const k="__probe"+Math.random();localStorage.setItem(k,"1");localStorage.removeItem(k);return true}catch(_){return false}}
+  const STORAGE_MSG=()=>storageWorks()?"Saved in this browser. Export a backup now and then.":"Storage is blocked here, so changes will be lost when you close this page.";
+  const $=s=>document.querySelector(s);
+  const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  let tt=null;
+  function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("show"),2600)}
+
+  if(!window.$3Dmol){
+    $("#welcome").innerHTML="<div><h2>Viewer failed to load</h2><p>The 3D library failed to start on this device.</p></div>";
+    return;
+  }
+
+  // residue classes
+  const AA=new Set("ALA ARG ASN ASP CYS GLN GLU GLY HIS ILE LEU LYS MET PHE PRO SER THR TRP TYR VAL HID HIE HIP HSD HSE HSP CYX CYM ASH GLH LYN ACE NME NHE NH2 SEC MSE PYL".split(" "));
+  const WATER=new Set("HOH WAT SOL TIP3 TIP4 TIP5 TIP3P TIP4P SPC SPCE T3P T4P H2O DOD".split(" "));
+  const IONS=new Set("NA CL K MG CA ZN MN FE FE2 CU CO NI CD LI RB CS BR IOD F NA+ CL- K+ SOD CLA POT CAL MG2 ZN2".split(" "));
+  const resn=a=>(a.resn||"").trim().toUpperCase();
+  const isProt=a=>{const r=resn(a);return AA.has(r)||(r.length===4&&(r[0]==="N"||r[0]==="C")&&AA.has(r.slice(1)))};
+  const isWater=a=>WATER.has(resn(a));
+  const isIon=a=>IONS.has(resn(a))&&!isProt(a);
+  const isLig=a=>!isProt(a)&&!isWater(a)&&!isIon(a);
+  const isH=a=>(a.elem||"").toUpperCase()==="H"||(a.elem||"").toUpperCase()==="D";
+
+  /* the 3D background follows the colour scheme chosen in the control center (--t-viewer, black by default) */
+  const bgNow=()=>getComputedStyle(document.documentElement).getPropertyValue("--t-viewer").trim()||"#000000";
+  const viewer=$3Dmol.createViewer($("#viewer"),{backgroundColor:bgNow(),antialias:true});
+  new MutationObserver(()=>{viewer.setBackgroundColor(bgNow());viewer.render()}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+  let model=null, nFrames=1, fileName="", fileFmt="", hasProt=false, bRange=[0,100];
+  const st={rep:"cartoon",color:"ss",lig:true,ions:true,water:false,hyd:false,surf:false,labels:true,focus:true,isolate:false};
+  let selTerms=[], nearR=0, surfOp=0.7, measuring=false, picks=[], measures=[], playing=false;
+  let chains=[], ligands=[], hidden=new Set();
+
+  // ---------- loading ----------
+  const EXT={pdb:"pdb",ent:"pdb",pqr:"pqr",gro:"gro",xyz:"xyz",sdf:"sdf",mol:"sdf",mol2:"mol2",cif:"cif",mmcif:"cif"};
+  function detectFormat(name,text){
+    const ext=(name.split(".").pop()||"").toLowerCase();
+    if(EXT[ext]) return EXT[ext];
+    if(/^(ATOM|HETATM|HEADER|CRYST1|MODEL)/m.test(text)) return "pdb";
+    if(/^data_/m.test(text)) return "cif";
+    if(/@<TRIPOS>/.test(text)) return "mol2";
+    return null;
+  }
+  function frameCount(text,fmt){
+    if(fmt==="pdb"||fmt==="pqr") return Math.max(1,(text.match(/^MODEL/gm)||[]).length);
+    const L=text.split(/\r?\n/);
+    if(fmt==="gro"){const n=parseInt(L[1]);if(!n)return 1;return Math.max(1,Math.floor(L.filter(l=>l.trim()).length/(n+3)))}
+    if(fmt==="xyz"){const n=parseInt(L[0]);if(!n)return 1;return Math.max(1,Math.floor(L.filter(l=>l.trim()).length/(n+2)))}
+    if(fmt==="sdf") return Math.max(1,(text.match(/^\$\$\$\$/gm)||[]).length);
+    return 1;
+  }
+  function load(text,name,fmt,remember){
+    fmt=fmt||detectFormat(name,text);
+    if(!fmt){toast("Unknown format. Rename with an extension like .pdb or .gro, or paste and choose the format.");return}
+    try{
+      stopPlay(); viewer.clear(); clearMeasures(false);
+      nFrames=frameCount(text,fmt);
+      model=nFrames>1?viewer.addModelsAsFrames(text,fmt):viewer.addModel(text,fmt);
+      const atoms=viewer.selectedAtoms({});
+      if(!atoms.length) throw new Error("no atoms");
+      nFrames=viewer.getNumFrames?Math.max(1,viewer.getNumFrames()):1;
+      fileName=name; fileFmt=fmt; window.__structure={text,name,fmt,viewer};
+      hasProt=atoms.some(isProt);
+      const bs=atoms.map(a=>a.b).filter(v=>typeof v==="number"&&isFinite(v));
+      bRange=bs.length?[Math.min(...bs),Math.max(...bs)]:[0,100];
+      if(!hasProt){ if(st.rep==="cartoon") st.rep="stick"; if(["ss","spectrum","b"].includes(st.color)) st.color="element"; }
+      else if(st.rep!=="cartoon"&&!remember){ /* keep user choice */ }
+      selTerms=[]; $("#selIn").value="";
+      viewer.setClickable({},true,onAtomTap);
+      applyStyle(true);
+      viewer.zoomTo(); viewer.render();
+      computeParts(atoms);
+      updateHeader(atoms); updateInfo(atoms); syncControls(); renderParts();
+      $("#welcome").classList.add("hidden"); window.dispatchEvent(new Event("structure-loaded"));
+      document.querySelectorAll(".tbtn,#spinBtn,#resetBtn,#shotBtn").forEach(b=>b.disabled=false);
+      setupFrames();
+      closePanels();
+      if(remember) saveRecent(name,fmt,text);
+    }catch(e){
+      viewer.clear(); viewer.render(); model=null;
+      toast("Couldn't read that file as "+fmt.toUpperCase()+". Check the format.");
+    }
+  }
+  function updateHeader(atoms){
+    const res=new Set(atoms.map(a=>(a.chain||"")+":"+a.resi+":"+resn(a)));
+    const chains=new Set(atoms.filter(isProt).map(a=>a.chain).filter(c=>c&&c.trim()));
+    $("#fname").textContent=fileName;
+    $("#fmeta").textContent=[`${atoms.length.toLocaleString("en-GB")} atoms`,`${res.size.toLocaleString("en-GB")} residues`,chains.size?`${chains.size} chain${chains.size>1?"s":""}`:"",nFrames>1?`${nFrames} frames`:""].filter(Boolean).join(", ");
+  }
+  function updateInfo(atoms){
+    const c=f=>atoms.filter(f);
+    const protRes=new Set(c(isProt).map(a=>a.chain+":"+a.resi)).size;
+    const ligs=[...new Set(c(isLig).map(a=>resn(a)))];
+    const waters=new Set(c(isWater).map(a=>a.chain+":"+a.resi)).size;
+    const ions={}; c(isIon).forEach(a=>{ions[resn(a)]=(ions[resn(a)]||0)+1});
+    const rows=[["File",fileName],["Format",fileFmt.toUpperCase()],["Atoms",atoms.length.toLocaleString("en-GB")],
+      ["Protein residues",protRes||"none"],["Ligand types",ligs.length?ligs.slice(0,12).join(", ")+(ligs.length>12?", ...":""):"none"],
+      ["Waters",waters.toLocaleString("en-GB")],["Ions",Object.keys(ions).length?Object.entries(ions).map(([k,v])=>`${k} ${v}`).join(", "):"none"],
+      ["B-factor range",`${bRange[0].toFixed(1)} to ${bRange[1].toFixed(1)}`],["Frames",nFrames],
+      ["Chains",chains.length?chains.map(c=>`${c.id||"-"} (${c.res.size})`).join(", "):"none"]];
+    $("#infoBox").innerHTML=rows.map(([k,v])=>`<div><span>${k}</span><b style="font-weight:500;text-align:right;overflow-wrap:anywhere">${esc(v)}</b></div>`).join("");
+  }
+
+  // ---------- chains and ligands ----------
+  function computeParts(atoms){
+    hidden=new Set(); chains=[]; ligands=[];
+    const cmap=new Map(), lmap=new Map();
+    for(const a of atoms){
+      const ch=(a.chain||"").trim();
+      if(!isWater(a)&&!isIon(a)){
+        const key=ch||"-";
+        const c=cmap.get(key)||{id:ch,res:new Set(),atoms:0,prot:0};
+        c.res.add(a.resi+":"+resn(a)); c.atoms++; if(isProt(a)) c.prot++;
+        cmap.set(key,c);
+      }
+      if(isLig(a)){
+        const k=(a.chain||"")+"|"+a.resi+"|"+resn(a);
+        const l=lmap.get(k)||{chain:(a.chain||"").trim(),resi:a.resi,resn:resn(a),atoms:0};
+        l.atoms++; lmap.set(k,l);
+      }
+    }
+    chains=[...cmap.values()].sort((a,b)=>(a.id||"").localeCompare(b.id||""));
+    ligands=[...lmap.values()].sort((a,b)=>b.atoms-a.atoms).slice(0,40);
+  }
+  const shown=a=>!hidden.has((a.chain||"").trim());
+  function renderParts(){
+    const multi=chains.length>1||(chains.length===1&&chains[0].id);
+    $("#chainGrp").style.display=multi?"":"none";
+    $("#chainList").innerHTML=chains.map(c=>`<span style="display:inline-flex;gap:2px;align-items:center">
+      <button data-ch="${esc(c.id)}" aria-pressed="${!hidden.has(c.id)}" title="${c.res.size} residues">${esc(c.id||"no chain")}<span style="opacity:.6;margin-left:6px">${c.res.size}</span></button>
+      <button data-focus="${esc(c.id)}" aria-label="Show only chain ${esc(c.id)}" style="padding:9px 12px;border-radius:999px;background:var(--surface);color:var(--accent);min-height:40px">only</button></span>`).join("");
+    $("#ligGrp").style.display=ligands.length?"":"none";
+    $("#ligList").innerHTML=ligands.map(l=>{
+      const on=selTerms.some(t=>t.from===l.resi&&t.resn===l.resn&&(t.chain||"")===(l.chain||"").toUpperCase());
+      return `<button data-lig="${esc(l.chain)}|${l.resi}|${esc(l.resn)}" aria-pressed="${on}">${esc(l.resn)}${l.resi!=null?" "+l.resi:""}${l.chain?" ("+esc(l.chain)+")":""}</button>`;
+    }).join("");
+  }
+  $("#chainList").addEventListener("click",e=>{
+    const f=e.target.closest("[data-focus]");
+    if(f){
+      const ch=f.dataset.focus;
+      hidden=new Set(chains.map(c=>c.id).filter(x=>x!==ch));
+      renderParts(); applyStyle(true);
+      viewer.zoomTo({predicate:a=>(a.chain||"").trim()===ch},400); viewer.render();
+      toast(`Showing chain ${ch||"with no name"} only`); return;
+    }
+    const b=e.target.closest("[data-ch]"); if(!b) return;
+    const ch=b.dataset.ch;
+    if(hidden.has(ch)) hidden.delete(ch); else hidden.add(ch);
+    if(hidden.size===chains.length){hidden.delete(ch);toast("At least one chain has to stay visible");return}
+    renderParts(); applyStyle();
+  });
+  const ligKey=t=>`${(t.chain||"")}|${t.from}|${t.resn}`;
+  function syncSelBox(){
+    $("#selIn").value=selTerms.map(t=>{
+      if(t.lig) return "lig"; if(t.water) return "water"; if(t.prot) return "protein"; if(t.ion) return "ions";
+      if(t.from==null&&!t.resn) return "chain "+t.chain;
+      const body=(t.resn||"")+(t.from!=null?((t.resn?" ":"")+(t.from===t.to?t.from:t.from+"-"+t.to)):"");
+      return (t.chain?t.chain+":":"")+body;
+    }).join(", ");
+  }
+  $("#ligList").addEventListener("click",e=>{
+    const b=e.target.closest("[data-lig]"); if(!b) return;
+    const [ch,resi,rn]=b.dataset.lig.split("|");
+    const term={chain:ch?ch.toUpperCase():undefined,resn:rn,from:+resi,to:+resi};
+    const k=ligKey(term), i=selTerms.findIndex(t=>t.from!=null&&ligKey(t)===k);
+    if(i>=0){
+      selTerms.splice(i,1); syncSelBox(); renderParts(); applyStyle();
+      toast(selTerms.length?`${selTerms.length} still selected`:"Selection cleared");
+      return;
+    }
+    selTerms=selTerms.concat([term]); syncSelBox();
+    if(nearR===0){nearR=4.5;$("#nearR").value=4.5;$("#nearOut").textContent="4.5 Å"}
+    renderParts(); applyStyle(true);
+    viewer.zoomTo({predicate:a=>!isWater(a),within:{distance:nearR,sel:{predicate:selectedSet()}},byres:true},400);
+    viewer.render();
+    toast(selTerms.length>1?`${selTerms.length} selected, each with ${nearR} Å around it`:`${rn} ${resi} with everything within ${nearR} Å`);
+  });
+
+  // ---------- styling ----------
+  function colorSpec(forCartoon){
+    switch(st.color){
+      case "ss": return {colorscheme:"ssPyMol"};
+      case "spectrum": return {color:"spectrum"};
+      case "chain": return {colorscheme:"chain"};
+      case "b": return {colorscheme:{prop:"b",gradient:"roygb",min:bRange[0],max:bRange[1]===bRange[0]?bRange[0]+1:bRange[1]}};
+      default: return forCartoon?{color:"#C8CDD6"}:{colorscheme:"Jmol"};
+    }
+  }
+  function repSpec(rep){
+    const c=colorSpec(rep==="cartoon");
+    if(rep==="cartoon") return {cartoon:{...c,arrows:true}};
+    if(rep==="stick") return {stick:{radius:.14,...c}};
+    if(rep==="line") return {line:{linewidth:1,...c}};
+    return {sphere:{scale:.9,...c}};
+  }
+  function selectedSet(){
+    if(!selTerms.length) return null;
+    const pred=a=>selTerms.some(t=>{
+      if(t.lig) return isLig(a);
+      if(t.water) return isWater(a);
+      if(t.ion) return isIon(a);
+      if(t.prot) return isProt(a);
+      if(t.chain&&(a.chain||"").toUpperCase()!==t.chain) return false;
+      if(t.resn&&resn(a)!==t.resn) return false;
+      if(t.from!=null&&(a.resi<t.from||a.resi>t.to)) return false;
+      return true;
+    });
+    return pred;
+  }
+  function applyStyle(skipRender){
+    if(!model) return;
+    const sel0=selectedSet();
+    const iso=st.isolate&&sel0;
+    const hOk=a=>(st.hyd||!isH(a))&&shown(a);
+    viewer.setStyle({},{});
+    viewer.removeAllLabels(); viewer.removeAllSurfaces();
+    if(hasProt){
+      const rep=st.rep;
+      viewer.setStyle({predicate:a=>isProt(a)&&shown(a)&&(rep==="cartoon"||hOk(a))},repSpec(rep));
+      if(st.lig) viewer.setStyle({predicate:a=>isLig(a)&&hOk(a)},{stick:{radius:.2,colorscheme:"greenCarbon"}});
+    }else{
+      viewer.setStyle({predicate:a=>!isWater(a)&&!isIon(a)&&hOk(a)},repSpec(st.rep==="cartoon"?"stick":st.rep));
+    }
+    if(st.ions) viewer.setStyle({predicate:a=>isIon(a)&&shown(a)},{sphere:{scale:.45,colorscheme:"Jmol"}});
+    if(st.water) viewer.setStyle({predicate:a=>isWater(a)&&hOk(a)},{line:{colorscheme:"Jmol",opacity:.6}});
+    if(iso){
+      // keep only the selection, plus its surroundings when a distance is set
+      viewer.setStyle({},{});
+      if(nearR>0) viewer.setStyle({predicate:a=>!isWater(a)&&hOk(a),within:{distance:nearR,sel:{predicate:sel0}},byres:true},{stick:{radius:.13,colorscheme:"whiteCarbon"}});
+      viewer.setStyle({predicate:a=>sel0(a)&&hOk(a)},{stick:{radius:.2,colorscheme:"yellowCarbon"}});
+      if(st.lig&&!nearR) viewer.addStyle({predicate:a=>isLig(a)&&hOk(a)},{stick:{radius:.2,colorscheme:"greenCarbon"}});
+      if(st.labels) labelResidues(sel0);
+      redrawMeasures();
+      if(!skipRender) viewer.render();
+      return;
+    }
+    const sel=selectedSet();
+    if(sel){
+      if(nearR>0){
+        viewer.addStyle({predicate:a=>!isWater(a)&&hOk(a),within:{distance:nearR,sel:{predicate:sel}},byres:true},{stick:{radius:.13,colorscheme:"whiteCarbon"}});
+      }
+      viewer.addStyle({predicate:a=>sel(a)&&hOk(a)},{stick:{radius:.2,colorscheme:"yellowCarbon"}});
+      if(st.labels) labelResidues(sel);
+    }
+    if(st.surf){
+      const surfSel=hasProt?{predicate:a=>isProt(a)&&shown(a)}:{predicate:a=>!isWater(a)&&!isIon(a)&&shown(a)};
+      const sc=st.color==="element"?{color:"#C8CDD6"}:colorSpec(false);
+      try{viewer.addSurface($3Dmol.SurfaceType.MS,{opacity:surfOp,...sc},surfSel,surfSel)}catch(_){toast("Surface is too large for this device")}
+    }
+    redrawMeasures();
+    if(!skipRender) viewer.render();
+  }
+  function labelResidues(sel){
+    const seen=new Map();
+    for(const a of viewer.selectedAtoms({predicate:sel})){
+      const k=(a.chain||"")+":"+a.resi+":"+resn(a);
+      if(!seen.has(k)||a.atom==="CA") seen.set(k,a);
+      if(seen.size>60) break;
+    }
+    for(const a of seen.values()){
+      viewer.addLabel(`${resn(a)}${a.resi}`,{position:{x:a.x,y:a.y,z:a.z},fontSize:12,fontColor:"#14161B",backgroundColor:"#E6C170",backgroundOpacity:.9,borderThickness:0,inFront:true,alignment:"bottomCenter"});
+    }
+  }
+
+  // ---------- selection ----------
+  function parseSel(str){
+    const out=[];
+    const chainIds=new Set(chains.map(c=>(c.id||"").toUpperCase()).filter(Boolean));
+    for(let tok of str.split(/[,;]+/).map(s=>s.trim().toUpperCase()).filter(Boolean)){
+      if(tok==="LIG"||tok==="LIGAND"||tok==="LIGANDS"||tok==="HET"){out.push({lig:true});continue}
+      if(tok==="WATER"||tok==="HOH"||tok==="SOL"){out.push({water:true});continue}
+      if(tok==="PROTEIN"||tok==="PROT"){out.push({prot:true});continue}
+      if(tok==="ION"||tok==="IONS"){out.push({ion:true});continue}
+      const t={};
+      // "chain A", "chain:A", "chains B"
+      const cw=tok.match(/^CHAINS?[:\s]+(.+)$/);
+      if(cw){ tok=cw[1].trim();
+        const only=tok.match(/^(\S+)$/);
+        if(only&&!/^\d+\s*-/.test(tok)){ out.push({chain:only[1]}); continue }
+      }
+      // "A:237", "A:200-210"
+      const cm=tok.match(/^([A-Z0-9]{1,3}):(.*)$/); if(cm){t.chain=cm[1];tok=cm[2].trim()}
+      // a bare chain name that exists in this structure
+      if(!t.chain&&chainIds.has(tok)&&!/^\d+$/.test(tok)){ out.push({chain:tok}); continue }
+      if(!tok){ if(t.chain){out.push(t);continue} return null }
+      const m=tok.match(/^([A-Z][A-Z0-9+\-]{0,4})?\s*(-?\d+)?(?:\s*(?:-|TO)\s*(-?\d+))?$/);
+      if(!m||(!m[1]&&!m[2])){ if(t.chain&&chainIds.has(t.chain)){out.push({chain:t.chain});continue} return null }
+      if(m[1]) t.resn=m[1];
+      if(m[2]){t.from=+m[2];t.to=m[3]!=null?+m[3]:+m[2]; if(t.to<t.from)[t.from,t.to]=[t.to,t.from]}
+      out.push(t);
+    }
+    return out.length?out:null;
+  }
+  $("#selBtn").addEventListener("click",()=>{
+    const v=$("#selIn").value.trim();
+    if(!v){toast("Type residues to show");return}
+    const terms=parseSel(v);
+    if(!terms){toast("Couldn't read that. Try 165, 206-208, HIS, chain A, A:237 or lig");return}
+    selTerms=terms;
+    const pred=selectedSet(), atoms=viewer.selectedAtoms({predicate:pred});
+    if(!atoms.length){selTerms=[];applyStyle();toast("No residues match");return}
+    applyStyle(true);
+    if(st.focus) viewer.zoomTo({predicate:pred},400);
+    viewer.render();
+    renderParts();
+    const n=new Set(atoms.map(a=>a.chain+":"+a.resi)).size;
+    toast(`${n} residue${n===1?"":"s"} shown`);
+    $("#selIn").blur();
+  });
+  $("#selIn").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("#selBtn").click()}});
+  $("#selClear").addEventListener("click",()=>{
+    selTerms=[];$("#selIn").value="";
+    if(st.isolate){st.isolate=false;syncControls()}
+    if(hidden.size){hidden=new Set();renderParts()}
+    applyStyle();
+  });
+  $("#nearR").addEventListener("input",e=>{nearR=+e.target.value;$("#nearOut").textContent=nearR?nearR+" Å":"off"});
+  $("#nearR").addEventListener("change",()=>{if(selTerms.length)applyStyle()});
+
+  // ---------- tapping and measuring ----------
+  const atomName=a=>`${resn(a)}${a.resi}${a.chain&&a.chain.trim()?" ("+a.chain+")":""} ${a.atom}`;
+  const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);
+  function angle(a,b,c){
+    const u=[a.x-b.x,a.y-b.y,a.z-b.z],v=[c.x-b.x,c.y-b.y,c.z-b.z];
+    const d=u[0]*v[0]+u[1]*v[1]+u[2]*v[2];
+    return Math.acos(Math.max(-1,Math.min(1,d/(Math.hypot(...u)*Math.hypot(...v)))))*180/Math.PI;
+  }
+  function onAtomTap(a){
+    $("#atomBox").innerHTML=[["Atom",atomName(a)],["Element",a.elem],["Serial",a.serial],["B-factor",typeof a.b==="number"?a.b.toFixed(2):"-"],["xyz (Å)",`${a.x.toFixed(2)}, ${a.y.toFixed(2)}, ${a.z.toFixed(2)}`]]
+      .map(([k,v])=>`<div><span>${k}</span><b style="font-weight:500">${esc(v)}</b></div>`).join("");
+    if(!measuring){toast(atomName(a));return}
+    if(picks.length&&picks[picks.length-1].index===a.index) return;
+    picks.push(a);
+    if(picks.length===3){
+      measures.push({type:"angle",atoms:picks.slice()}); picks=[];
+      renderMeasList(); toast(`Angle ${angle(...measures[measures.length-1].atoms).toFixed(1)}°`);
+    }else if(picks.length===2){
+      toast(`${dist(picks[0],picks[1]).toFixed(2)} Å. Tap a third atom for an angle, or Measure to finish.`);
+    }else toast(atomName(a));
+    applyStyle();
+  }
+  function drawDist(a,b){
+    viewer.addCylinder({start:{x:a.x,y:a.y,z:a.z},end:{x:b.x,y:b.y,z:b.z},radius:.06,color:"#E6C170",dashed:true,fromCap:1,toCap:1});
+    viewer.addLabel(dist(a,b).toFixed(2)+" Å",{position:{x:(a.x+b.x)/2,y:(a.y+b.y)/2,z:(a.z+b.z)/2},fontSize:12,fontColor:"#14161B",backgroundColor:"#E6C170",backgroundOpacity:.95,borderThickness:0,inFront:true});
+  }
+  function redrawMeasures(){
+    viewer.removeAllShapes();
+    for(const p of picks) viewer.addSphere({center:{x:p.x,y:p.y,z:p.z},radius:.35,color:"#9DB2FF",opacity:.8});
+    if(picks.length===2) drawDist(picks[0],picks[1]);
+    for(const m of measures){
+      const [a,b,c]=m.atoms;
+      if(m.type==="dist") drawDist(a,b);
+      else{
+        viewer.addCylinder({start:a,end:b,radius:.05,color:"#9DB2FF",dashed:true});
+        viewer.addCylinder({start:b,end:c,radius:.05,color:"#9DB2FF",dashed:true});
+        viewer.addLabel(angle(a,b,c).toFixed(1)+"°",{position:{x:b.x,y:b.y,z:b.z},fontSize:12,fontColor:"#14161B",backgroundColor:"#9DB2FF",backgroundOpacity:.95,borderThickness:0,inFront:true});
+      }
+    }
+  }
+  function renderMeasList(){
+    $("#measList").innerHTML=measures.length?measures.map(m=>{
+      const n=m.atoms.map(atomName).join(" · ");
+      const v=m.type==="dist"?dist(m.atoms[0],m.atoms[1]).toFixed(2)+" Å":angle(...m.atoms).toFixed(1)+"°";
+      return `<div><span style="color:var(--muted);font-size:.8rem;overflow-wrap:anywhere">${esc(n)}</span><b style="font-weight:700;white-space:nowrap;margin-left:8px">${v}</b></div>`;
+    }).join(""):`<div><span style="color:var(--muted)">None yet. Use Measure and tap atoms.</span></div>`;
+  }
+  function finishPending(){
+    if(picks.length===2){measures.push({type:"dist",atoms:picks.slice()});renderMeasList()}
+    picks=[];
+  }
+  function clearMeasures(render=true){measures=[];picks=[];viewer.removeAllShapes();renderMeasList();if(render&&model)applyStyle()}
+  $("#measClear").addEventListener("click",()=>clearMeasures());
+  $("#measBtn").addEventListener("click",()=>{
+    measuring=!measuring;
+    $("#measBtn").setAttribute("aria-pressed",measuring);
+    $("#measHint").classList.toggle("hidden",!measuring);
+    if(!measuring){finishPending();applyStyle()}
+    else{closePanels()}
+  });
+
+  // ---------- frames ----------
+  let playTimer=null;
+  function setupFrames(){
+    const show=nFrames>1;
+    $("#frames").classList.toggle("hidden",!show);
+    $("#frameSl").max=nFrames-1; $("#frameSl").value=0; $("#frameOut").textContent=`1/${nFrames}`;
+  }
+  async function goFrame(i){
+    await viewer.setFrame(i); applyStyle(true); viewer.render();
+    $("#frameSl").value=i; $("#frameOut").textContent=`${i+1}/${nFrames}`;
+  }
+  $("#frameSl").addEventListener("input",e=>{stopPlay();goFrame(+e.target.value)});
+  function stopPlay(){playing=false;clearTimeout(playTimer);$("#playBtn").textContent="▶";$("#playBtn").setAttribute("aria-label","Play frames")}
+  $("#playBtn").addEventListener("click",()=>{
+    if(playing){stopPlay();return}
+    playing=true; $("#playBtn").textContent="❚❚"; $("#playBtn").setAttribute("aria-label","Pause frames");
+    const step=async()=>{if(!playing)return;const i=(+$("#frameSl").value+1)%nFrames;await goFrame(i);playTimer=setTimeout(step,120)};
+    step();
+  });
+
+  // ---------- panels ----------
+  function closePanels(){document.querySelectorAll(".panel").forEach(p=>p.classList.remove("open"));document.querySelectorAll("[data-panel]").forEach(b=>b.setAttribute("aria-pressed","false"))}
+  document.querySelectorAll("[data-panel]").forEach(b=>b.addEventListener("click",()=>{
+    const p=$("#p-"+b.dataset.panel), open=p.classList.contains("open");
+    closePanels();
+    if(!open){
+      if(measuring){measuring=false;$("#measBtn").setAttribute("aria-pressed","false");$("#measHint").classList.add("hidden");finishPending();applyStyle()}
+      p.classList.add("open");b.setAttribute("aria-pressed","true");
+      if(b.dataset.panel==="open") renderRecent();
+      if(b.dataset.panel==="info") renderMeasList();
+    }
+  }));
+  document.querySelectorAll("[data-closep]").forEach(b=>b.addEventListener("click",closePanels));
+  $("#welcomeOpen").addEventListener("click",()=>$("#fileIn").click());
+
+  function syncControls(){
+    document.querySelectorAll(".seg[data-key]").forEach(s=>s.querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",st[s.dataset.key]===b.dataset.v)));
+    document.querySelectorAll("[data-t]").forEach(b=>b.setAttribute("aria-pressed",!!st[b.dataset.t]));
+    $("#mainLabel").textContent=hasProt?"Protein":"Molecules";
+    const cart=document.querySelector('[data-key="rep"] [data-v="cartoon"]'); cart.disabled=!hasProt&&!!model; cart.style.opacity=cart.disabled?.35:"";
+  }
+  document.querySelectorAll(".seg[data-key]").forEach(s=>s.addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b||b.disabled) return;
+    st[s.dataset.key]=b.dataset.v; syncControls(); applyStyle(); savePrefs();
+  }));
+  document.querySelectorAll(".seg[data-toggles]").forEach(s=>s.addEventListener("click",e=>{
+    const b=e.target.closest("[data-t]"); if(!b) return;
+    st[b.dataset.t]=!st[b.dataset.t]; syncControls();
+    if(b.dataset.t==="surf"&&st.surf) toast("Building surface...");
+    setTimeout(()=>applyStyle(),10); savePrefs();
+  }));
+  $("#surfOp").addEventListener("input",e=>{surfOp=+e.target.value;$("#surfOpOut").textContent=Math.round(surfOp*100)+"%"});
+  $("#surfOp").addEventListener("change",()=>{if(st.surf)applyStyle()});
+
+  // top buttons
+  $("#spinBtn").addEventListener("click",()=>{const on=$("#spinBtn").getAttribute("aria-pressed")!=="true";viewer.spin(on?"y":false);$("#spinBtn").setAttribute("aria-pressed",on)});
+  $("#resetBtn").addEventListener("click",()=>{
+    if(hidden.size){hidden=new Set();renderParts();applyStyle(true)}
+    viewer.zoomTo(undefined,300);viewer.render();
+  });
+  $("#shotBtn").addEventListener("click",async()=>{
+    const uri=viewer.pngURI(); const b64=uri.split(",")[1]; const bin=atob(b64);
+    const buf=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) buf[i]=bin.charCodeAt(i);
+    offlineSave((fileName.replace(/\.[^.]+$/,"")||"structure")+".png",new Blob([buf],{type:"image/png"}));
+  });
+
+  // ---------- files ----------
+  $("#pickBtn").addEventListener("click",()=>$("#fileIn").click());
+  $("#fileIn").addEventListener("change",async e=>{
+    const f=e.target.files[0]; e.target.value=""; if(!f) return;
+    if(f.size>60*1024*1024){toast("That file is over 60 MB, too large to view here. Strip waters or frames first.");return}
+    toast("Loading...");
+    const text=await f.text();
+    setTimeout(()=>load(text,f.name,null,true),20);
+  });
+  $("#pasteBtn").addEventListener("click",()=>{
+    const t=$("#pasteTxt").value; if(!t.trim()){toast("Paste coordinates first");return}
+    const fmt=$("#pasteFmt").value; load(t,"Pasted structure."+fmt,fmt,true);
+  });
+
+  // ---------- fetch by ID (RCSB, AlphaFold, PubChem) ----------
+  const UNIPROT=/^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$/i;
+  const PDBID=/^[0-9][A-Za-z0-9]{3}$/;
+  async function grab(url){
+    const c=new AbortController(), t=setTimeout(()=>c.abort(),30000);
+    try{
+      const r=await fetch(url,{signal:c.signal});
+      if(!r.ok) throw {code:r.status};
+      return await r.text();
+    }catch(e){
+      if(e&&e.name==="AbortError") throw {code:"timeout"};
+      throw e&&e.code?e:{code:"offline"};
+    }finally{clearTimeout(t)}
+  }
+  function fetchErr(e,what){
+    if(!e||e.code==="offline") return "No connection, or the service refused the request.";
+    if(e.code==="timeout") return "The service did not answer in time.";
+    if(e.code===404) return what+" not found. Check the ID.";
+    return "Request failed ("+e.code+").";
+  }
+  /* open one entry by its exact identifier */
+  async function openEntry(src,raw){
+    const btn=$("#fetchBtn"); btn.disabled=true;
+    const msg=$("#fetchMsg"); msg.style.color="var(--muted)"; msg.textContent="Fetching "+raw+"...";
+    try{
+      if(src==="pdb"){
+        const id=raw.toUpperCase();
+        let text,fmt="pdb";
+        try{text=await grab(`https://files.rcsb.org/download/${id}.pdb`)}
+        catch(e){ if(e.code!==404) throw e; text=await grab(`https://files.rcsb.org/download/${id}.cif`); fmt="cif" }
+        msg.textContent=`Loaded ${id} from RCSB.`;
+        load(text,`${id}.${fmt}`,fmt,true);
+      }else if(src==="af"){
+        const acc=raw.toUpperCase();
+        const meta=await (async()=>{const t=await grab(`https://alphafold.ebi.ac.uk/api/prediction/${encodeURIComponent(acc)}`);return JSON.parse(t)})();
+        const entry=Array.isArray(meta)?meta[0]:meta;
+        if(!entry||!entry.pdbUrl) throw {code:404};
+        const text=await grab(entry.pdbUrl);
+        msg.textContent=`AlphaFold model of ${acc} loaded. Colour by B-factor to see pLDDT.`;
+        st.color="b"; syncControls();
+        load(text,`AF-${acc}.pdb`,"pdb",true);
+      }else{
+        const q=raw;
+        const base="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/"+(/^\d+$/.test(q)?"cid/"+q:"name/"+encodeURIComponent(q));
+        let text, flat=false;
+        try{text=await grab(base+"/SDF?record_type=3d")}
+        catch(e){ if(e.code!==404) throw e; text=await grab(base+"/SDF?record_type=2d"); flat=true }
+        msg.textContent=flat?"Only a flat 2D structure exists for this one.":"Loaded from PubChem.";
+        load(text,`${(/^\d+$/.test(q)?"CID"+q:q).replace(/[^\w.-]/g,"_")}.sdf`,"sdf",true);
+      }
+      return true;
+    }catch(e){
+      msg.style.color="var(--danger)";
+      msg.textContent=fetchErr(e,src==="pdb"?"PDB entry":src==="af"?"AlphaFold model":"Compound");
+      return e;
+    }finally{btn.disabled=false}
+  }
+
+  /* ---------- search: several matches from each source to pick from ---------- */
+  const STATIC_HOST=(()=>{try{const u=new URL(document.baseURI);return u.protocol==="file:"||/(^|\.)(github\.io|gitlab\.io|netlify\.app|pages\.dev|vercel\.app|codeberg\.page)$/i.test(u.hostname)}catch(_){return false}})();
+  const RELAYED=/^(search|data|files)\.rcsb\.org$|^rest\.uniprot\.org$|^alphafold\.ebi\.ac\.uk$/;
+  let relayOK=null; const VIA={};
+  async function relayAvailable(){
+    if(relayOK!==null) return relayOK;
+    if(STATIC_HOST) return relayOK=false;
+    try{const r=await fetch("/api/backup/ping",{cache:"no-store"});const j=await r.json();relayOK=!!(j&&j.relay)}catch(_){relayOK=false}
+    return relayOK;
+  }
+  async function timed(url,opts){
+    const c=new AbortController(), t=setTimeout(()=>c.abort(),30000);
+    try{return await fetch(url,{...opts,signal:c.signal})}
+    catch(e){throw e&&e.name==="AbortError"?{code:"timeout"}:{code:"blocked"}}
+    finally{clearTimeout(t)}
+  }
+  /* straight from the browser, or through the local server's relay when the browser is not allowed to */
+  async function api(url){
+    const host=new URL(url).host, hdr={headers:{Accept:"application/json"}};
+    if(VIA[host]!=="relay"){
+      try{const r=await timed(url,hdr);VIA[host]="direct";return r}
+      catch(e){if(e.code==="timeout"||!RELAYED.test(host)||!(await relayAvailable()))throw e}
+    }
+    try{const r=await timed("/api/relay?url="+encodeURIComponent(url),{...hdr,cache:"no-store"});VIA[host]="relay";return r}
+    catch(e){throw e.code==="timeout"?e:{code:"offline"}}
+  }
+  async function apiJSON(url,notFoundIsEmpty){
+    const r=await api(url);
+    if(r.status===204||(notFoundIsEmpty&&r.status===404)) return null;   // RCSB answers 204, PubChem 404, when nothing matches
+    if(!r.ok) throw {code:r.status};
+    return await r.json();
+  }
+  const searchErr=e=>!e?"Search failed.":e.code==="timeout"?"The service did not answer in time.":e.code==="blocked"||e.code==="offline"?"Could not reach the service. Check the connection.":e.code===400?"The service did not accept these words. Try simpler ones.":e.code===429||e.code===503?"The service is busy. Try again in a minute.":"Search failed ("+e.code+").";
+  const uniq=a=>[...new Set(a)];
+  const METHOD={"X-RAY DIFFRACTION":"X-ray","ELECTRON MICROSCOPY":"Cryo-EM","SOLUTION NMR":"NMR","SOLID-STATE NMR":"Solid-state NMR","NEUTRON DIFFRACTION":"Neutron","ELECTRON CRYSTALLOGRAPHY":"MicroED"};
+  const PER=6;
+  const SOURCES={
+    pdb:{name:"PDB entries",what:"experimental structures in RCSB PDB",
+      async page(q,g){
+        const body={query:{type:"terminal",service:"full_text",parameters:{value:q}},return_type:"entry",
+          request_options:{paginate:{start:g.items.length,rows:PER},results_content_type:["experimental"],sort:[{sort_by:"score",direction:"desc"}]}};
+        const j=await apiJSON("https://search.rcsb.org/rcsbsearch/v2/query?json="+encodeURIComponent(JSON.stringify(body)));
+        if(!j) return {items:[],total:g.items.length};
+        const ids=(j.result_set||[]).map(x=>typeof x==="string"?x:x&&x.identifier).filter(Boolean).map(x=>String(x).toUpperCase());
+        const det={};
+        if(ids.length){
+          try{
+            const g2=await apiJSON("https://data.rcsb.org/graphql?query="+encodeURIComponent(`{entries(entry_ids:${JSON.stringify(ids)}){rcsb_id struct{title} rcsb_accession_info{initial_release_date} exptl{method} rcsb_entry_info{resolution_combined} polymer_entities{rcsb_entity_source_organism{ncbi_scientific_name}}}}`));
+            ((g2&&g2.data&&g2.data.entries)||[]).forEach(e=>{if(e&&e.rcsb_id)det[e.rcsb_id.toUpperCase()]=e});
+          }catch(_){/* the IDs alone still help */}
+        }
+        return {total:+j.total_count||ids.length,items:ids.map(id=>{
+          const e=det[id]||{}, res=((e.rcsb_entry_info||{}).resolution_combined||[])[0];
+          const method=uniq((e.exptl||[]).map(x=>x&&x.method).filter(Boolean)).map(m=>METHOD[m]||m.charAt(0)+m.slice(1).toLowerCase()).join(", ");
+          const orgs=uniq((e.polymer_entities||[]).flatMap(p=>((p&&p.rcsb_entity_source_organism)||[]).map(o=>o&&o.ncbi_scientific_name)).filter(Boolean));
+          const d=new Date(String((e.rcsb_accession_info||{}).initial_release_date||"").slice(0,10)+"T00:00:00Z");
+          const date=isNaN(d)?"":d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric",timeZone:"UTC"});
+          return {id,title:(e.struct&&e.struct.title)||"",sub:[method+(typeof res==="number"?`, ${res.toFixed(2)} Å`:""),orgs.slice(0,2).join(", "),date?"released "+date:""].filter(Boolean).join(" · ")};
+        })};
+      }},
+    af:{name:"AlphaFold models",what:"UniProt proteins; the model comes from AlphaFold DB",
+      async page(q,g){
+        const first=`https://rest.uniprot.org/uniprotkb/search?query=${encodeURIComponent(q)}&format=json&size=${PER}`;
+        let url=g.next||first+"&fields=accession,id,protein_name,organism_name,length,reviewed";
+        let r=await api(url);
+        if(r.status===400&&!g.next) r=await api(first);          // a field name UniProt no longer knows: whole entries
+        if(!r.ok) throw {code:r.status};
+        const j=await r.json();
+        let total=0, next="";
+        try{total=+(r.headers.get("x-total-results")||0)}catch(_){}
+        try{const m=/<([^>]+)>\s*;\s*rel="next"/.exec(r.headers.get("link")||"");next=m?m[1]:""}catch(_){}
+        g.next=next;
+        const items=(j.results||[]).map(x=>{
+          if(!x||!x.primaryAccession) return null;
+          const v=y=>typeof y==="string"?y:y&&y.value||"";
+          const pd=x.proteinDescription||{}, rec=pd.recommendedName||{}, subs=pd.submissionNames||[];
+          const name=v(rec.fullName)||(subs[0]&&v(subs[0].fullName))||x.uniProtkbId||x.primaryAccession;
+          const reviewed=/reviewed/i.test(String(x.entryType||""))&&!/unreviewed/i.test(String(x.entryType||""));
+          const len=x.sequence&&x.sequence.length;
+          return {id:x.primaryAccession,title:name,sub:[(x.organism&&x.organism.scientificName)||"",len?len+" aa":"",reviewed?"reviewed (Swiss-Prot)":"unreviewed (TrEMBL)"].filter(Boolean).join(" · ")};
+        }).filter(Boolean);
+        const shown=g.items.length+items.length;
+        return {items,total:total||(next?shown+1:shown)};
+      }},
+    pubchem:{name:"Compounds",what:"small molecules in PubChem",
+      async page(q,g){
+        if(!g.cids){
+          const base="https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"+encodeURIComponent(q)+"/cids/JSON";
+          const exact=await apiJSON(base,true).catch(()=>null);
+          let word=null;
+          try{word=await apiJSON(base+"?name_type=word",true)}catch(e){if(!exact)throw e}
+          const ids=o=>(o&&o.IdentifierList&&o.IdentifierList.CID)||[];
+          g.cids=uniq([...ids(exact),...ids(word)]).slice(0,60);
+          if(!g.cids.length){
+            try{const a=await apiJSON("https://pubchem.ncbi.nlm.nih.gov/rest/autocomplete/compound/"+encodeURIComponent(q)+"/json?limit=6",true);
+              g.suggest=((a&&a.dictionary_terms&&a.dictionary_terms.compound)||[]).filter(x=>String(x).toLowerCase()!==q.toLowerCase())}
+            catch(_){g.suggest=[]}
+            return {items:[],total:0};
+          }
+        }
+        const batch=g.cids.slice(g.items.length,g.items.length+PER);
+        if(!batch.length) return {items:[],total:g.cids.length};
+        const by={};
+        try{
+          const p=await apiJSON(`https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/${batch.join(",")}/property/Title,MolecularFormula,MolecularWeight/JSON`);
+          ((p&&p.PropertyTable&&p.PropertyTable.Properties)||[]).forEach(x=>{if(x&&x.CID)by[x.CID]=x});
+        }catch(_){/* CIDs alone still open */}
+        return {total:g.cids.length,items:batch.map(cid=>{
+          const x=by[cid]||{}, mw=parseFloat(x.MolecularWeight);
+          return {id:String(cid),title:x.Title||"CID "+cid,sub:["CID "+cid,x.MolecularFormula||"",isFinite(mw)?mw.toFixed(2)+" g/mol":""].filter(Boolean).join(" · ")};
+        })};
+      }}
+  };
+  const SR={q:"",groups:{},run:0};
+  function paintHits(){
+    const box=$("#hits"), keys=Object.keys(SR.groups);
+    if(!keys.length){box.innerHTML="";return}
+    box.innerHTML=`<p class="help">Matches for "${esc(SR.q)}". Tap one to open it.</p>`+keys.map(k=>{
+      const g=SR.groups[k], S=SOURCES[k], n=g.items.length;
+      const count=g.err?"":g.busy&&!n?"searching...":g.total>n?`${n} of ${g.total.toLocaleString("en-GB")}`:String(n);
+      let body;
+      if(g.err) body=`<p class="help" style="color:var(--danger)">${esc(g.err)}</p>`;
+      else if(!n&&!g.busy) body=`<p class="help">No ${esc(S.what)} match.${g.suggest&&g.suggest.length?" Did you mean "+g.suggest.map(x=>`<button type="button" class="sugg" data-sugg="${esc(x)}">${esc(x)}</button>`).join(", ")+"?":""}</p>`;
+      else body=g.items.map((it,i)=>`<button type="button" class="hit" data-src="${k}" data-i="${i}"><span class="hid">${esc(it.id)}</span><b>${esc(it.title||it.id)}</b>${it.sub?`<small>${esc(it.sub)}</small>`:""}</button>`).join("");
+      const tail=g.busy&&n?`<p class="help">Loading more...</p>`:!g.busy&&!g.err&&g.total>n?`<button type="button" class="btn hmore" data-more="${k}">Show more ${esc(S.name.toLowerCase())}</button>`:"";
+      return `<section class="hg" aria-label="${esc(S.name)}"><div class="hgh"><b>${esc(S.name)}</b><span>${count}</span></div>${body}${tail}</section>`;
+    }).join("");
+  }
+  async function loadGroup(k,run){
+    const g=SR.groups[k]; if(!g||g.busy&&g.items.length) return;
+    g.busy=true; g.err=""; paintHits();
+    try{
+      const r=await SOURCES[k].page(SR.q,g);
+      if(run!==SR.run) return;
+      const have=new Set(g.items.map(x=>x.id));
+      g.items=g.items.concat(r.items.filter(x=>!have.has(x.id)));
+      g.total=Math.max(r.total||0,g.items.length);
+      if(!r.items.length) g.total=g.items.length;      // nothing more to page through
+    }catch(e){ if(run===SR.run) g.err=searchErr(e); }
+    finally{ if(run===SR.run){g.busy=false;paintHits()} }
+  }
+  function search(q,keys){
+    SR.q=q; SR.run++; SR.groups={};
+    keys.forEach(k=>SR.groups[k]={items:[],total:0,busy:false,err:""});
+    const msg=$("#fetchMsg"); msg.style.color="var(--muted)"; msg.textContent="Searching...";
+    const run=SR.run;
+    Promise.all(keys.map(k=>loadGroup(k,run))).then(()=>{
+      if(run!==SR.run) return;
+      const n=keys.reduce((a,k)=>a+SR.groups[k].items.length,0);
+      msg.textContent=n?"":"Nothing found. Try other words, or an exact ID.";
+    });
+  }
+  $("#hits").addEventListener("click",e=>{
+    const more=e.target.closest("[data-more]"); if(more){loadGroup(more.dataset.more,SR.run);return}
+    const sug=e.target.closest("[data-sugg]"); if(sug){$("#idIn").value=sug.dataset.sugg;search(sug.dataset.sugg,Object.keys(SR.groups));return}
+    const b=e.target.closest(".hit"); if(!b) return;
+    const g=SR.groups[b.dataset.src], it=g&&g.items[+b.dataset.i]; if(!it) return;
+    openEntry(b.dataset.src,it.id);
+  });
+
+  /* an exact ID opens at once; anything else is searched, with several matches to pick from */
+  async function fetchById(){
+    const raw=$("#idIn").value.trim(); if(!raw){toast("Type an ID or a few words first");return}
+    const src=$("#srcSel").value;
+    const exact=src==="pdb"?PDBID.test(raw):src==="af"?UNIPROT.test(raw):src==="pubchem"?/^\d+$/.test(raw)
+      :PDBID.test(raw)||UNIPROT.test(raw)||/^CID\s*\d+$/i.test(raw);
+    if(exact){
+      const s=src!=="auto"?src:PDBID.test(raw)?"pdb":UNIPROT.test(raw)?"af":"pubchem";
+      const r=await openEntry(s,s==="pubchem"?raw.replace(/^CID\s*/i,""):raw);
+      if(r===true||src!=="auto"||!r||r.code!==404) return;
+      /* looked like an ID but is not one: search for it instead */
+    }
+    search(raw,src==="auto"?["pdb","af","pubchem"]:[src]);
+  }
+  $("#fetchBtn").addEventListener("click",fetchById);
+  $("#idIn").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();fetchById()}});
+
+  // recent files in IndexedDB (this device only)
+  const DBN="structviewer",STO="files";
+  function idb(){return new Promise((res,rej)=>{let r;try{r=indexedDB.open(DBN,1)}catch(e){rej(e);return}
+    r.onupgradeneeded=()=>r.result.createObjectStore(STO,{keyPath:"name"});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+  async function saveRecent(name,fmt,text){
+    if(text.length>25e6) return;
+    try{const db=await idb();const tx=db.transaction(STO,"readwrite");const s=tx.objectStore(STO);
+      s.put({name,fmt,text,at:Date.now(),size:text.length});
+      const all=await new Promise(r=>{const q=s.getAll();q.onsuccess=()=>r(q.result);q.onerror=()=>r([])});
+      all.sort((a,b)=>b.at-a.at).slice(6).forEach(x=>s.delete(x.name));
+    }catch(_){}
+  }
+  async function renderRecent(){
+    let all=[];
+    try{const db=await idb();all=await new Promise(r=>{const q=db.transaction(STO).objectStore(STO).getAll();q.onsuccess=()=>r(q.result);q.onerror=()=>r([])})}catch(_){}
+    all.sort((a,b)=>b.at-a.at);
+    $("#recentGrp").classList.toggle("hidden",!all.length);
+    $("#recent").innerHTML=all.map(x=>`<button data-name="${esc(x.name)}"><b>${esc(x.name)}</b><small>${(x.size/1e6).toFixed(x.size<1e6?2:1)} MB</small></button>`).join("");
+  }
+  $("#recent").addEventListener("click",async e=>{
+    const b=e.target.closest("[data-name]"); if(!b) return;
+    try{const db=await idb();const x=await new Promise(r=>{const q=db.transaction(STO).objectStore(STO).get(b.dataset.name);q.onsuccess=()=>r(q.result);q.onerror=()=>r(null)});
+      if(x){toast("Loading...");setTimeout(()=>load(x.text,x.name,x.fmt,true),20)}}catch(_){toast("Couldn't open that file")}
+  });
+
+  // prefs
+  function savePrefs(){try{localStorage.setItem("structviewer.prefs",JSON.stringify({rep:st.rep,color:st.color,lig:st.lig,ions:st.ions,water:st.water,hyd:st.hyd,labels:st.labels,focus:st.focus}))}catch(_){}}
+  try{Object.assign(st,JSON.parse(localStorage.getItem("structviewer.prefs")||"{}"))}catch(_){}
+  st.surf=false;
+
+  window.addEventListener("resize",()=>{viewer.resize();viewer.render()});
+  syncControls(); renderMeasList(); renderRecent();
+})();
+</script>
+<script>
+/* Suite bridge: send the loaded structure to the QM/MM builder tab */
+(function(){
+  let host; try{host=window.parent!==window&&window.parent}catch(_){host=null}
+  if(!host||!host.suiteHas||!host.suiteHas("qmmm")) return;
+  const bar=document.querySelector(".topin"), first=document.getElementById("spinBtn");
+  if(!bar) return;
+  const b=document.createElement("button");
+  b.type="button"; b.className="ibtn"; b.id="qmmmBtn"; b.disabled=true;
+  b.title="Open in QM/MM builder"; b.setAttribute("aria-label","Open in QM/MM builder");
+  b.style.cssText="font-size:.78rem;font-weight:700;letter-spacing:.02em";
+  b.textContent="QM/MM";
+  bar.insertBefore(b,first);
+  let tt=null;
+  const say=t=>{const el=document.getElementById("toast"); if(!el) return; el.textContent=t; el.classList.add("show");
+    clearTimeout(tt); tt=setTimeout(()=>el.classList.remove("show"),2600)};
+  // fixed-column PDB writer for GRO, XYZ, SDF, MOL2 and CIF input (current frame)
+  function toPDB(atoms){
+    const f=(v,w,d)=>(Number.isFinite(v)?v:0).toFixed(d).padStart(w);
+    const out=[]; let n=0;
+    for(const a of atoms){
+      n++;
+      const el=String(a.elem||"").trim().toUpperCase().slice(0,2);
+      let nm=String(a.atom||el||"X").trim().slice(0,4);
+      nm=nm.length<4&&el.length===1?" "+nm.padEnd(3):nm.padEnd(4);
+      const rn=String(a.resn||"UNK").trim()||"UNK";
+      const rcol=rn.length>=4?rn.slice(0,4):" "+rn.padStart(3);
+      const ch=(String(a.chain||"").trim()||"A").slice(0,1);
+      const ri=String(((a.resi|0)%10000+10000)%10000).padStart(4);
+      out.push((a.hetflag?"HETATM":"ATOM  ")+String(n%100000).padStart(5)+" "+nm+rcol+" "+ch+ri+"    "
+        +f(a.x,8,3)+f(a.y,8,3)+f(a.z,8,3)+"  1.00"+f(typeof a.b==="number"?a.b:0,6,2)+"          "+el.padStart(2));
+    }
+    out.push("END");
+    return out.join("\n")+"\n";
+  }
+  window.addEventListener("structure-loaded",()=>{b.disabled=false});
+  b.addEventListener("click",()=>{
+    const s=window.__structure; if(!s) return;
+    let text=s.text;
+    if(!/^(pdb|pqr)$/.test(s.fmt)){
+      try{ text=toPDB(s.viewer.selectedAtoms({})); }catch(_){ text=""; }
+      if(!/^(ATOM|HETATM)/m.test(text||"")){ say("This file could not be converted to PDB for the QM/MM builder."); return; }
+    }
+    host.suiteSend("qmmm",{type:"structure",name:s.name,fmt:s.fmt,text});
+  });
+})();
+</script>
+<!-- suite-viewer-fetch:begin -->
+<script>
+/* Suite bridge: open a PDB entry, AlphaFold model or PubChem compound when another app asks,
+   e.g. suiteSend("viewer",{type:"fetch",src:"pdb",id:"5XJH"}) from the structure watcher */
+(function(){
+  const prev=window.suiteReceive;
+  window.suiteReceive=function(msg){
+    if(msg&&msg.type==="fetch"&&msg.id){
+      const inp=document.getElementById("idIn"), sel=document.getElementById("srcSel"), btn=document.getElementById("fetchBtn");
+      if(inp&&btn){
+        inp.value=String(msg.id);
+        if(sel) sel.value=[...sel.options].some(o=>o.value===msg.src)?msg.src:"auto";
+        btn.click();
+        return;
+      }
+    }
+    if(typeof prev==="function") prev(msg);
+  };
+})();
+</script>
+<!-- suite-viewer-fetch:end -->
+</body>
+</html>

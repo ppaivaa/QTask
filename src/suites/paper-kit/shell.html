@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="suite-theme.js" data-suite-theme></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#5A4360">
+<meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="paper-kit.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/paper-kit-192.png">
+<link rel="apple-touch-icon" href="icons/paper-kit-192.png">
+<title>Paper kit</title>
+<style>
+:root{
+  color-scheme:dark;
+  --bg:var(--t-bg,#000000);--ink:var(--t-ink,#F2F2F4);--muted:var(--t-muted,#9D9DA5);--line:var(--t-faint,#28282E);--accent:var(--t-accent,#EBA8E4);
+  --grad:linear-gradient(90deg,var(--t-grad1,#F0A8DC) 0%,var(--t-grad2,#C9B6EF) 50%,var(--t-grad3,#A6CCF5) 100%);
+  --font:Roboto,"Google Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{height:100%}
+body{
+  margin:0;height:100%;height:100dvh;display:grid;grid-template-rows:minmax(0,1fr) auto;
+  padding-top:env(safe-area-inset-top,0px);
+  background:var(--t-bg,#000) linear-gradient(var(--t-head,#5A4360),var(--t-head,#5A4360)) top/100% env(safe-area-inset-top,0px) no-repeat;
+  color:var(--ink);font-family:var(--font);
+}
+.stage{position:relative;min-height:0;min-width:0}
+/* inactive frames stay laid out (visibility, not display) so 3D canvases keep their size */
+.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:var(--t-bg,#000);visibility:hidden;pointer-events:none}
+.stage iframe.on{visibility:visible;pointer-events:auto}
+nav{display:flex;gap:2px;background:var(--t-bg,#000);border-top:1px solid var(--line);
+  padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px))}
+nav button{flex:1 1 0;min-width:0;min-height:58px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  background:none;border:0;color:var(--muted);font:inherit;font-size:.74rem;cursor:pointer;padding:2px}
+nav .ic{width:56px;height:30px;border-radius:999px;display:grid;place-items:center}
+nav svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav .lb{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav button[aria-current="page"]{color:var(--ink);font-weight:500}
+nav button[aria-current="page"] .ic{background:var(--grad);color:var(--t-on-grad,#17161C)}
+nav button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px;border-radius:12px}
+@media (prefers-reduced-motion:no-preference){nav .ic{transition:background-color .15s}}
+nav .util .ic{position:relative}
+nav .util[data-state="ok"] .ic::after,nav .util[data-state="err"] .ic::after{content:"";position:absolute;top:3px;right:12px;width:8px;height:8px;border-radius:50%;background:var(--t-green,#7DCB9C);box-shadow:0 0 0 2px var(--t-bg,#000)}
+nav .util[data-state="err"] .ic::after{background:var(--t-danger,#EF5A50)}
+dialog{border:0;padding:0;background:var(--t-raised,#1D1D22);color:var(--ink);width:100%;max-width:560px;margin:auto auto 0;border-radius:20px 20px 0 0;max-height:92vh;font-family:var(--font)}
+@media (min-width:600px){dialog{margin:auto;border-radius:20px}}
+dialog::backdrop{background:var(--t-backdrop,rgba(0,0,0,.6))}
+.sheet{padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px}
+.sheet h2{margin:0;font-size:1.15rem;font-weight:700}
+.sheet p{margin:0}
+.sheet .note{font-size:.85rem;color:var(--muted);line-height:1.45}
+.sheet .warn{font-size:.85rem;color:var(--t-gold,#E6C170);background:var(--t-pinbg,#2A2413);border-radius:12px;padding:10px 12px;line-height:1.45}
+.sheet .warn code,.sheet .note code{font-family:"Roboto Mono",ui-monospace,Menlo,monospace;font-size:.8rem}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--t-surface,#131316);border-radius:14px;padding:12px 14px;min-height:56px;cursor:pointer}
+.sw input{appearance:none;width:46px;height:28px;border-radius:999px;background:var(--t-edge,#3B3B43);position:relative;flex:0 0 auto;cursor:pointer;margin:0}
+.sw input::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--t-knob,#F2F2F4);transition:left .15s}
+.sw input:checked{background:var(--grad)}
+.sw input:checked::after{left:21px;background:var(--t-on-grad,#17161C)}
+.sw input:disabled{opacity:.4}
+.bk-list{display:flex;flex-direction:column;gap:6px}
+.bk-row{background:var(--t-surface,#131316);border-radius:12px;padding:10px 12px}
+.bk-row b{display:block;font-weight:500}
+.bk-row span{display:block;font-size:.8rem;color:var(--muted);overflow-wrap:anywhere}
+.bk-row span.err{color:var(--t-danger,#EF5A50)}
+.bk-bar{display:flex;gap:8px;flex-wrap:wrap}
+.bk-btn{border:0;border-radius:12px;padding:12px 16px;min-height:48px;background:var(--t-surface,#131316);color:var(--ink);font:inherit;cursor:pointer}
+.bk-btn.primary{background:var(--grad);color:var(--t-on-grad,#17161C);font-weight:700}
+.bk-btn:disabled{opacity:.45;cursor:default}
+.bk-sel{background:var(--t-field,#0F0F12);border:1.5px solid var(--t-line,#2E2E35);border-radius:12px;padding:12px;min-height:48px;color:var(--ink);font:inherit;flex:1;min-width:0}
+.bk-files{display:flex;flex-direction:column;gap:6px;max-height:36vh;overflow-y:auto}
+.bk-files button{text-align:left;border:0;background:var(--t-surface,#131316);color:var(--ink);border-radius:12px;padding:10px 12px;font:inherit;cursor:pointer}
+.bk-files button small{display:block;color:var(--muted);font-size:.78rem}
+.sheet h3{margin:6px 0 -4px;font-size:.85rem;font-weight:500;color:var(--accent)}
+.bk-toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--t-raised2,#26262C);color:var(--ink);padding:10px 16px;border-radius:12px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:10}
+.bk-toast.show{opacity:1}
+@media (min-width:900px){
+  body{grid-template-rows:minmax(0,1fr);grid-template-columns:auto minmax(0,1fr)}
+  nav{order:-1;flex-direction:column;justify-content:flex-start;gap:10px;width:96px;border-top:0;border-right:1px solid var(--line);
+    padding:18px 6px calc(18px + env(safe-area-inset-bottom,0px))}
+  nav button{flex:none}
+}
+</style>
+</head>
+<body>
+<main class="stage" id="stage"></main>
+<nav id="nav" aria-label="Paper kit apps">
+  <button type="button" data-id="plots"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V4"/><path d="M4 20h16"/><path d="M8 16v-4M12 16V8M16 16v-6"/></svg></span><span class="lb">Plot guide</span></button>
+  <button type="button" data-id="schemes"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17c0-6 4-10 11-10"/><path d="M13 4l3 3-3 3"/><circle cx="5" cy="19" r="1.5"/></svg></span><span class="lb">Schemes</span></button>
+  <button type="button" data-id="journals"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 5c3-1 6-1 9 1 3-2 6-2 9-1v14c-3-1-6-1-9 1-3-2-6-2-9-1z"/><path d="M12 6v14"/></svg></span><span class="lb">Journals</span></button>
+  <button type="button" class="util" data-act="backup" aria-haspopup="dialog"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v11"/><path d="M8 10l4 4 4-4"/><path d="M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/></svg></span><span class="lb">Backup</span></button>
+</nav>
+<script>
+const SUITE={"id": "paper-kit", "title": "Paper kit"};
+const SHARED=/*SHARED*/{};
+const APPS=/*APPS*/[];
+(function(){
+  const stage=document.getElementById("stage"), nav=document.getElementById("nav");
+  const KEY="suite."+SUITE.id+".tab", frames={};
+  function docFor(app){
+    let doc=app.html;
+    for(const k in SHARED){ const ph="/*__SHARED_"+k+"__*/"; if(doc.includes(ph)) doc=doc.replace(ph,()=>SHARED[k]); }
+    return doc;
+  }
+  function frame(app){
+    if(frames[app.id]) return frames[app.id];
+    const f=document.createElement("iframe");
+    f.title=app.label; f.setAttribute("allow","clipboard-read; clipboard-write");
+    f.addEventListener("load",()=>{f.dataset.ready="1"},{once:true});
+    f.srcdoc=docFor(app); stage.appendChild(f); frames[app.id]=f;
+    return f;
+  }
+  function show(id){
+    const app=APPS.find(a=>a.id===id)||APPS[0];
+    frame(app);
+    for(const k in frames) frames[k].classList.toggle("on",k===app.id);
+    nav.querySelectorAll("button[data-id]").forEach(b=>{
+      if(b.dataset.id===app.id) b.setAttribute("aria-current","page"); else b.removeAttribute("aria-current");
+    });
+    document.title=app.label+" - "+SUITE.title;
+    try{localStorage.setItem(KEY,app.id)}catch(_){}
+    if(location.hash!=="#"+app.id) history.replaceState(null,"","#"+app.id);
+    return app;
+  }
+  // apps in the same suite can hand data to each other
+  window.suiteHas=id=>APPS.some(a=>a.id===id);
+  window.suiteReload=id=>{const f=frames[id]; if(!f) return; f.dataset.ready="";
+    f.addEventListener("load",()=>{f.dataset.ready="1"},{once:true}); f.srcdoc=docFor(APPS.find(a=>a.id===id)); };
+  window.suiteShow=id=>show(id);
+  window.suiteSend=(id,msg)=>{
+    const app=show(id), f=frames[app.id];
+    const deliver=()=>{try{f.contentWindow.suiteReceive&&f.contentWindow.suiteReceive(msg)}catch(e){console.warn(e)}};
+    if(f.dataset.ready) deliver(); else f.addEventListener("load",deliver,{once:true});
+  };
+  nav.addEventListener("click",e=>{
+    const b=e.target.closest("button"); if(!b) return;
+    if(b.dataset.act==="backup"){ window.suiteBackup&&window.suiteBackup.open(); return; }
+    const app=show(b.dataset.id); try{frames[app.id].contentWindow.focus()}catch(_){}
+  });
+  nav.addEventListener("keydown",e=>{
+    const bs=[...nav.querySelectorAll("button[data-id]")], i=bs.indexOf(document.activeElement);
+    if(i<0) return;
+    const step={ArrowRight:1,ArrowDown:1,ArrowLeft:-1,ArrowUp:-1}[e.key];
+    if(!step) return;
+    e.preventDefault(); const n=bs[(i+step+bs.length)%bs.length]; n.focus(); show(n.dataset.id);
+  });
+  window.addEventListener("hashchange",()=>show(location.hash.slice(1)));
+  let start=location.hash.slice(1);
+  if(!APPS.some(a=>a.id===start)){ try{start=localStorage.getItem(KEY)||""}catch(_){start=""} }
+  show(start);
+  if("serviceWorker" in navigator&&window.isSecureContext&&location.protocol.startsWith("http")){
+    window.addEventListener("load",()=>navigator.serviceWorker.register("suite-sw.js").catch(()=>{}));
+  }
+})();
+</script>
+<dialog id="bkDlg" aria-labelledby="bkTitle">
+  <div class="sheet">
+    <h2 id="bkTitle">Backups</h2>
+    <label class="sw"><span>Back up automatically</span><input type="checkbox" id="bkOn" role="switch"></label>
+    <p class="note" id="bkNote"></p>
+    <p class="warn" id="bkServer" hidden></p>
+    <div class="bk-list" id="bkList"></div>
+    <div class="bk-bar"><button class="bk-btn primary" id="bkNow" type="button">Back up now</button><button class="bk-btn" id="bkClose" type="button">Close</button></div>
+    <h3>Restore</h3>
+    <div class="bk-bar"><select class="bk-sel" id="bkApp" aria-label="App to restore"></select><button class="bk-btn" id="bkShow" type="button">Show backups</button></div>
+    <div class="bk-files" id="bkFiles"></div>
+  </div>
+</dialog>
+<div class="bk-toast" id="bkToast" role="status" aria-live="polite"></div>
+<script>
+const BACKUP_APPS=[{"id": "schemes", "file": "mechanism-scheme-editor", "label": "Schemes", "keys": [], "prefixes": ["mech."], "reminder": ""}, {"id": "journals", "file": "journal-selector", "label": "Journals", "keys": ["bench.journals"], "prefixes": [], "reminder": ""}];
+(function(){
+  const $=s=>document.getElementById(s);
+  const btn=document.querySelector('nav [data-act="backup"]'), dlg=$("bkDlg");
+  const SK="suite."+SUITE.id+".backup";
+  const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+  let st; try{st=JSON.parse(localStorage.getItem(SK)||"null")}catch(_){st=null}
+  if(!st||typeof st!=="object") st={on:!!window.SuitesAndroid,apps:{}};   // the Android app backs up from the start
+  if(!st.apps) st.apps={};
+  const persist=()=>{try{localStorage.setItem(SK,JSON.stringify(st))}catch(_){}};
+  let server=null, busy=false, again=false, tt=null, timer=null;
+  function toast(t){const el=$("bkToast");el.textContent=t;el.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>el.classList.remove("show"),2600)}
+
+  // ---------- what each app keeps ----------
+  function owned(app,k){return app.keys.includes(k)||app.prefixes.some(p=>k.startsWith(p))}
+  function keysOf(app){const out=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k!=null&&owned(app,k))out.push(k)}}catch(_){}return out.sort()}
+  function snapshot(app){
+    const json={}, text={};
+    for(const k of keysOf(app)){const v=localStorage.getItem(k);if(v==null)continue;try{json[k]=JSON.parse(v)}catch(_){text[k]=v}}
+    return {json,text};
+  }
+  function fingerprint(app){
+    let h=0x811c9dc5;
+    for(const k of keysOf(app)){const v=k+"\u0000"+(localStorage.getItem(k)||"")+"\u0001";
+      for(let i=0;i<v.length;i++){h^=v.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0}}
+    return h.toString(16);
+  }
+
+  // ---------- server ----------
+  /* static hosts (GitHub Pages and similar) never run serve_apps.py: skip the request there */
+  const STATIC_HOST=location.protocol==="file:"||/(^|\.)(github\.io|gitlab\.io|netlify\.app|pages\.dev|vercel\.app|codeberg\.page)$/i.test(location.hostname);
+  async function ping(){
+    if(STATIC_HOST){server=false;return false}
+    try{const r=await fetch("/api/backup/ping",{cache:"no-store"});server=r.ok&&(await r.json()).ok===true}
+    catch(_){server=false}
+    return server;
+  }
+  async function send(app,tag){
+    const {json,text}=snapshot(app);
+    if(!Object.keys(json).length&&!Object.keys(text).length) return null;       // nothing stored yet
+    const payload={format:"suite-backup",version:1,suite:SUITE.id,suiteTitle:SUITE.title,app:app.file,label:app.label,
+      saved:new Date().toISOString(),json,text};
+    const r=await fetch("/api/backup/save",{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({suite:SUITE.id,app:app.file,tag:tag||"",payload})});
+    let j={}; try{j=await r.json()}catch(_){}
+    if(!r.ok||!j.ok) throw new Error(j.error||("HTTP "+r.status));
+    return j.file;
+  }
+  async function backup(app,force){
+    const fp=fingerprint(app), rec=st.apps[app.file]||{};
+    if(!force&&rec.fp===fp) return false;
+    try{
+      const file=await send(app);
+      st.apps[app.file]={fp,at:file?Date.now():rec.at,file:file||rec.file,err:""};
+      if(file&&app.reminder){try{localStorage.setItem(app.reminder+".lastBackup",String(Date.now()));localStorage.setItem(app.reminder+".backupSnooze","0")}catch(_){}}
+      return !!file;
+    }catch(e){ st.apps[app.file]={...rec,err:String(e.message||e)}; throw e }
+    finally{ persist() }
+  }
+  async function sweep(force){
+    if(!st.on&&!force) return;
+    if(busy){again=true;return}
+    busy=true;
+    try{
+      if(server!==true) await ping();
+      if(!server){ if(force) toast("Backup server not found"); return }
+      let n=0, bad=0;
+      for(const app of BACKUP_APPS){ try{ if(await backup(app,force)) n++ }catch(_){bad++} }
+      if(force) toast(bad?`${bad} backup${bad>1?"s":""} failed`:n?`Saved ${n} file${n>1?"s":""}`:"Nothing to back up yet");
+    }finally{
+      busy=false; paint();
+      if(again){again=false;schedule(1500)}
+    }
+  }
+  function schedule(ms){clearTimeout(timer);timer=setTimeout(()=>sweep(false),ms)}
+
+  // ---------- panel ----------
+  const fmt=t=>new Date(t).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
+  function paint(){
+    const errs=BACKUP_APPS.some(a=>(st.apps[a.file]||{}).err);
+    btn.dataset.state=!st.on?"":errs||server===false?"err":"ok";
+    if(!dlg.open) return;
+    $("bkOn").checked=!!st.on; $("bkOn").disabled=server===false&&!st.on;
+    $("bkServer").hidden=server!==false;
+    $("bkServer").innerHTML=STATIC_HOST
+      ?"This copy runs without the backup server, so automatic backups are off. Use <b>Export backup</b> in each app's menu, or <b>Download everything as one file</b> in the control center."
+      :`Automatic backups need the suites to be opened through <code>serve_apps.py</code>. Start it in the folder with the suites with <code>python serve_apps.py --port ${location.port||"8765"}</code>, using the port you normally use, so the browser keeps the same storage.`;
+    $("bkNote").textContent=st.on
+      ?"Each app is saved to a dated file in the folder this suite is served from, a few seconds after its data changes. Later changes on the same day replace that day's file."
+      :"When on, each app is saved to a dated file in the folder this suite is served from, whenever its data changes.";
+    $("bkList").innerHTML=BACKUP_APPS.map(a=>{
+      const r=st.apps[a.file]||{};
+      const line=r.err?`<span class="err">Last try failed: ${esc(r.err)}</span>`
+        :r.file?`<span>${esc(r.file)}, ${esc(fmt(r.at))}</span>`
+        :keysOf(a).length?`<span>Not backed up yet</span>`:`<span>Nothing stored yet</span>`;
+      return `<div class="bk-row"><b>${esc(a.label)}</b>${line}</div>`;
+    }).join("");
+    $("bkNow").disabled=server===false||busy;
+  }
+  async function open(){
+    $("bkApp").innerHTML=BACKUP_APPS.map(a=>`<option value="${esc(a.file)}">${esc(a.label)}</option>`).join("");
+    $("bkFiles").innerHTML="";
+    dlg.showModal(); paint();
+    await ping(); paint();
+  }
+  $("bkOn").addEventListener("change",async e=>{
+    st.on=e.target.checked; persist(); paint();
+    if(st.on){ await sweep(false); toast(server?"Automatic backups on":"Backup server not found") }
+  });
+  $("bkNow").addEventListener("click",()=>sweep(true));
+  $("bkClose").addEventListener("click",()=>dlg.close());
+  dlg.addEventListener("click",e=>{if(e.target===dlg)dlg.close()});
+
+  // ---------- restore ----------
+  async function listFiles(){
+    const app=BACKUP_APPS.find(a=>a.file===$("bkApp").value), box=$("bkFiles");
+    box.innerHTML='<p class="note">Looking...</p>';
+    try{
+      const r=await fetch(`/api/backup/list?suite=${encodeURIComponent(SUITE.id)}&app=${encodeURIComponent(app.file)}`,{cache:"no-store"});
+      const j=await r.json(); if(!j.ok) throw new Error(j.error);
+      box.innerHTML=j.files.length?j.files.map(f=>`<button type="button" data-f="${esc(f.file)}">${esc(f.date)}${f.tag?" (before a restore)":""}<small>${esc(f.file)}, ${(f.bytes/1024).toFixed(1)} KB, saved ${esc(fmt(f.mtime))}</small></button>`).join("")
+        :'<p class="note">No backups for this app yet.</p>';
+    }catch(_){ box.innerHTML='<p class="note">Backups can only be listed when the suite is opened through serve_apps.py.</p>' }
+  }
+  $("bkShow").addEventListener("click",listFiles);
+  $("bkApp").addEventListener("change",()=>{$("bkFiles").innerHTML=""});
+  $("bkFiles").addEventListener("click",async e=>{
+    const b=e.target.closest("[data-f]"); if(!b) return;
+    const app=BACKUP_APPS.find(a=>a.file===$("bkApp").value), name=b.dataset.f;
+    if(!confirm(`Replace the current ${app.label} data with ${name}?
+
+The current data is saved first as a separate "pre-restore" file.`)) return;
+    let doc;
+    try{ const r=await fetch("/"+encodeURIComponent(name),{cache:"no-store"}); doc=await r.json() }catch(_){ toast("Could not read that file"); return }
+    if(!doc||doc.format!=="suite-backup"||doc.app!==app.file){ toast("That file is not a backup of "+app.label); return }
+    try{ await send(app,"pre-restore") }catch(_){ if(!confirm("The current data could not be saved first. Restore anyway?")) return }
+    try{
+      for(const k of keysOf(app)) localStorage.removeItem(k);
+      for(const [k,v] of Object.entries(doc.json||{})) if(owned(app,k)) localStorage.setItem(k,JSON.stringify(v));
+      for(const [k,v] of Object.entries(doc.text||{})) if(owned(app,k)) localStorage.setItem(k,String(v));
+    }catch(_){ toast("Restore failed: storage is full or blocked"); return }
+    window.suiteReload(app.id); window.suiteShow(app.id); dlg.close();
+    toast(app.label+" restored from "+doc.saved.slice(0,10));
+    schedule(1500);
+  });
+
+  // ---------- triggers ----------
+  window.addEventListener("storage",e=>{ if(st.on&&(e.key==null||BACKUP_APPS.some(a=>owned(a,e.key)))) schedule(4000) });
+  document.addEventListener("visibilitychange",()=>{ if(document.hidden&&st.on){clearTimeout(timer);sweep(false)} });
+  setInterval(()=>{ if(st.on) sweep(false) },120000);
+  window.suiteBackup={open,sweep};
+  paint();
+  if(st.on) schedule(2000);
+})();
+</script>
+<!-- suite-live-sync:begin v3 -->
+<script>
+/* Suite live sync, added by patch_suites.py for control-center.html.
+   1. When an app's stored data changes outside that app (the control center, this suite in another
+      tab, or a sibling app), the app's frame is reloaded so it never saves an older copy over it.
+   2. control-center.html can open an app filtered to one item: suite.html?find=TEXT&pick=VIEW#app,
+      and a structure in the viewer: structure-studio.html?load=pdb:5XJH#viewer (or af:ACCESSION)
+   3. The Backup sheet gets a link to the control center. */
+(function(){
+  const SYNC={"schemes":{"keys":[],"prefixes":["mech."]},"journals":{"keys":["bench.journals"],"prefixes":[]}};
+  const SEARCH={"journals":"jr-q"};
+  const PICKS={jobs:{all:'#chips [data-f="all"]'},
+    log:{actions:'#tabs [data-tab="actions"]',meetings:'#tabs [data-tab="meetings"]'},
+    ideas:{spark:'#tabs [data-stage="spark"]',explore:'#tabs [data-stage="explore"]',doing:'#tabs [data-stage="doing"]',done:'#tabs [data-stage="done"]'},
+    deadlines:{done:'#showDone'}};
+  const stage=document.getElementById("stage");
+  if(!stage||typeof APPS==="undefined") return;
+  const labelOf=id=>{const a=APPS.find(x=>x.id===id);return a?a.label:null};
+  const idOf=f=>{const a=APPS.find(x=>x.label===f.title);return a?a.id:null};
+  const frameOf=id=>{const l=labelOf(id);return l?[...stage.querySelectorAll("iframe")].find(f=>f.title===l)||null:null};
+  const owns=(id,k)=>{const s=SYNC[id];return !!s&&(s.keys.includes(k)||s.prefixes.some(p=>k.startsWith(p)))};
+  function say(t){const el=document.getElementById("bkToast");if(!el)return;el.textContent=t;el.classList.add("show");
+    clearTimeout(say.t);say.t=setTimeout(()=>el.classList.remove("show"),2600)}
+
+  /* what each frame wrote recently (as hashes), so an app's own saves are never taken for outside
+     changes, even when it saves several times before the browser reports the first one */
+  const mine={};
+  const fnv=s=>{if(s==null)return "-";let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0}return h.toString(36)+"."+s.length};
+  function note(k,v,app){
+    const list=mine[k]||(mine[k]=[]), now=Date.now();
+    list.push({h:fnv(v),app,t:now});
+    while(list.length>40||(list.length&&now-list[0].t>120000)) list.shift();
+  }
+  function hook(f){
+    let w; try{w=f.contentWindow}catch(_){return}
+    if(!w) return;
+    try{
+      const P=w.Storage.prototype; if(P.__suiteHook) return;
+      const set=P.setItem, rem=P.removeItem, id=idOf(f);
+      P.setItem=function(k,v){set.call(this,k,v);try{if(this===w.localStorage)note(String(k),String(v),id)}catch(_){}};
+      P.removeItem=function(k){rem.call(this,k);try{if(this===w.localStorage)note(String(k),null,id)}catch(_){}};
+      Object.defineProperty(P,"__suiteHook",{value:true});
+    }catch(_){}
+  }
+  function watch(f){if(f.__suiteWatch)return;f.__suiteWatch=true;hook(f);f.addEventListener("load",()=>hook(f))}
+  stage.querySelectorAll("iframe").forEach(watch);
+  new MutationObserver(ms=>ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.tagName==="IFRAME")watch(n)}))).observe(stage,{childList:true});
+
+  const pending=new Set(); let timer=null;
+  function busy(f){
+    try{
+      const d=f.contentDocument; if(!d) return false;
+      if(d.querySelector("dialog[open]")) return true;
+      if(!f.classList.contains("on")||document.hidden) return false;
+      const ae=d.activeElement;
+      return !!ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName)&&!/^(search|checkbox|radio|button|file|range)$/.test(ae.type||"");
+    }catch(_){return false}
+  }
+  function flush(){
+    for(const id of [...pending]){
+      const f=frameOf(id);
+      if(!f){pending.delete(id);continue}
+      if(f.dataset.ready!=="1"||busy(f)) continue;
+      pending.delete(id);
+      const seen=f.classList.contains("on")&&!document.hidden;
+      window.suiteReload(id);
+      if(seen) say(labelOf(id)+" updated with changes made elsewhere");
+    }
+    if(pending.size&&!timer) timer=setInterval(()=>{flush();if(!pending.size){clearInterval(timer);timer=null}},1500);
+  }
+  window.addEventListener("storage",e=>{
+    try{if(e.storageArea&&e.storageArea!==localStorage)return}catch(_){}
+    const k=e.key, list=k==null?null:mine[k];
+    let writer=null;
+    if(list){const h=fnv(e.newValue);for(let i=list.length-1;i>=0;i--)if(list[i].h===h){writer=list[i].app;break}}
+    if(k!=null&&!writer) delete mine[k];
+    for(const id in SYNC){
+      if(k!=null&&!owns(id,k)) continue;
+      if(writer===id) continue;
+      pending.add(id);
+    }
+    if(pending.size) setTimeout(flush,50);
+  });
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden&&pending.size)flush()});
+
+  /* hand-off from the control center: open this app filtered to one item */
+  const qs=new URLSearchParams(location.search), find=qs.get("find"), pick=qs.get("pick"), load=qs.get("load");
+  if(load){
+    history.replaceState(null,"",location.pathname+location.hash);
+    const m=/^(pdb|af|pubchem):(.+)$/i.exec(load);
+    if(m&&window.suiteHas&&window.suiteHas("viewer")) window.suiteSend("viewer",{type:"fetch",src:m[1].toLowerCase(),id:m[2]});
+  }else if(find!=null||pick){
+    history.replaceState(null,"",location.pathname+location.hash);
+    const id=location.hash.slice(1), f=frameOf(id);
+    const apply=()=>{try{
+      const d=f.contentDocument; if(!d) return;
+      const sel=pick&&PICKS[id]&&PICKS[id][pick];
+      if(sel){const b=d.querySelector(sel);if(b&&!(id==="deadlines"&&!/^show/i.test(b.textContent.trim())))b.click()}
+      const box=find!=null?d.getElementById(SEARCH[id]||"search"):null;
+      if(box){box.value=find;box.dispatchEvent(new Event("input",{bubbles:true}))}
+    }catch(_){}};
+    if(f){if(f.dataset.ready==="1")setTimeout(apply,150);else f.addEventListener("load",()=>setTimeout(apply,150),{once:true})}
+  }
+
+  /* a way back to the control center from the Backup sheet */
+  const bar=document.querySelector("#bkDlg .bk-bar");
+  if(bar&&!document.getElementById("bkHub")){
+    const a=document.createElement("a");a.id="bkHub";a.className="bk-btn";a.href="control-center.html";a.textContent="Control center";
+    a.style.cssText="text-decoration:none;display:inline-flex;align-items:center";bar.appendChild(a);
+  }
+})();
+</script>
+<!-- suite-live-sync:end -->
+</body>
+</html>

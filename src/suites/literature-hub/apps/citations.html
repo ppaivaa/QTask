@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<script src="suite-theme.js" data-suite-theme></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#5A4360">
+<meta name="color-scheme" content="dark">
+<title>Citation tracker</title>
+<style>
+:root{
+  color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);
+  --bg:var(--t-bg,#14161B);--surface:var(--t-surface,#1C1F26);--raised:var(--t-raised,#242832);--ink:var(--t-ink,#E7E9EE);--muted:var(--t-muted,#8B919E);--faint:var(--t-faint,#2C303A);
+  --accent:var(--t-accent,#9DB2FF);--danger:var(--t-red,#F28B82);--gold:var(--t-gold,#E6C170);--green:var(--t-green,#7DCB9C);--violet:var(--t-violet,#C3A6F0);--pink:var(--t-pink,#EE93AF);--teal:var(--t-teal,#8CC3CC);
+  --font:"Manrope",system-ui,Roboto,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"Roboto Mono",Menlo,Consolas,monospace;
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:760px;margin:0 auto;padding:16px 16px calc(110px + env(safe-area-inset-bottom,0px))}
+header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 16px}
+h1{font-size:1.5rem;font-weight:700;margin:0;letter-spacing:-.01em}
+h1 .n{font-weight:400;color:var(--muted);font-size:1rem;margin-left:6px}
+.hbtns{display:flex;gap:4px;position:relative}
+.ibtn{min-width:44px;min-height:44px;border-radius:12px;color:var(--muted);display:grid;place-items:center;font-size:1.1rem}
+.ibtn:active{background:var(--surface)}
+.menu{position:absolute;right:0;top:48px;background:var(--raised);border-radius:12px;padding:6px;min-width:200px;display:none;z-index:5;box-shadow:0 8px 24px var(--t-shadow,rgba(0,0,0,.4))}
+.menu.open{display:block}
+.menu button{display:block;width:100%;text-align:left;padding:12px;border-radius:8px}
+.menu button:active{background:var(--faint)}
+.search{width:100%;background:var(--surface);border:0;border-radius:12px;padding:12px 14px;min-height:48px}
+.search::placeholder{color:var(--muted)}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:10px -16px 0;padding:0 16px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;border-radius:999px;padding:8px 14px;min-height:38px;color:var(--muted);background:var(--surface);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip .c{opacity:.7}
+.chip .dot{width:8px;height:8px;border-radius:50%;background:var(--cc)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.bar{display:flex;justify-content:space-between;align-items:center;margin:14px 2px 8px;color:var(--muted);font-size:.85rem;gap:8px}
+.bar select{background:transparent;border:0;color:var(--muted);padding:6px 0;min-height:40px;max-width:60%}
+.list{display:flex;flex-direction:column;gap:8px}
+.card{background:var(--surface);border-radius:14px;padding:14px 10px 8px 16px}
+.card h3{font-size:1rem;font-weight:500;margin:0;overflow-wrap:anywhere}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.tags{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:4px;font-size:.82rem;color:var(--muted)}
+.pill{flex:0 0 auto;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:999px;color:var(--cc);background:color-mix(in srgb,var(--cc) 16%,transparent)}
+.note{font-size:.88rem;color:var(--muted);margin-top:6px;white-space:pre-wrap;overflow-wrap:anywhere}
+.acts{display:flex;justify-content:flex-end;margin-top:2px;flex-wrap:wrap}
+.acts .ibtn{min-width:40px;min-height:40px;font-size:.95rem}
+.acts .txt{font-size:.85rem;padding:0 10px;color:var(--accent)}
+.star-on{color:var(--gold)}
+.empty{color:var(--muted);text-align:center;padding:48px 16px}
+.fab{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:60px;height:60px;border-radius:18px;background:var(--accent);color:var(--t-on-accent,#14161B);font-size:1.8rem;box-shadow:0 6px 18px var(--t-shadow,rgba(0,0,0,.45));z-index:4}
+dialog{border:0;padding:0;background:var(--raised);color:var(--ink);width:100%;max-width:560px;margin:auto auto 0;border-radius:20px 20px 0 0;max-height:92vh}
+@media (min-width:600px){dialog{margin:auto;border-radius:20px}}
+dialog::backdrop{background:var(--t-backdrop,rgba(0,0,0,.6))}
+.sheet{padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:12px}
+.sheet h2{margin:0;font-size:1.15rem;font-weight:700}
+.sheet h4{margin:6px 0 -4px;font-size:.8rem;font-weight:500;color:var(--accent)}
+.sheet label{display:flex;flex-direction:column;gap:6px;font-size:.85rem;color:var(--muted);min-width:0}
+.sheet input,.sheet select,.sheet textarea{background:var(--surface);border:0;border-radius:12px;padding:12px;color:var(--ink);min-height:48px;width:100%;min-width:0}
+.sheet textarea{min-height:90px;resize:vertical}
+.mono{font-family:var(--mono)!important;font-size:.88rem!important}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.check{flex-direction:row!important;align-items:center;gap:10px!important;color:var(--ink)!important;font-size:1rem!important}
+.check input{min-height:auto!important;width:20px!important;height:20px;accent-color:var(--accent)}
+.hint{font-size:.8rem;color:var(--danger);min-height:1em;margin:0}
+.sbar{display:flex;justify-content:space-between;gap:8px;margin-top:4px}
+.btn{border-radius:12px;padding:12px 16px;min-height:48px}
+.btn.primary{background:var(--accent);color:var(--t-on-accent,#14161B);font-weight:700}
+.btn.ghost{color:var(--muted)}
+.btn.danger{color:var(--danger)}
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--raised);padding:10px 16px;border-radius:12px;font-size:.9rem;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;text-align:center;z-index:6}
+.toast.show{opacity:1}
+.sync{font-size:.8rem;color:var(--muted);text-align:center;margin-top:24px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.hidden{display:none!important}
+.setup{background:var(--surface);border-radius:16px;padding:16px;margin-bottom:14px}
+.setup input{width:100%;background:var(--t-field,#0E0E11);border:1.5px solid var(--t-line,#2E2E35);border-radius:12px;padding:12px;min-height:48px;color:var(--ink);margin-bottom:8px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+.stat{background:var(--surface);border-radius:12px;padding:12px 6px;text-align:center}
+.stat b{display:block;font-size:1.35rem;font-weight:700;font-variant-numeric:tabular-nums}
+.stat span{font-size:.72rem;color:var(--muted)}
+.stat .up{font-size:.72rem;color:var(--green)}
+.panel{background:var(--surface);border-radius:16px;padding:14px;margin-bottom:14px}
+.panel h2{font-size:.8rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+svg{display:block;width:100%;height:auto}
+.work{background:var(--surface);border-radius:14px;padding:12px 14px}
+.work h3{font-size:.96rem;font-weight:500;margin:0;overflow-wrap:anywhere}
+.work .vn{font-size:.8rem;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:4px 10px}
+.work .cc{float:right;margin-left:10px;font-weight:700;font-variant-numeric:tabular-nums}
+.work .cc small{display:block;font-size:.7rem;font-weight:400;color:var(--green);text-align:right}
+.spin{display:inline-block;width:14px;height:14px;border:2px solid var(--muted);border-top-color:var(--accent);border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.res{background:var(--t-field,#0E0E11);border-radius:12px;padding:12px;margin-bottom:6px;display:block;width:100%;text-align:left}
+.res b{font-weight:500}
+.res span{display:block;font-size:.8rem;color:var(--muted);margin-top:2px}
+.res[data-a]{cursor:pointer;color:inherit;font:inherit;border:1.5px solid var(--faint)}
+.res[data-a]:hover,.res[data-a]:focus-visible{border-color:var(--muted)}
+.hithead{font-size:.82rem;color:var(--muted);margin:0 0 8px}
+.morehits{width:100%;margin-top:2px}
+/* ---- Theme: dark with pink-to-blue accents ---- */
+:root{
+  --bg:var(--t-bg,#000000);--surface:var(--t-surface,#131316);--raised:var(--t-raised,#1D1D22);--ink:var(--t-ink,#F2F2F4);--muted:var(--t-muted,#9D9DA5);--faint:var(--t-faint,#28282E);
+  --accent:var(--t-accent,#EBA8E4);--accent2:var(--t-accent2,#A7CBF4);
+  --grad:linear-gradient(90deg,var(--t-grad1,#F0A8DC) 0%,var(--t-grad2,#C9B6EF) 50%,var(--t-grad3,#A6CCF5) 100%);
+  --danger:var(--t-danger,#EF5A50);--star:var(--t-accent,#EBA8E4);--pinbg:var(--t-pinbg,#2A2413);
+  --font:Roboto,"Google Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Roboto Mono","Droid Sans Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+body{background-color:var(--t-bg,#000);background-image:linear-gradient(172deg,var(--t-head,#5A4360) 0%,var(--t-head2,#352C3F) 90px,var(--t-head3,#15121A) 210px,var(--t-bg,#000) 320px);background-repeat:no-repeat;background-size:100% 340px}
+h1{font-weight:500;font-size:1.85rem;letter-spacing:0}
+h1 .n{font-size:1rem}
+.search{background:var(--t-field,#0E0E11);border:1.5px solid var(--t-line,#2E2E35);border-radius:999px}
+.search:focus{border-color:var(--t-focus,#9C8BC0);outline:none}
+.chip{background:var(--t-bg,#000);border:1.5px solid var(--t-edge,#3B3B43);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--grad);border-color:transparent;color:var(--t-on-grad,#17161C);font-weight:500}
+.chip.add{color:var(--accent)}
+.tab[aria-selected="true"]::after{background:var(--grad)}
+.btn.primary,.add{background:var(--grad)!important;color:var(--t-on-grad,#17161C)!important}
+.fab{background:var(--t-fab,#17171C);border:1px solid var(--t-edge,#3A3A42);color:var(--t-fab-ink,#D9B9EE);box-shadow:0 8px 22px var(--t-shadow,rgba(0,0,0,.7))}
+.star-on{color:var(--star)!important}
+.card:has(.star-on),.paper:has(.star-on),.entry:has(.star-on){background:var(--pinbg)}
+.menu{background:var(--raised);border:1px solid var(--t-line,#2E2E35)}
+dialog{background:var(--raised)}
+.sheet input,.sheet select,.sheet textarea,.dlg input,.dlg textarea,.dlg select{background:var(--t-field,#0F0F12)}
+.toast{background:var(--t-raised2,#26262C);color:var(--ink)}
+.doi{color:var(--accent2)}
+.sync{color:var(--t-dim,#6F6F77)}
+.seg button[aria-pressed="true"]{background:var(--grad);color:var(--t-on-grad,#17161C)}
+.topbar{background:linear-gradient(172deg,var(--t-head,#5A4360) 0%,var(--t-headbar,#2A2432) 100%)}
+.toolbar{background:var(--t-bg,#000)}
+.bk.hidden{display:none!important}
+.bk{display:flex;align-items:center;gap:8px;background:var(--pinbg,var(--t-pinbg,#2A2413));border-radius:14px;padding:10px 8px 10px 14px;margin:0 0 14px}
+.bk .bkt{flex:1;min-width:0;font-size:.9rem;line-height:1.3}
+.bk .bkt b{display:block;font-weight:500}
+.bk .bkt span{color:var(--muted);font-size:.8rem}
+.bk .bkgo{background:var(--grad);color:var(--t-on-grad,#17161C);border-radius:999px;padding:10px 14px;min-height:44px;font-weight:500;white-space:nowrap}
+.bk .bkno{color:var(--muted);padding:10px 8px;min-height:44px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="h1">Citations</h1>
+    <div class="hbtns">
+      <button class="ibtn" id="refreshBtn" aria-label="Refresh">⟳</button>
+      <button class="ibtn" id="moreBtn" aria-label="More options" aria-expanded="false">⋮</button>
+      <div class="menu" id="menu" role="menu">
+        <button role="menuitem" id="changeBtn">Change author</button>
+        <button role="menuitem" id="csvBtn">Export CSV</button>
+        <button role="menuitem" id="exportBtn">Export backup</button>
+        <button role="menuitem" id="importBtn">Import backup</button>
+        <button role="menuitem" id="mailBtn">Set contact email</button>
+        <button role="menuitem" id="oaKeyBtn">Set OpenAlex API key</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json,.json" hidden>
+    </div>
+  </header>
+  <div id="body"></div>
+  <p class="sync" id="sync"></p>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const $=s=>document.querySelector(s);
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const num=v=>{const n=parseFloat(v);return isFinite(n)?n:null};
+const stamp=()=>new Date().toISOString().slice(0,10);
+let _tt=null;
+function toast(t){const el=$("#toast");el.textContent=t;el.classList.add("show");clearTimeout(_tt);_tt=setTimeout(()=>el.classList.remove("show"),2400)}
+async function copyText(t,msg){
+  try{await navigator.clipboard.writeText(t);toast(msg||"Copied")}
+  catch(_){const a=document.createElement("textarea");a.value=t;document.body.appendChild(a);a.select();
+    try{document.execCommand("copy");toast(msg||"Copied")}catch(__){toast("Copy not available")}a.remove()}
+}
+function storageWorks(){try{const k="__probe"+Math.random();localStorage.setItem(k,"1");localStorage.removeItem(k);return true}catch(_){return false}}
+function saveFile(filename,data){
+  try{
+    const ext=(filename.split(".").pop()||"").toLowerCase();
+    const type={json:"application/json",csv:"text/csv",md:"text/markdown",py:"text/x-python",sh:"text/x-shellscript",png:"image/png"}[ext]||"text/plain";
+    const blob=data instanceof Blob?data:new Blob([data],{type:type+";charset=utf-8"});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement("a");a.href=url;a.download=filename;a.style.display="none";
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),10000);
+    toast("Saved to Downloads");if(/\.json$/i.test(filename)&&window.__markBackup)window.__markBackup();
+  }catch(_){toast("Couldn't save the file")}
+}
+function setupMenu(){
+  const menu=$("#menu"),btn=$("#moreBtn");
+  const close=()=>{menu.classList.remove("open");btn.setAttribute("aria-expanded","false")};
+  btn.addEventListener("click",e=>{e.stopPropagation();btn.setAttribute("aria-expanded",menu.classList.toggle("open"))});
+  document.addEventListener("click",e=>{if(!e.target.closest("#menu"))close()});
+  menu.addEventListener("click",close);
+  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>b.closest("dialog").close()));
+  document.querySelectorAll("dialog").forEach(d=>d.addEventListener("click",e=>{if(e.target===d)d.close()}));
+}
+// Store: kept in this browser's local storage only.
+function makeStore(lsKey,docName,listKeys,onChange){
+  const S={data:null};
+  try{const r=localStorage.getItem(lsKey);S.data=r?JSON.parse(r):null}catch(_){}
+  if(!S.data||typeof S.data!=="object") S.data={};
+  listKeys.forEach(k=>{if(!Array.isArray(S.data[k]))S.data[k]=[]});
+  S.saveLocal=()=>{try{localStorage.setItem(lsKey,JSON.stringify(S.data))}catch(_){toast("Couldn't save. Storage is full or blocked; export a backup.")}};
+  S.persist=()=>S.saveLocal();
+  S.connect=()=>{
+    $("#sync").textContent=storageWorks()?"Saved in this browser. Export a backup now and then.":"Storage is blocked here, so changes will be lost when you close this page.";
+  };
+  return S;
+}
+
+// ---- network helpers (self-hosted: real internet access) ----
+const MAILTO=()=>{try{return localStorage.getItem("net.mailto")||""}catch(_){return ""}};
+/* OpenAlex has asked for a free API key on every request since February 2026; it is set in the menu
+   here or in the control center's Settings, and shared by every app on this address */
+const OAKEY=()=>{try{return (localStorage.getItem("net.openalexKey")||"").trim()}catch(_){return ""}};
+const isOA=url=>/^https:\/\/api\.openalex\.org\//.test(url);
+function withMail(url){
+  const m=MAILTO(), k=isOA(url)?OAKEY():"", add=(u,p)=>u+(u.includes("?")?"&":"?")+p;
+  if(m) url=add(url,"mailto="+encodeURIComponent(m));
+  if(k) url=add(url,"api_key="+encodeURIComponent(k));
+  return url;
+}
+async function getJSON(url,opts){
+  const c=new AbortController(); const t=setTimeout(()=>c.abort(),20000);
+  try{
+    const r=await fetch(withMail(url),{signal:c.signal,headers:{Accept:"application/json"},...(opts||{})});
+    if(!r.ok) throw {code:r.status,message:"HTTP "+r.status,oa:isOA(url)};
+    return await r.json();
+  }catch(e){
+    if(e&&e.name==="AbortError") throw {code:"timeout",message:"The request timed out"};
+    if(e&&e.code) throw e;
+    throw {code:"offline",message:"No connection, or the service refused the request"};
+  }finally{clearTimeout(t)}
+}
+async function getText(url){
+  const c=new AbortController(); const t=setTimeout(()=>c.abort(),30000);
+  try{
+    const r=await fetch(url,{signal:c.signal});
+    if(!r.ok) throw {code:r.status,message:"HTTP "+r.status};
+    return await r.text();
+  }catch(e){
+    if(e&&e.name==="AbortError") throw {code:"timeout",message:"The request timed out"};
+    if(e&&e.code) throw e;
+    throw {code:"offline",message:"No connection, or the service refused the request"};
+  }finally{clearTimeout(t)}
+}
+const netErr=e=>{
+  if(e&&e.oa&&!OAKEY()&&(e.code===401||e.code===403||e.code===429)) return "OpenAlex now asks for a free API key. Get one at openalex.org/settings/api, then add it with the menu (⋮), Set OpenAlex API key.";
+  if(e&&e.oa&&(e.code===401||e.code===403)) return "OpenAlex did not accept your API key. Check it with the menu (⋮), Set OpenAlex API key.";
+  if(e&&e.oa&&e.code===429) return "OpenAlex's daily allowance for your key is used up. Try again tomorrow.";
+  return e&&e.code==="offline"?"No connection. Check you are online and try again.":e&&e.code==="timeout"?"The service did not answer in time.":e&&e.code===404?"Not found.":"Request failed ("+((e&&e.message)||"unknown")+").";
+};
+
+(function(){
+  const store=makeStore("citedash.v1","citations",["works","snaps"],render);
+  const D=()=>store.data;
+  let busy=false, results=null, rq="", rtotal=0, rbusy=false;
+
+  const fmt=n=>(n||0).toLocaleString("en-GB");
+  const PER=10;
+  async function searchAuthors(q,page){
+    const r=await getJSON(`https://api.openalex.org/authors?per-page=${PER}&page=${page||1}&search=${encodeURIComponent(q)}`);
+    return {total:+((r.meta||{}).count)||0,items:(r.results||[]).map(a=>({id:(a.id||"").split("/").pop(),name:a.display_name,
+      inst:((a.last_known_institutions||[])[0]||{}).display_name||((a.last_known_institution||{}).display_name)||"",
+      works:a.works_count||0,cites:a.cited_by_count||0,orcid:(a.orcid||"").replace(/^https?:\/\/orcid\.org\//,""),
+      topics:(a.topics||[]).slice(0,2).map(t=>t&&t.display_name).filter(Boolean)}))};
+  }
+  function showAuthors(note){
+    const n=results.length, all=Math.max(rtotal,n);
+    $("#results").innerHTML=`<p class="hithead">${all>n?`${n} of ${fmt(all)} people`:`${n} ${n===1?"person":"people"}`} in OpenAlex match "${esc(rq)}". Pick the profile with your papers; the numbers help.</p>`
+      +results.map((a,i)=>`<button class="res" data-a="${i}"><b>${esc(a.name)}</b><span>${esc(a.inst||"No institution listed")}. ${fmt(a.works)} works, ${fmt(a.cites)} citations${a.orcid?", ORCID "+esc(a.orcid):""}${a.topics.length?". "+esc(a.topics.join(", ")):""}</span></button>`).join("")
+      +(note||"")+(all>n&&n<100?`<button class="btn ghost morehits" id="moreAuthors">Show ${Math.min(PER,all-n)} more</button>`:"");
+  }
+  async function findAuthors(more){
+    if(rbusy) return;
+    const q=more?rq:$("#q").value.trim(); if(!q){toast("Type a name");return}
+    rbusy=true;
+    if(more){const b=$("#moreAuthors");if(b){b.disabled=true;b.innerHTML=`<span class="spin"></span>Loading more...`}}
+    else{rq=q;results=[];rtotal=0;$("#results").innerHTML=`<div class="res"><span class="spin"></span>Searching OpenAlex...</div>`}
+    try{
+      const r=await searchAuthors(q,Math.floor(results.length/PER)+1);
+      const have=new Set(results.map(a=>a.id));
+      results=results.concat(r.items.filter(a=>!have.has(a.id))); rtotal=r.total;
+      if(!results.length){$("#results").innerHTML=`<div class="res">Nobody found. Try another spelling, or your name as it appears on your papers.</div>`;return}
+      showAuthors();
+    }catch(err){
+      const msg=`<div class="res" style="color:var(--danger)">${esc(netErr(err))}</div>`;
+      if(more&&results.length) showAuthors(msg); else $("#results").innerHTML=msg;
+    }finally{rbusy=false}
+  }
+  async function pull(){
+    if(busy||!D().author) return;
+    busy=true; render();
+    try{
+      const a=await getJSON(`https://api.openalex.org/authors/${encodeURIComponent(D().author.id)}`);
+      D().author={...D().author,name:a.display_name,works:a.works_count,cites:a.cited_by_count,
+        h:(a.summary_stats||{}).h_index||0,i10:(a.summary_stats||{}).i10_index||0,
+        byYear:(a.counts_by_year||[]).map(y=>({year:y.year,cites:y.cited_by_count,works:y.works_count}))};
+      const w=await getJSON(`https://api.openalex.org/works?per-page=100&sort=cited_by_count:desc&filter=author.id:${encodeURIComponent(D().author.id)}&select=id,doi,title,publication_year,type,primary_location,cited_by_count`);
+      const prev={}; D().works.forEach(x=>prev[x.id]=x.cites);
+      D().works=(w.results||[]).map(x=>({id:(x.id||"").split("/").pop(),title:(x.title||"Untitled").replace(/\s+/g," "),
+        doi:(x.doi||"").replace(/^https?:\/\/doi\.org\//,""),year:x.publication_year||"",
+        venue:(x.primary_location&&x.primary_location.source&&x.primary_location.source.display_name)||"",
+        cites:x.cited_by_count||0,prev:prev[(x.id||"").split("/").pop()]??null}));
+      const today=new Date().toISOString().slice(0,10);
+      D().snaps=(D().snaps||[]).filter(s=>s.date!==today);
+      D().snaps.push({date:today,cites:D().author.cites,works:D().author.works,h:D().author.h});
+      D().snaps=D().snaps.slice(-60);
+      D().lastRun=Date.now();
+      store.persist(); toast("Updated");
+    }catch(e){toast(netErr(e))}
+    busy=false; render();
+  }
+
+  function barChart(data,key,label){
+    if(!data.length) return "";
+    const w=320,h=120,pad=18,max=Math.max(...data.map(d=>d[key]),1);
+    const bw=(w-pad*2)/data.length;
+    const bars=data.map((d,i)=>{
+      const bh=Math.max(1,(d[key]/max)*(h-pad*2));
+      return `<rect x="${(pad+i*bw+bw*0.15).toFixed(1)}" y="${(h-pad-bh).toFixed(1)}" width="${(bw*0.7).toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="url(#g)"></rect>`;
+    }).join("");
+    const labs=data.map((d,i)=>(data.length<=8||i%2===0)?`<text x="${(pad+i*bw+bw/2).toFixed(1)}" y="${h-5}" font-size="8" style="fill:var(--t-muted,#9D9DA5)" text-anchor="middle">${String(d.year).slice(2)}</text>`:"").join("");
+    return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${label}">
+      <defs><linearGradient id="g" x1="0" y1="1" x2="0" y2="0"><stop offset="0" style="stop-color:var(--t-grad3,#A6CCF5)"/><stop offset="1" style="stop-color:var(--t-grad1,#F0A8DC)"/></linearGradient></defs>
+      <text x="${pad}" y="10" font-size="8" style="fill:var(--t-muted,#9D9DA5)">${max}</text>${bars}${labs}</svg>`;
+  }
+
+  function render(){
+    const A=D().author;
+    document.getElementById("h1").textContent=A?"Citations":"Citations";
+    if(!A){
+      $("#body").innerHTML=`<div class="setup">
+        <p style="margin:0 0 10px;color:var(--muted);font-size:.9rem">Find yourself in OpenAlex, which indexes Crossref, PubMed and preprint servers. No account needed.</p>
+        <label class="sr" for="q">Author name</label>
+        <input id="q" placeholder="Your name as it appears on your papers" autocapitalize="words">
+        <button class="btn primary" id="searchBtn" style="width:100%;border-radius:12px;padding:12px;min-height:48px">Search</button>
+        <div id="results" style="margin-top:10px"></div></div>`;
+      return;
+    }
+    const last=D().snaps&&D().snaps.length>1?D().snaps[D().snaps.length-2]:null;
+    const dC=last?A.cites-last.cites:0;
+    $("#body").innerHTML=`
+      <div class="stats">
+        <div class="stat"><b>${fmt(A.cites)}</b><span>citations</span>${dC>0?`<span class="up">+${fmt(dC)}</span>`:""}</div>
+        <div class="stat"><b>${fmt(A.works)}</b><span>works</span></div>
+        <div class="stat"><b>${fmt(A.h)}</b><span>h-index</span></div>
+        <div class="stat"><b>${fmt(A.i10)}</b><span>i10</span></div>
+      </div>
+      <p class="sync" style="margin:-6px 0 14px">${esc(A.name)}${A.inst?", "+esc(A.inst):""}. ${D().lastRun?"Updated "+new Date(D().lastRun).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"Not updated yet"}. ${busy?"Checking...":""}</p>
+      <div class="panel"><h2>Citations per year</h2>${barChart([...(A.byYear||[])].sort((a,b)=>a.year-b.year),"cites","Citations per year")}</div>
+      <div class="panel"><h2>Publications per year</h2>${barChart([...(A.byYear||[])].sort((a,b)=>a.year-b.year),"works","Publications per year")}</div>
+      <div class="bar"><span>${D().works.length} works, most cited first</span><span></span></div>
+      <div class="list">${D().works.map(w=>`<article class="work">
+        <span class="cc">${fmt(w.cites)}${w.prev!=null&&w.cites>w.prev?`<small>+${w.cites-w.prev}</small>`:""}</span>
+        <h3>${esc(w.title)}</h3>
+        <div class="vn">${w.venue?`<span>${esc(w.venue)}</span>`:""}${w.year?`<span>${w.year}</span>`:""}${w.doi?`<a href="https://doi.org/${esc(w.doi)}" target="_blank" rel="noopener" style="color:var(--accent2)">DOI</a>`:""}</div>
+      </article>`).join("")||`<div class="empty">No works found yet. Tap ⟳.</div>`}</div>`;
+  }
+  $("#body").addEventListener("click",async e=>{
+    if(e.target.closest("#searchBtn")){findAuthors(false);return}
+    if(e.target.closest("#moreAuthors")){findAuthors(true);return}
+    const pick=e.target.closest("[data-a]");
+    if(pick&&results){
+      const {topics,...a}=results[+pick.dataset.a];
+      D().author=a; D().works=[]; D().snaps=[]; store.persist(); render(); pull();
+    }
+  });
+  $("#body").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="q"){e.preventDefault();findAuthors(false)}});
+  $("#refreshBtn").addEventListener("click",pull);
+  $("#changeBtn").addEventListener("click",()=>{if(!confirm("Pick a different author? The citation history you have collected is kept."))return;D().author=null;store.persist();render()});
+  $("#csvBtn").addEventListener("click",()=>{
+    if(!D().works.length){toast("Nothing to export");return}
+    const q=s=>`"${String(s??"").replace(/"/g,'""')}"`;
+    const rows=[["title","year","venue","doi","citations"].join(",")].concat(D().works.map(w=>[w.title,w.year,w.venue,w.doi,w.cites].map(q).join(",")));
+    saveFile(`citations-${stamp()}.csv`,rows.join("\n"));
+  });
+  $("#exportBtn").addEventListener("click",()=>saveFile(`citations-${stamp()}.json`,JSON.stringify({version:1,exported:new Date().toISOString(),author:D().author,works:D().works,snaps:D().snaps},null,2)));
+  $("#importBtn").addEventListener("click",()=>$("#importFile").click());
+  $("#importFile").addEventListener("change",async e=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{const o=JSON.parse(await f.text()); if(!o.author) throw 0;
+      D().author=o.author; D().works=o.works||[]; D().snaps=o.snaps||[];
+      store.persist(); render(); toast("Imported");
+    }catch(_){toast("Choose a .json backup exported from this dashboard")}
+    e.target.value="";
+  });
+  $("#mailBtn").addEventListener("click",()=>{
+    const cur=localStorage.getItem("net.mailto")||"";
+    const v=prompt("Your email is sent to OpenAlex so they give faster, more reliable service. Optional.",cur);
+    if(v!==null){try{localStorage.setItem("net.mailto",v.trim())}catch(_){};toast("Saved")}
+  });
+  $("#oaKeyBtn").addEventListener("click",()=>{
+    const v=prompt("OpenAlex asks for a free API key since February 2026. Sign in at openalex.org/settings/api, copy your key and paste it here. It stays on this device and is used by every app here (radar, citations, journal selector).",OAKEY());
+    if(v!==null){try{v.trim()?localStorage.setItem("net.openalexKey",v.trim()):localStorage.removeItem("net.openalexKey")}catch(_){};toast(v.trim()?"Key saved":"Key removed")}
+  });
+  setupMenu(); render(); store.connect();
+  if(D().author&&Date.now()-(D().lastRun||0)>7*864e5) setTimeout(pull,600);
+})();
+</script>
+<script>window.__BACKUP={id:"cite-dash",key:"citedash.v1"};</script>
+<script>
+(function(){
+  const C=window.__BACKUP, LK=C.id+".lastBackup", SK=C.id+".backupSnooze", WEEK=7*864e5;
+  const get=k=>{try{return +localStorage.getItem(k)||0}catch(_){return 0}};
+  const set=(k,v)=>{try{localStorage.setItem(k,String(v))}catch(_){}};
+  function hasData(){
+    try{const v=JSON.parse(localStorage.getItem(C.key)||"null");if(!v)return false;
+      if(Array.isArray(v))return v.length>0;
+      return Object.values(v).some(x=>Array.isArray(x)&&x.length>0)}catch(_){return false}
+  }
+  const bar=document.createElement("div");
+  bar.className="bk hidden"; bar.setAttribute("role","status");
+  bar.innerHTML='<div class="bkt"><b></b><span>A copy goes to your Downloads folder.</span></div><button class="bkno" type="button">Later</button><button class="bkgo" type="button">Back up now</button>';
+  const wrap=document.querySelector(".wrap"), head=wrap&&wrap.querySelector(":scope > header");
+  if(head) head.insertAdjacentElement("afterend",bar); else if(wrap) wrap.prepend(bar);
+  function check(){
+    const now=Date.now(), last=get(LK), data=hasData();
+    // never backed up: start the 7-day clock from when data first appears
+    if(!last&&data&&!get(C.id+".firstData")) set(C.id+".firstData",now);
+    const ref=last||get(C.id+".firstData")||now;
+    const due=data&&now-ref>WEEK&&now>get(SK);
+    bar.classList.toggle("hidden",!due);
+    if(due){
+      const days=last?Math.floor((now-last)/864e5):0;
+      bar.querySelector("b").textContent=last?`Last backup ${days} days ago`:"Not backed up yet";
+    }
+  }
+  window.__markBackup=()=>{set(LK,Date.now());set(SK,0);check()};
+  bar.querySelector(".bkgo").addEventListener("click",()=>{const b=document.getElementById("exportBtn");if(b)b.click()});
+  bar.querySelector(".bkno").addEventListener("click",()=>{set(SK,Date.now()+864e5);check()});
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)check()});
+  window.addEventListener("storage",check);
+  setInterval(check,36e5);
+  // first check after the app has loaded its data; recheck when data changes
+  setTimeout(check,300);
+  let t=null; document.addEventListener("click",()=>{clearTimeout(t);t=setTimeout(check,600)},true);
+})();
+</script>
+</body>
+</html>
