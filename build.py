@@ -17,9 +17,10 @@ import argparse, http.server, json, os, re, shutil, socketserver, sys
 ROOT = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(ROOT, "src")
 
-NAME = "LabKit"                      # working name, decided later
-SHORT = "LabKit"
+NAME = "QTask"
+SHORT = "QTask"
 TAGLINE = "Your research day in one place"
+SYNC_REPO = "ppaivaa/QTask-data"     # suggested in the sync set-up
 VERSION = "1.0.0"
 
 # suite id -> (title, [(app id, label)]) in the order of the bottom bar
@@ -75,6 +76,7 @@ PICKS = {
                      "ideas": {s: f'#tabs [data-stage="{s}"]' for s in ("spark", "explore", "doing", "done")},
                      "deadlines": {"done": "#showDone"},
                      "tasks": {s: f'#chips [data-f="{s}"]' for s in ("today", "upcoming", "someday", "all", "done")}},
+    "literature-hub": {"radar": {"saved": '#chips [data-f="saved"]', "new": '#chips [data-f="new"]'}},
 }
 
 
@@ -165,7 +167,7 @@ def main():
     ap.add_argument("--port", type=int, default=8765)
     a = ap.parse_args()
     ctx = {"APP_NAME": a.name, "APP_SHORT": a.name if a.name != NAME else SHORT,
-           "APP_TAGLINE": TAGLINE, "APP_VERSION": VERSION}
+           "APP_TAGLINE": TAGLINE, "APP_VERSION": VERSION, "SYNC_REPO": SYNC_REPO}
     print(f"Building {a.name} {VERSION} into {a.out}")
     build(a.out, ctx)
     if a.serve:

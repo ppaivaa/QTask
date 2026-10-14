@@ -28,7 +28,7 @@
   /* the apps' "back up now" reminders: a good sync counts as a backup */
   var REMINDERS = ["research-log", "idea-board", "script-planner", "deadline-radar", "task-list", "lit-radar", "cite-dash"];
   var API = "https://api.github.com";
-  var FORMAT = "labkit-sync";
+  var FORMAT = "qtask-sync";
   var ME = Math.random().toString(36).slice(2) + Date.now().toString(36);
 
   /* ---------- storage ---------- */
@@ -319,7 +319,7 @@
   /* check the repository and the token without saving anything */
   async function inspect(repo, token, dir) {
     repo = cleanRepo(repo); token = String(token || "").trim();
-    if (!repo) throw err("Write the repository as owner/name, for example ppaivaa/labkit-data.", "input");
+    if (!repo) throw err("Write the repository as owner/name, for example ppaivaa/QTask-data.", "input");
     if (!token) throw err("Paste the token from GitHub.", "input");
     var c = { repo: repo, token: token, dir: (dir || "data").replace(/^\/+|\/+$/g, "") || "data" };
     var r = await gh(c, "GET", repoPath(c));

@@ -229,7 +229,7 @@ function makeStore(lsKey,docName,listKeys,onChange){
   S.saveLocal=()=>{try{localStorage.setItem(lsKey,JSON.stringify(S.data))}catch(_){toast("Couldn't save. Storage is full or blocked; export a backup.")}};
   S.persist=()=>S.saveLocal();
   S.connect=()=>{
-    $("#sync").textContent=storageWorks()?"Saved in this browser. Export a backup now and then.":"Storage is blocked here, so changes will be lost when you close this page.";
+    $("#sync").textContent=storageWorks()?(localStorage.getItem("sync.github")?"Saved on this device and synced to your other devices.":"Saved on this device. Turn on sync in the control center, or export a backup now and then."):"Storage is blocked here, so changes will be lost when you close this page.";
   };
   return S;
 }
@@ -405,7 +405,7 @@ const netErr=e=>e&&e.code==="offline"?"No connection. Check you are online and t
   }
   const bar=document.createElement("div");
   bar.className="bk hidden"; bar.setAttribute("role","status");
-  bar.innerHTML='<div class="bkt"><b></b><span>A copy goes to your Downloads folder.</span></div><button class="bkno" type="button">Later</button><button class="bkgo" type="button">Back up now</button>';
+  bar.innerHTML='<div class="bkt"><b></b><span>Save a copy to Files or Downloads, or turn on sync in the control center.</span></div><button class="bkno" type="button">Later</button><button class="bkgo" type="button">Back up now</button>';
   const wrap=document.querySelector(".wrap"), head=wrap&&wrap.querySelector(":scope > header");
   if(head) head.insertAdjacentElement("afterend",bar); else if(wrap) wrap.prepend(bar);
   function check(){

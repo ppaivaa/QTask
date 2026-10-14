@@ -252,7 +252,7 @@ dialog{background:var(--raised)}
     }catch(_){toast("Couldn't save the file")}
   }
   function storageWorks(){try{const k="__probe"+Math.random();localStorage.setItem(k,"1");localStorage.removeItem(k);return true}catch(_){return false}}
-  const STORAGE_MSG=()=>storageWorks()?"Saved in this browser. Export a backup now and then.":"Storage is blocked here, so changes will be lost when you close this page.";
+  const STORAGE_MSG=()=>storageWorks()?(localStorage.getItem("sync.github")?"Saved on this device and synced to your other devices.":"Saved on this device. Turn on sync in the control center, or export a backup now and then."):"Storage is blocked here, so changes will be lost when you close this page.";
   const $=s=>document.querySelector(s);
   const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
   let tt=null;

@@ -1,0 +1,293 @@
+{
+ "tasks.v1": {
+  "items": [
+   {
+    "id": "x1000",
+    "title": "Rerun umbrella windows 12-15 with longer equilibration",
+    "proj": "Cutinase QM/MM",
+    "prio": "high",
+    "plan": "2026-10-13",
+    "due": "2026-10-13",
+    "done": false,
+    "doneAt": null,
+    "added": 1791546089516,
+    "updated": 1791891689516,
+    "notes": "",
+    "subs": [
+     {
+      "id": "s1",
+      "text": "Extend equilibration to 2 ns",
+      "done": true
+     },
+     {
+      "id": "s2",
+      "text": "Resubmit",
+      "done": false
+     }
+    ]
+   },
+   {
+    "id": "x1001",
+    "title": "Draft the methods section for the SI",
+    "proj": "Cutinase QM/MM",
+    "prio": "medium",
+    "plan": "2026-10-14",
+    "due": "2026-10-16",
+    "done": false,
+    "doneAt": null,
+    "added": 1791718889516,
+    "updated": 1791891689516,
+    "notes": "",
+    "subs": []
+   },
+   {
+    "id": "x1002",
+    "title": "Reply to the reviewers of the lipase paper",
+    "proj": "Lipase MD",
+    "prio": "high",
+    "plan": "",
+    "due": "2026-10-17",
+    "done": false,
+    "doneAt": null,
+    "added": 1791805289516,
+    "updated": 1791891689516,
+    "notes": "",
+    "subs": []
+   },
+   {
+    "id": "x1003",
+    "title": "Order new GPU hours",
+    "proj": "",
+    "prio": "low",
+    "plan": "2026-10-14",
+    "due": "",
+    "done": false,
+    "doneAt": null,
+    "added": 1791891689516,
+    "updated": 1791891689516,
+    "notes": "",
+    "subs": []
+   },
+   {
+    "id": "x1004",
+    "title": "Prepare poster figures",
+    "proj": "Symposium",
+    "prio": "medium",
+    "plan": "2026-10-18",
+    "due": "2026-10-23",
+    "done": false,
+    "doneAt": null,
+    "added": 1791891689516,
+    "updated": 1791891689516,
+    "notes": "",
+    "subs": []
+   },
+   {
+    "id": "x1005",
+    "title": "Read the new PETase mechanism preprint",
+    "proj": "",
+    "prio": "low",
+    "plan": "",
+    "due": "",
+    "done": false,
+    "doneAt": null,
+    "added": 1791891689516,
+    "updated": 1791891689516,
+    "notes": "",
+    "subs": []
+   },
+   {
+    "id": "x1006",
+    "title": "Send the lipase boxes to the cluster",
+    "proj": "Lipase MD",
+    "prio": "medium",
+    "plan": "2026-10-14",
+    "due": "",
+    "done": true,
+    "doneAt": 1791974489516,
+    "added": 1791805289516,
+    "updated": 1791974489516,
+    "notes": "",
+    "subs": []
+   }
+  ]
+ },
+ "researchlog.v1": {
+  "entries": [
+   {
+    "id": "x1008",
+    "added": 1791805289516,
+    "text": "Window 13 drifts after 600 ps; equilibration too short. #umbrella",
+    "kind": "problem",
+    "proj": "Cutinase QM/MM",
+    "date": "2026-10-12",
+    "pin": false,
+    "updated": 1791805289516
+   },
+   {
+    "id": "x1009",
+    "added": 1791891689516,
+    "text": "PMF converged for windows 1-11. Barrier 17.8 kcal/mol.",
+    "kind": "result",
+    "proj": "Cutinase QM/MM",
+    "date": "2026-10-13",
+    "pin": true,
+    "updated": 1791891689516
+   },
+   {
+    "id": "x1007",
+    "added": 1791632489516,
+    "kind": "meeting",
+    "mtype": "group",
+    "title": "Weekly group meeting",
+    "people": [
+     "Rui",
+     "Ana"
+    ],
+    "text": "",
+    "decisions": "Go for longer windows",
+    "proj": "Cutinase QM/MM",
+    "date": "2026-10-10",
+    "updated": 1791632489516,
+    "actions": [
+     {
+      "id": "a1",
+      "text": "Check the protonation of His224",
+      "owner": "me",
+      "due": "2026-10-13",
+      "done": false
+     },
+     {
+      "id": "a2",
+      "text": "Share the lipase topologies",
+      "owner": "Rui",
+      "due": "2026-10-19",
+      "done": false
+     }
+    ]
+   }
+  ],
+  "lastProj": "Cutinase QM/MM"
+ },
+ "deadlines.v1": {
+  "items": [
+   {
+    "id": "x1010",
+    "done": false,
+    "added": 1791200489516,
+    "title": "Abstract for the TheoBio symposium",
+    "kind": "abstract",
+    "date": "2026-10-20",
+    "time": "",
+    "yearly": false,
+    "url": "",
+    "notes": "",
+    "updated": 1791978089516
+   },
+   {
+    "id": "x1011",
+    "done": false,
+    "added": 1791200489516,
+    "title": "FCT progress report",
+    "kind": "report",
+    "date": "2026-10-13",
+    "time": "",
+    "yearly": false,
+    "url": "",
+    "notes": "",
+    "updated": 1791978089516
+   }
+  ]
+ },
+ "ideaboard.v1": [
+  {
+   "id": "x1012",
+   "title": "Machine-learned charges for the cutinase ligands",
+   "notes": "",
+   "cat": "research",
+   "stage": "doing",
+   "tags": [
+    "ml"
+   ],
+   "star": false,
+   "created": 1791459689516,
+   "updated": 1791891689516
+  }
+ ],
+ "litradar.v1": {
+  "topics": [
+   {
+    "id": "x1013",
+    "q": "cutinase OR PETase",
+    "checked": 1791891689516
+   }
+  ],
+  "works": [
+   {
+    "id": "W1",
+    "topic": "x1013",
+    "title": "Mechanism of PET hydrolysis by an engineered cutinase from QM/MM free energy simulations",
+    "doi": "10.1000/xyz1",
+    "date": "2026-10-11",
+    "venue": "ACS Catalysis",
+    "preprint": false,
+    "type": "article",
+    "oa": true,
+    "lang": "en",
+    "authors": "Ana Silva, Rui Lima",
+    "cites": 2,
+    "abs": "",
+    "found": 1791891689516,
+    "seen": false
+   },
+   {
+    "id": "W2",
+    "topic": "x1013",
+    "title": "Thermostable PETase variants from ancestral reconstruction",
+    "doi": "10.1000/xyz2",
+    "date": "2026-10-08",
+    "venue": "bioRxiv",
+    "preprint": true,
+    "type": "preprint",
+    "oa": true,
+    "lang": "en",
+    "authors": "J. Smith",
+    "cites": 0,
+    "abs": "",
+    "found": 1791891689516,
+    "seen": false
+   }
+  ],
+  "saved": [
+   {
+    "id": "W9",
+    "title": "A review of enzymatic plastic degradation",
+    "doi": "10.1000/rev",
+    "authors": "M. Costa, L. Brown",
+    "venue": "Chem Rev",
+    "date": "2025-03-01",
+    "type": "review",
+    "cites": 120,
+    "abs": "",
+    "topic": "cutinase OR PETase",
+    "read": false,
+    "saved": 1791805289516,
+    "notes": ""
+   }
+  ],
+  "days": 45,
+  "lastRun": 1791891689516,
+  "filters": {}
+ },
+ "citedash.v1": {
+  "author": {
+   "name": "Pedro",
+   "cites": 412,
+   "h": 11,
+   "works": 24
+  },
+  "works": [],
+  "snaps": [],
+  "lastRun": 1791805289516
+ }
+}

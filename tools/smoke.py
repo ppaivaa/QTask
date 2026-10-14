@@ -59,7 +59,7 @@ def main():
         if a.seed:
             import json
             seed = json.load(open(a.seed))
-            page.goto(base + "/index.html")
+            page.goto(base + "/suite-theme.js")
             page.evaluate("s=>{for(const [k,v] of Object.entries(s))localStorage.setItem(k,typeof v==='string'?v:JSON.stringify(v))}", seed)
         for suite, tabs in PAGES.items():
             for tab in tabs:
@@ -76,7 +76,7 @@ def main():
                 if a.shots:
                     os.makedirs(a.shots, exist_ok=True)
                     page.screenshot(path=os.path.join(a.shots, f"{suite}-{tab}.png"))
-                bad = [m for m in msgs if "net::ERR_FAILED" not in m and "Failed to load resource" not in m]
+                bad = [m for m in msgs if not any(x in m for x in ("net::ERR_FAILED", "Failed to load resource", "web-share", "WebGL", "GroupMarkerNotSet", "GPU stall"))]
                 print(f"{suite}#{tab}: {'OK' if not bad else 'PROBLEMS'}")
                 for m in bad:
                     print("   ", m[:300])

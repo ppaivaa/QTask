@@ -157,6 +157,8 @@ dialog{background:var(--raised)}
       <button class="ibtn" id="moreBtn" aria-label="More options" aria-expanded="false">⋮</button>
       <div class="menu" id="menu" role="menu">
         <button role="menuitem" id="markBtn">Mark all as seen</button>
+        <button role="menuitem" id="bibBtn">Export reading list (BibTeX)</button>
+        <button role="menuitem" id="copyListBtn">Copy reading list as text</button>
         <button role="menuitem" id="windowBtn">Search filters</button>
         <button role="menuitem" id="testBtn">Test the connection</button>
         <button role="menuitem" id="clearBtn">Clear cached results</button>
@@ -256,7 +258,7 @@ function makeStore(lsKey,docName,listKeys,onChange){
   S.saveLocal=()=>{try{localStorage.setItem(lsKey,JSON.stringify(S.data))}catch(_){toast("Couldn't save. Storage is full or blocked; export a backup.")}};
   S.persist=()=>S.saveLocal();
   S.connect=()=>{
-    $("#sync").textContent=storageWorks()?"Saved in this browser. Export a backup now and then.":"Storage is blocked here, so changes will be lost when you close this page.";
+    $("#sync").textContent=storageWorks()?(localStorage.getItem("sync.github")?"Saved on this device and synced to your other devices.":"Saved on this device. Turn on sync in the control center, or export a backup now and then."):"Storage is blocked here, so changes will be lost when you close this page.";
   };
   return S;
 }
@@ -305,7 +307,7 @@ const netErr=e=>{
 };
 
 (function(){
-  const store=makeStore("litradar.v1","radar",["topics","works"],render);
+  const store=makeStore("litradar.v1","radar",["topics","works","saved"],render);
   const D=()=>store.data;
   if(!D().days) D().days=45;
   if(!D().lastRun) D().lastRun=0;
@@ -470,11 +472,13 @@ const netErr=e=>{
     $("#filterBar").innerHTML=`<span>${esc(fSummary())}</span><span class="go">Filters</span>`;
     $("#filterBar").classList.toggle("on",!!isNarrowed());
     $("#total").textContent=W.filter(w=>!w.seen).length||"";
-    if(filter!=="all"&&filter!=="new"&&!T.some(t=>t.id===filter)) filter="all";
+    if(filter!=="all"&&filter!=="new"&&filter!=="saved"&&!T.some(t=>t.id===filter)) filter="all";
     $("#chips").innerHTML=[`<button class="chip" data-f="all" aria-pressed="${filter==="all"}">All<span class="c">${W.length}</span></button>`,
-      `<button class="chip" data-f="new" aria-pressed="${filter==="new"}">Unseen<span class="c">${W.filter(w=>!w.seen).length}</span></button>`]
+      `<button class="chip" data-f="new" aria-pressed="${filter==="new"}">Unseen<span class="c">${W.filter(w=>!w.seen).length}</span></button>`,
+      `<button class="chip" data-f="saved" aria-pressed="${filter==="saved"}">Reading list<span class="c">${D().saved.filter(s=>!s.read).length||D().saved.length}</span></button>`]
       .concat(T.map(t=>`<button class="chip tchip" data-f="${t.id}" aria-pressed="${filter===t.id}" title="${esc(t.err||"")}" style="${t.err?"border-color:var(--danger)":""}">${esc(t.q)}<span class="c">${W.filter(w=>w.topic===t.id&&!w.seen).length}</span><span class="x" data-del="${t.id}" role="button" aria-label="Remove topic">✕</span></button>`)).join("");
     setStatus(false);
+    if(filter==="saved"){renderSaved();return}
     const byCites=F().sort==="cites";
     const list=W.filter(w=>filter==="all"||(filter==="new"?!w.seen:w.topic===filter))
       .sort((a,b)=>byCites?((b.cites||0)-(a.cites||0)||(b.date||"").localeCompare(a.date||"")):((b.date||"").localeCompare(a.date||"")||b.found-a.found));
@@ -490,29 +494,75 @@ const netErr=e=>{
         ${w.doi?`<button class="ibtn" data-act="open" aria-label="Open DOI">↗</button>`:""}
         <button class="ibtn" data-act="seen" aria-label="${w.seen?"Mark unseen":"Mark seen"}">${w.seen?"↺":"✓"}</button>
         <button class="ibtn" data-act="hide" aria-label="Remove">✕</button>
-        <button class="ibtn txt" data-act="save">Save to library</button>
+        <button class="ibtn txt" data-act="save">${isSaved(w)?"In reading list ✓":"Save to reading list"}</button>
       </div></article>`}).join("")
       :`<div class="empty">${T.length?(D().works.length?"Nothing matches the current filters. Loosen them, or tap ⟳ to check with them.":"Nothing here yet. Tap ⟳ to check."):"Add a topic above, then tap ⟳. Topics are searched in titles and abstracts, so OR works: polyurethane OR polyurethanase."}</div>`;
   }
 
-  // save into the paper library that runs on the same server
-  function saveToLibrary(w){
-    try{
-      const raw=localStorage.getItem("paperlib.v1");
-      const lib=raw?JSON.parse(raw):{papers:[],collections:[]};
-      if(!Array.isArray(lib.papers)) lib.papers=[];
-      if(!Array.isArray(lib.collections)) lib.collections=[];
-      if(w.doi&&lib.papers.some(p=>(p.doi||"").toLowerCase()===w.doi.toLowerCase())){toast("Already in your library");return}
-      lib.papers.push({id:uid(),title:w.title,doi:w.doi||"",authors:(w.authors||"").split(", ").filter(Boolean).join("; "),
-        venue:w.venue||"",year:(w.date||"").slice(0,4),coll:"",star:false,added:Date.now(),updated:Date.now()});
-      localStorage.setItem("paperlib.v1",JSON.stringify(lib));
-      toast("Saved to your paper library");
-    }catch(_){
-      saveFile(`paper-${stamp()}.json`,JSON.stringify({version:2,papers:[{id:uid(),title:w.title,doi:w.doi||"",authors:w.authors||"",venue:w.venue||"",year:(w.date||"").slice(0,4),coll:"",star:false,added:Date.now(),updated:Date.now()}],collections:[]},null,2));
-    }
+  // ---- reading list: papers you keep, inside this app's data ----
+  const sameDoi=(a,b)=>!!a&&!!b&&a.toLowerCase()===b.toLowerCase();
+  const savedOf=w=>D().saved.find(s=>s.id===w.id||sameDoi(s.doi,w.doi));
+  const isSaved=w=>!!savedOf(w);
+  function toggleSaved(w){
+    const s=savedOf(w);
+    if(s){D().saved=D().saved.filter(x=>x!==s);toast("Removed from the reading list");return}
+    const topic=(D().topics.find(t=>t.id===w.topic)||{}).q||"";
+    D().saved.unshift({id:w.id,title:w.title,doi:w.doi||"",authors:w.authors||"",venue:w.venue||"",date:w.date||"",type:w.type||"",
+      cites:w.cites||0,abs:w.abs||"",topic,read:false,saved:Date.now(),notes:""});
+    toast("Saved to the reading list");
+  }
+  function authorsOf(s){
+    const a=String(s.authors||"").replace(/,?\s*et al\.?$/i,"").trim(); if(!a) return [];
+    return (a.includes(";")?a.split(";"):a.split(/,\s*/)).map(x=>x.trim()).filter(Boolean);
+  }
+  function citeText(s){
+    const au=authorsOf(s), yr=(s.date||"").slice(0,4);
+    return `${au.length>3?au.slice(0,3).join(", ")+" et al.":au.join(", ")||"Unknown"} (${yr||"n.d."}). ${s.title}.${s.venue?" "+s.venue+".":""}${s.doi?" https://doi.org/"+s.doi:""}`;
+  }
+  function bibKey(s,used){
+    const au=authorsOf(s)[0]||"anon", last=(au.includes(",")?au.split(",")[0]:au.split(/\s+/).pop())||"anon";
+    const word=(String(s.title||"").toLowerCase().match(/[a-z]{4,}/)||["paper"])[0];
+    let k=(last.normalize("NFD").replace(/[^A-Za-z]/g,"").toLowerCase()||"anon")+((s.date||"").slice(0,4)||"nd")+word, i=0, base=k;
+    while(used.has(k)) k=base+String.fromCharCode(97+(i++));
+    used.add(k); return k;
+  }
+  function bibtex(list){
+    const used=new Set(), b=x=>String(x||"").replace(/[{}]/g,"").replace(/\s+/g," ").trim();
+    return list.map(s=>{
+      const type=s.type==="book-chapter"?"incollection":s.type==="preprint"?"misc":"article";
+      const f=[["title",`{${b(s.title)}}`],["author",authorsOf(s).map(b).join(" and ")],[type==="incollection"?"booktitle":type==="misc"?"howpublished":"journal",b(s.venue)],
+        ["year",(s.date||"").slice(0,4)],["doi",b(s.doi)],["url",s.doi?"https://doi.org/"+s.doi:""]].filter(x=>x[1]);
+      return `@${type}{${bibKey(s,used)},\n${f.map(([k,v])=>`  ${k} = {${v}}`).join(",\n")}\n}`;
+    }).join("\n\n");
+  }
+  function renderSaved(){
+    const L=D().saved.slice().sort((a,b)=>(a.read?1:0)-(b.read?1:0)||(b.saved||0)-(a.saved||0));
+    $("#list").innerHTML=L.length?L.map(s=>`<article class="work ${s.read?"":"new"}" data-saved="${esc(s.id)}">
+      <h3>${esc(s.title)}</h3>
+      ${s.authors?`<div class="auth">${esc(s.authors)}</div>`:""}
+      <div class="vn">${s.venue?`<span>${esc(s.venue)}</span>`:""}${s.date?`<span>${esc(s.date)}</span>`:""}${s.topic?`<span>${esc(s.topic)}</span>`:""}
+        ${s.read?`<span>read</span>`:`<span class="badge">To read</span>`}<span>saved ${esc(new Date(s.saved||Date.now()).toLocaleDateString("en-GB",{day:"numeric",month:"short"}))}</span></div>
+      ${s.abs?`<div class="abs clamp">${esc(s.abs)}</div>`:""}
+      <div class="wacts">
+        ${s.doi?`<button class="ibtn" data-sact="open" aria-label="Open DOI">↗</button>`:""}
+        <button class="ibtn" data-sact="cite" aria-label="Copy citation">⧉</button>
+        <button class="ibtn" data-sact="del" aria-label="Remove from reading list">✕</button>
+        <button class="ibtn txt" data-sact="read">${s.read?"Mark as to read":"Mark as read"}</button>
+      </div></article>`).join("")
+      :`<div class="empty">Your reading list is empty. Tap <b>Save to reading list</b> on a radar result, or add a paper by DOI with + in the control center.</div>`;
   }
 
   $("#list").addEventListener("click",e=>{
+    const sb=e.target.closest("[data-sact]");
+    if(sb){
+      const s=D().saved.find(x=>x.id===sb.closest("[data-saved]").dataset.saved); if(!s) return;
+      const a=sb.dataset.sact;
+      if(a==="open"){window.open("https://doi.org/"+s.doi,"_blank","noopener");return}
+      if(a==="cite"){copyText(citeText(s),"Citation copied");return}
+      if(a==="read"){s.read=!s.read;store.persist();render();return}
+      if(a==="del"){if(!confirm("Remove this paper from the reading list?"))return;D().saved=D().saved.filter(x=>x!==s);store.persist();render();return}
+      return;
+    }
     const b=e.target.closest("[data-act]"); if(!b) return;
     const card=b.closest(".work");
     const w=D().works.find(x=>x.id===card.dataset.id&&x.topic===card.dataset.topic); if(!w) return;
@@ -521,7 +571,7 @@ const netErr=e=>{
     if(a==="open"){window.open("https://doi.org/"+w.doi,"_blank","noopener");w.seen=true;store.persist();render();return}
     if(a==="seen"){w.seen=!w.seen;store.persist();render();return}
     if(a==="hide"){D().works=D().works.filter(x=>!(x.id===w.id&&x.topic===w.topic));store.persist();render();return}
-    if(a==="save"){saveToLibrary(w);w.seen=true;store.persist();render()}
+    if(a==="save"){toggleSaved(w);w.seen=true;store.persist();render()}
   });
   $("#chips").addEventListener("click",e=>{
     const x=e.target.closest("[data-del]");
@@ -596,8 +646,10 @@ const netErr=e=>{
       el.textContent=`No luck: ${netErr(e)}. If you opened this file directly instead of through http://localhost, the browser blocks these requests.`;
     }
   });
-  $("#clearBtn").addEventListener("click",()=>{if(!confirm("Clear all cached results? Topics stay."))return;D().works=[];store.persist();render()});
-  $("#exportBtn").addEventListener("click",()=>saveFile(`radar-${stamp()}.json`,JSON.stringify({version:2,exported:new Date().toISOString(),topics:D().topics,works:D().works,days:D().days,filters:D().filters},null,2)));
+  $("#clearBtn").addEventListener("click",()=>{if(!confirm("Clear all cached results? Topics and the reading list stay."))return;D().works=[];store.persist();render()});
+  $("#bibBtn").addEventListener("click",()=>{if(!D().saved.length){toast("The reading list is empty");return}saveFile(`reading-list-${stamp()}.bib`,bibtex(D().saved))});
+  $("#copyListBtn").addEventListener("click",()=>{if(!D().saved.length){toast("The reading list is empty");return}copyText(D().saved.map(citeText).join("\n\n"),"Reading list copied")});
+  $("#exportBtn").addEventListener("click",()=>saveFile(`radar-${stamp()}.json`,JSON.stringify({version:3,exported:new Date().toISOString(),topics:D().topics,works:D().works,saved:D().saved,days:D().days,filters:D().filters},null,2)));
   $("#importBtn").addEventListener("click",()=>$("#importFile").click());
   $("#importFile").addEventListener("change",async e=>{
     const f=e.target.files[0]; if(!f) return;
@@ -605,6 +657,7 @@ const netErr=e=>{
       const have=new Set(D().topics.map(t=>t.q.toLowerCase()));
       o.topics.forEach(t=>{if(t&&t.q&&!have.has(t.q.toLowerCase()))D().topics.push({id:t.id||uid(),q:t.q,checked:0})});
       if(Array.isArray(o.works)){const k=new Set(D().works.map(w=>w.id+"|"+w.topic));o.works.forEach(w=>{if(w&&w.id&&!k.has(w.id+"|"+w.topic))D().works.push(w)})}
+      if(Array.isArray(o.saved)){o.saved.forEach(s=>{if(s&&s.title&&!D().saved.some(x=>x.id===s.id||sameDoi(x.doi,s.doi)))D().saved.push(s)})}
       if(o.days) D().days=o.days;
       if(o.filters&&typeof o.filters==="object") D().filters={...FDEF,...o.filters};
       store.persist(); render(); toast("Imported");
@@ -639,7 +692,7 @@ const netErr=e=>{
   }
   const bar=document.createElement("div");
   bar.className="bk hidden"; bar.setAttribute("role","status");
-  bar.innerHTML='<div class="bkt"><b></b><span>A copy goes to your Downloads folder.</span></div><button class="bkno" type="button">Later</button><button class="bkgo" type="button">Back up now</button>';
+  bar.innerHTML='<div class="bkt"><b></b><span>Save a copy to Files or Downloads, or turn on sync in the control center.</span></div><button class="bkno" type="button">Later</button><button class="bkgo" type="button">Back up now</button>';
   const wrap=document.querySelector(".wrap"), head=wrap&&wrap.querySelector(":scope > header");
   if(head) head.insertAdjacentElement("afterend",bar); else if(wrap) wrap.prepend(bar);
   function check(){
