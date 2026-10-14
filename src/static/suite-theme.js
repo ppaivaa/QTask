@@ -16,7 +16,7 @@
 (function () {
   "use strict";
   var KEY = "suite.theme";
-  var DEF = { mode: "dark", palette: "orchid" };
+  var DEF = { mode: "dark", palette: "ocean" };
 
   /* surfaces, text and status colours, shared by every palette */
   var NEUTRAL = {

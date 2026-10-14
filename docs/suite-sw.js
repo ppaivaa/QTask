@@ -1,9 +1,9 @@
 /* Service worker: fresh files from the site whenever it answers, the last copy seen when it does
    not, so the installed app still opens offline. Change CACHE when the file list changes.
    GitHub (sync) and the online lookups are never cached: they go straight to the network. */
-const CACHE="QTask-1.0.0-1";
+const CACHE="QTask-1.0.0-2";
 const SUITES=["control-center","lab-notebook","literature-hub","structure-studio","paper-kit"];
-const CORE=["./","./index.html","./suite-theme.js","./suite-sync.js","./app.webmanifest","./icons/apple-touch-icon.png"].concat(...SUITES.map(s=>[
+const CORE=["./","./index.html","./suite-theme.js","./suite-sync.js","./app.webmanifest","./icons/apple-touch-icon.png","./icons/qtask.svg"].concat(...SUITES.map(s=>[
   `./${s}.html`,`./icons/${s}-192.png`,`./icons/${s}-512.png`,`./icons/${s}-512-maskable.png`]));
 self.addEventListener("install",e=>{
   e.waitUntil(caches.open(CACHE).then(c=>Promise.all(CORE.map(u=>c.add(u).catch(()=>{})))));

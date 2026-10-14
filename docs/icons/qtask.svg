@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><defs>
+<linearGradient id="bond" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#5EF2D6"/><stop offset=".5" stop-color="#4DB4FF"/><stop offset="1" stop-color="#6A7DFF"/></linearGradient>
+<radialGradient id="bg" cx=".32" cy=".2" r="1.05"><stop offset="0" stop-color="#1D4A82"/><stop offset=".5" stop-color="#0C2243"/><stop offset="1" stop-color="#050C1A"/></radialGradient>
+<radialGradient id="atom" cx=".36" cy=".3" r=".75"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".3" stop-color="#D2F8FF"/><stop offset=".75" stop-color="#6CC4FF"/><stop offset="1" stop-color="#3C8DF0"/></radialGradient>
+<radialGradient id="cloud" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#4DB4FF" stop-opacity=".36"/><stop offset=".65" stop-color="#4DB4FF" stop-opacity=".09"/><stop offset="1" stop-color="#4DB4FF" stop-opacity="0"/></radialGradient>
+<filter id="soft" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#020814" flood-opacity=".55"/></filter>
+</defs><rect width="1024" height="1024" fill="url(#bg)"/><g transform="translate(512 512) scale(0.92) translate(-571 -512)">
+<ellipse cx="560" cy="560" rx="390" ry="300" fill="url(#cloud)" transform="rotate(-25 560 560)"/>
+<g filter="url(#soft)">
+<path d="M300 540 L470 710 L800 330" fill="none" stroke="url(#bond)" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M300 540 L470 710 L800 330" fill="none" stroke="#FFFFFF" stroke-opacity=".28" stroke-width="16" stroke-linecap="round" stroke-linejoin="round" transform="translate(-6 -10)"/>
+<circle cx="300" cy="540" r="70" fill="url(#atom)"/>
+<circle cx="470" cy="710" r="92" fill="url(#atom)"/>
+<circle cx="800" cy="330" r="112" fill="url(#atom)"/>
+</g></g></svg>
